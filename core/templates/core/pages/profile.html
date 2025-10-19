@@ -1,0 +1,198 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block title %}Dashboard - Profile Perusahaan{% endblock %}
+
+{% block content %}
+<div class="flex h-screen bg-gray-100">
+  <!-- Sidebar -->
+  <aside
+    id="sidebar"
+    class="w-64 bg-white shadow-md flex flex-col transition-all duration-300"
+  >
+    <div class="p-6 text-center text-2xl font-bold border-b">
+      <span class="logo-text">Logo</span>
+    </div>
+    <nav class="flex-grow p-4">
+      <a
+        href="#"
+        class="flex items-center py-3 px-4 rounded-lg bg-[#8C705A] text-white font-semibold"
+      >
+        <svg
+          class="w-6 h-6 mr-3"
+          fill="none"
+          stroke="currentColor"
+          viewBox="0 0 24 24"
+          xmlns="http://www.w3.org/2000/svg"
+        >
+          <path
+            stroke-linecap="round"
+            stroke-linejoin="round"
+            stroke-width="2"
+            d="M5.121 17.804A13.937 13.937 0 0112 16c2.5 0 4.847.655 6.879 1.804M15 10a3 3 0 11-6 0 3 3 0 016 0zm6 2a9 9 0 11-18 0 9 9 0 0118 0z"
+          ></path>
+        </svg>
+        <span class="nav-text">Profil Perusahaan</span>
+      </a>
+      <!-- Add other nav links here -->
+    </nav>
+  </aside>
+
+  <!-- Main Content -->
+  <div class="flex-1 flex flex-col">
+    <header
+      class="bg-white shadow-sm p-4 flex justify-between items-center"
+    >
+      <button id="menu-toggle-btn" class="text-gray-600">
+        <svg
+          class="w-6 h-6"
+          fill="none"
+          stroke="currentColor"
+          viewBox="0 0 24 24"
+          xmlns="http://www.w3.org/2000/svg"
+        >
+          <path
+            stroke-linecap="round"
+            stroke-linejoin="round"
+            stroke-width="2"
+            d="M4 6h16M4 12h16M4 18h16"
+          ></path>
+        </svg>
+      </button>
+      <div class="font-semibold">Selamat Datang, Nama User</div>
+    </header>
+    <main class="flex-1 p-8 bg-gray-50">
+      <div class="bg-white p-8 rounded-lg shadow-lg max-w-4xl mx-auto">
+        <h1 class="text-3xl font-bold mb-8 text-slate-800">
+          Profil Perusahaan
+        </h1>
+        <form>
+          <div class="mb-8">
+            <label
+              for="company-name"
+              class="block text-slate-600 font-semibold mb-2"
+              >Nama Perusahaan</label
+            >
+            <input
+              type="text"
+              id="company-name"
+              placeholder="Masukan Nama Perusahaan"
+              class="w-full p-3 border-b-2 border-slate-200 focus:border-slate-400 outline-none"
+            />
+          </div>
+          <div class="grid grid-cols-1 md:grid-cols-2 gap-8 mb-8">
+            <div>
+              <label
+                for="month"
+                class="block text-slate-600 font-semibold mb-2"
+                >Bulan</label
+              >
+              <select
+                id="month"
+                class="w-full p-3 border-b-2 border-slate-200 bg-transparent outline-none"
+              >
+                <option value="">Pilih Bulan</option>
+                <!-- Add months here -->
+                <option value="1">Januari</option>
+                <option value="2">Februari</option>
+                <!-- etc. -->
+              </select>
+            </div>
+            <div>
+              <label
+                for="year"
+                class="block text-slate-600 font-semibold mb-2"
+                >Tahun</label
+              >
+              <input
+                type="number"
+                id="year"
+                placeholder="Masukkan Tahun"
+                class="w-full p-3 border-b-2 border-slate-200 focus:border-slate-400 outline-none"
+              />
+            </div>
+          </div>
+          <div class="mb-8">
+            <label
+              for="business-status"
+              class="block text-slate-600 font-semibold mb-2"
+              >Status Usaha</label
+            >
+            <select
+              id="business-status"
+              class="w-full p-3 border-b-2 border-slate-200 bg-transparent outline-none"
+            >
+              <option value="">Pilih Status</option>
+              <option value="badan">Badan</option>
+              <option value="orang_pribadi">Orang Pribadi</option>
+            </select>
+          </div>
+          <!-- PTKP Field - Initially hidden -->
+          <div id="ptkp-field-wrapper" class="mb-8 hidden">
+            <label
+              for="ptkp-status"
+              class="block text-slate-600 font-semibold mb-2"
+              >Status PTKP</label
+            >
+            <select
+              id="ptkp-status"
+              class="w-full p-3 border-b-2 border-slate-200 bg-transparent outline-none"
+            >
+              <option value="">Pilih Status PTKP</option>
+              <!-- Add PTKP options here -->
+            </select>
+          </div>
+          <div class="mb-8">
+            <label
+              for="tax-incentive"
+              class="block text-slate-600 font-semibold mb-2"
+              >Sudah Daftar Insentif Pajak UMKM</label
+            >
+            <select
+              id="tax-incentive"
+              class="w-full p-3 border-b-2 border-slate-200 bg-transparent outline-none"
+            >
+              <option value="">Pilih Jawaban</option>
+              <option value="sudah">Sudah</option>
+              <option value="belum">Belum</option>
+            </select>
+          </div>
+          <div class="mb-8">
+            <label for="omzet" class="block text-slate-600 font-semibold mb-2"
+              >Omzet</label
+            >
+            <input
+              type="text"
+              id="omzet"
+              placeholder="Masukkan Omzet Bulanan"
+              class="w-full p-3 border-b-2 border-slate-200 focus:border-slate-400 outline-none"
+            />
+          </div>
+          <div class="mb-8">
+            <label
+              for="business-type"
+              class="block text-slate-600 font-semibold mb-2"
+              >Jenis usaha</label
+            >
+            <select
+              id="business-type"
+              class="w-full p-3 border-b-2 border-slate-200 bg-transparent outline-none"
+            >
+              <option value="">Pilih Jenis Usaha</option>
+              <option value="dagang">Dagang</option>
+              <option value="manufaktur">Manufaktur</option>
+            </select>
+          </div>
+          <div class="text-right mt-16">
+            <button
+              class="py-3 px-12 bg-[#8C705A] text-white font-semibold rounded-lg shadow-md hover:bg-opacity-90"
+            >
+              Lanjut
+            </button>
+          </div>
+        </form>
+      </div>
+    </main>
+  </div>
+</div>
+{% endblock %}
