@@ -1,0 +1,237 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Financial Growth Tool</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600;700&display=swap"
+      rel="stylesheet"
+    />
+    <style>
+      body {
+        font-family: "Poppins", sans-serif;
+      }
+    </style>
+  </head>
+  <body class="bg-white text-slate-800">
+    <div class="container mx-auto max-w-6xl px-8">
+      <header class="flex justify-between items-center py-5">
+        <div class="logo text-xl font-bold border border-slate-300 py-1 px-4">
+          <strong>Logo</strong>
+        </div>
+        <nav class="hidden md:flex items-center">
+          <ul class="flex gap-10">
+            <li>
+              <a href="#" class="font-semibold text-slate-700 hover:text-black"
+                >Features</a
+              >
+            </li>
+            <li>
+              <a href="#" class="font-semibold text-slate-700 hover:text-black"
+                >Pricing</a
+              >
+            </li>
+            <li>
+              <a href="#" class="font-semibold text-slate-700 hover:text-black"
+                >About Us</a
+              >
+            </li>
+          </ul>
+        </nav>
+        <div class="auth-buttons flex items-center">
+          <button
+            id="login-btn"
+            class="border border-black py-2 px-6 rounded-lg font-semibold hover:bg-slate-100 transition-colors"
+          >
+            Login
+          </button>
+          <button
+            id="signup-btn"
+            class="bg-black text-white py-2 px-6 rounded-lg font-semibold ml-2 hover:bg-slate-800 transition-colors"
+          >
+            Sign Up
+          </button>
+        </div>
+      </header>
+
+      <main class="hero text-center py-20">
+        <p class="text-lg text-slate-600">
+          A tool for simplifying your complex financial report
+        </p>
+        <h1 class="text-6xl font-bold my-4 leading-tight">
+          Decrease Spreadsheets<br />
+          Increase your <span class="text-green-700">Growth</span>
+        </h1>
+        <button
+          id="create-account-btn"
+          class="bg-black text-white py-4 px-10 rounded-lg text-xl font-semibold mt-6 hover:bg-slate-800 transition-colors"
+        >
+          Create account
+        </button>
+      </main>
+
+      <section class="flex justify-center items-center gap-5 flex-wrap pb-24">
+        <div
+          class="w-[200px] h-[250px] rounded-2xl bg-cover bg-center shadow-lg relative self-start"
+          style="
+            background-image: url('https://i.ibb.co/6y4nJvD/image-7b549f.png');
+          "
+        >
+          <div
+            class="absolute bottom-5 left-5 right-5 bg-black/60 text-white p-2 rounded-lg text-center font-semibold text-sm"
+          >
+            Don't waste your time
+          </div>
+        </div>
+        <div
+          class="w-[250px] h-[180px] rounded-2xl bg-cover bg-center shadow-lg mt-12"
+          style="
+            background-image: url('https://i.ibb.co/31V2xQk/image-7b51d9.png');
+          "
+        ></div>
+        <div
+          class="w-[220px] h-[120px] rounded-2xl bg-green-100 flex items-center justify-center p-5 text-center font-semibold shadow-lg mt-2"
+        >
+          Always know what your next move
+        </div>
+        <div
+          class="w-[200px] h-[250px] rounded-2xl bg-cover bg-center shadow-lg -mt-5"
+          style="
+            background-image: url('https://i.ibb.co/3pY62Y1/image-7b519b.png');
+          "
+        ></div>
+        <div
+          class="w-[250px] h-[300px] rounded-2xl bg-cover bg-center shadow-lg self-start"
+          style="
+            background-image: url('https://i.ibb.co/k2xQjYm/image-7b5162.png');
+          "
+        ></div>
+      </section>
+    </div>
+
+    <div
+      id="login-modal-overlay"
+      class="fixed inset-0 bg-black/60 flex justify-center items-center z-50 transition-opacity opacity-0 pointer-events-none"
+    >
+      <div class="bg-white p-10 rounded-2xl shadow-xl w-full max-w-md">
+        <h2 class="text-center text-3xl font-bold mb-8">Login</h2>
+        <form>
+          <div class="mb-5">
+            <label for="email" class="block mb-2 font-semibold">Email</label>
+            <input
+              type="email"
+              id="email"
+              placeholder="Alamat Email"
+              class="w-full p-3 border border-slate-300 rounded-lg"
+            />
+          </div>
+          <div class="mb-5">
+            <label for="password" class="block mb-2 font-semibold"
+              >Password</label
+            >
+            <div class="relative flex items-center">
+              <input
+                type="password"
+                id="password"
+                placeholder="Masukkan Password"
+                class="w-full p-3 border border-slate-300 rounded-lg"
+              />
+              <span
+                class="toggle-password absolute right-4 cursor-pointer text-slate-400"
+              ></span>
+            </div>
+          </div>
+          <button
+            type="submit"
+            class="w-full bg-black text-white p-3 rounded-lg font-semibold text-lg mt-4 hover:bg-slate-800"
+          >
+            Sign in
+          </button>
+        </form>
+        <div class="flex items-center my-6">
+          <hr class="flex-grow" />
+          <span class="mx-4 text-slate-400">Atau</span>
+          <hr class="flex-grow" />
+        </div>
+        <p class="text-center text-slate-600">
+          Belum Punya Akun?
+          <a href="#" id="show-signup-link" class="font-semibold text-green-700"
+            >Registrasi</a
+          >
+        </p>
+      </div>
+    </div>
+
+    <div
+      id="signup-modal-overlay"
+      class="fixed inset-0 bg-black/60 flex justify-center items-center z-50 transition-opacity opacity-0 pointer-events-none"
+    >
+      <div class="bg-white p-10 rounded-2xl shadow-xl w-full max-w-md">
+        <h2 class="text-center text-3xl font-bold mb-8">Sign Up</h2>
+        <form>
+          <div class="mb-5">
+            <label for="fullname" class="block mb-2 font-semibold"
+              >Full Name</label
+            >
+            <input
+              type="text"
+              id="fullname"
+              placeholder="Masukan Nama Lengkap"
+              class="w-full p-3 border border-slate-300 rounded-lg"
+            />
+          </div>
+          <div class="mb-5">
+            <label for="signup-email" class="block mb-2 font-semibold"
+              >Email</label
+            >
+            <input
+              type="email"
+              id="signup-email"
+              placeholder="Alamat Email"
+              class="w-full p-3 border border-slate-300 rounded-lg"
+            />
+          </div>
+          <div class="mb-5">
+            <label for="signup-password" class="block mb-2 font-semibold"
+              >Password</label
+            >
+            <div class="relative flex items-center">
+              <input
+                type="password"
+                id="signup-password"
+                placeholder="Masukkan Password"
+                class="w-full p-3 border border-slate-300 rounded-lg"
+              />
+              <span
+                class="toggle-password-signup absolute right-4 cursor-pointer text-slate-400"
+              ></span>
+            </div>
+          </div>
+          <button
+            type="submit"
+            class="w-full bg-black text-white p-3 rounded-lg font-semibold text-lg mt-4 hover:bg-slate-800"
+          >
+            Sign up
+          </button>
+        </form>
+        <div class="flex items-center my-6">
+          <hr class="flex-grow" />
+          <span class="mx-4 text-slate-400">Atau</span>
+          <hr class="flex-grow" />
+        </div>
+        <p class="text-center text-slate-600">
+          Sudah memiliki account ?
+          <a href="#" id="show-login-link" class="font-semibold text-green-700"
+            >Masuk</a
+          >
+        </p>
+      </div>
+    </div>
+
+    <script src="js/script.js"></script>
+  </body>
+</html>
