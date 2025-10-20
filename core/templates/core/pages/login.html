@@ -1,0 +1,77 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block title %}Login - JurnalKita{% endblock %}
+
+{% block content %}
+<div class="flex justify-center items-center min-h-screen bg-[#F4F6F9]">
+  <div class="bg-white p-10 rounded-2xl shadow-xl w-full max-w-md">
+    <h2 class="text-center text-3xl font-bold mb-8">Login</h2>
+
+    <form method="post" action="{% url 'core:login' %}" class="space-y-5">
+      {% csrf_token %}
+      {% if error %}
+      <p class="text-red-500 text-sm text-center">{{ error }}</p>
+      {% endif %}
+      <div>
+        <label for="username" class="block mb-2 font-semibold">Username</label>
+        <input
+          type="text"
+          id="username"
+          name="username"
+          placeholder="Masukkan Username"
+          class="w-full p-3 border border-slate-300 rounded-lg"
+          required
+        />
+      </div>
+      <div>
+        <label for="password" class="block mb-2 font-semibold">Password</label>
+        <div class="relative flex items-center">
+          <input
+            type="password"
+            id="password"
+            name="password"
+            placeholder="Masukkan Password"
+            class="w-full p-3 border border-slate-300 rounded-lg"
+            required
+          />
+          <button
+            type="button"
+            class="toggle-password absolute right-4 text-slate-400"
+            onclick="togglePasswordVisibility()"
+          >
+            👁
+          </button>
+        </div>
+      </div>
+
+      <button
+        type="submit"
+        class="w-full bg-black text-white p-3 rounded-lg font-semibold text-lg hover:bg-slate-800"
+      >
+        Sign in
+      </button>
+    </form>
+
+    <div class="flex items-center my-6">
+      <hr class="flex-grow" />
+      <span class="mx-4 text-slate-400">Atau</span>
+      <hr class="flex-grow" />
+    </div>
+
+    <p class="text-center text-slate-600">
+      Belum punya akun?
+      <a href="#" class="font-semibold text-green-700">Registrasi</a>
+    </p>
+  </div>
+</div>
+
+{% block extra_js %}
+<script>
+function togglePasswordVisibility() {
+  const input = document.getElementById("password");
+  input.type = input.type === "password" ? "text" : "password";
+}
+</script>
+{% endblock %}
+{% endblock %}
