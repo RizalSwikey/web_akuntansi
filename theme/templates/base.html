@@ -6,7 +6,7 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>{% block title %}Accounting App{% endblock %}</title>
-    
+
     {% tailwind_css %}
 
     <link rel="preconnect" href="https://fonts.googleapis.com" />
@@ -21,12 +21,5 @@
       }
     </style>
   </head>
-  <body class="bg-gray-50 text-slate-800">
-
-    {% block content %}
-    
-    {% endblock %}
-
-    <script src="{% static 'core/js/script.js' %}" defer></script>
-  </body>
+  {% block content %} {% endblock %}
 </html>
