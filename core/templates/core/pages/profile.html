@@ -1,222 +1,188 @@
-{% extends "base.html" %} 
-{% load static %} 
-{% block title %}Dashboard - Profile Perusahaan{% endblock %} 
-
-{% block content %}
-<body class="bg-[#F4F6F9] p-4 md:p-6">
+{% extends "base.html" %} {% load static %} {% block title %}Dashboard - Profile
+Perusahaan{% endblock %} {% block content %}
+<div class="bg-white text-slate-800">
   <div class="flex gap-6">
-    <aside
-      id="sidebar"
-      class="group bg-[#4A5C51] text-white p-6 rounded-2xl flex flex-col justify-between transition-[width] duration-300 ease-in-out w-[280px] [&.collapsed]:w-24"
-    >
-      <div>
-        <div class="flex items-center justify-between mb-12">
-          <div
-            class="bg-white text-black font-bold text-lg py-2 px-4 rounded-md text-center group-[.collapsed]:hidden"
-          >
-            <strong>Logo</strong>
-          </div>
-          <button
-            id="menu-toggle-btn"
-            class="text-white p-2 rounded-md hover:bg-[#5a7065]"
-          >
-            <svg
-              class="w-6 h-6"
-              xmlns="http://www.w3.org/2000/svg"
-              fill="none"
-              viewBox="0 0 24 24"
-              stroke-width="1.5"
-              stroke="currentColor"
-            >
-              <path
-                stroke-linecap="round"
-                stroke-linejoin="round"
-                d="M3.75 6.75h16.5M3.75 12h16.5m-16.5 5.25h16.5"
-              />
-            </svg>
-          </button>
-        </div>
-       
-        {% include 'core/sections/side_menu.html' %}
-        
-      </div>
-      <button
-        class="w-full py-4 bg-[#8C705A] font-semibold rounded-lg hover:bg-[#a1826a] flex items-center justify-center gap-4"
-      >
-        <svg
-          class="w-6 h-6 group-[.collapsed]:hidden"
-          xmlns="http://www.w3.org/2000/svg"
-          fill="none"
-          viewBox="0 0 24 24"
-          stroke-width="1.5"
-          stroke="currentColor"
-        >
-          <path
-            stroke-linecap="round"
-            stroke-linejoin="round"
-            d="M15.75 9V5.25A2.25 2.25 0 0 0 13.5 3h-6a2.25 2.25 0 0 0-2.25 2.25v13.5A2.25 2.25 0 0 0 7.5 21h6a2.25 2.25 0 0 0 2.25-2.25V15M12 9l-3 3m0 0 3 3m-3-3h12.75"
-          />
-        </svg>
-        <span class="group-[.collapsed]:hidden">Logout</span>
-        <svg
-          class="w-6 h-6 hidden group-[.collapsed]:block"
-          xmlns="http://www.w3.org/2000/svg"
-          fill="none"
-          viewBox="0 0 24 24"
-          stroke-width="1.5"
-          stroke="currentColor"
-        >
-          <path
-            stroke-linecap="round"
-            stroke-linejoin="round"
-            d="M15.75 9V5.25A2.25 2.25 0 0 0 13.5 3h-6a2.25 2.25 0 0 0-2.25 2.25v13.5A2.25 2.25 0 0 0 7.5 21h6a2.25 2.25 0 0 0 2.25-2.25V15M12 9l-3 3m0 0 3 3m-3-3h12.75"
-          />
-        </svg>
-      </button>
-    </aside>
+    {% include 'core/partials/side_menu.html' %}
 
     <main id="main-content" class="flex-1">
+      <br />
       <h1 class="text-3xl font-bold mb-6">Profile Perusahaan</h1>
-      <div class="bg-white rounded-2xl p-8 shadow-sm">
-        <div class="mb-8">
-          <label
-            for="company-name"
-            class="block text-slate-600 font-semibold mb-2"
-            >Nama Perusahaan</label
-          ><input
-            type="text"
-            id="company-name"
-            class="w-full p-3 border-b-2 border-slate-200 focus:border-slate-400 outline-none"
-          />
-        </div>
-        <div class="flex gap-8 mb-8">
-          <div class="flex-1">
-            <label for="month" class="block text-slate-600 font-semibold mb-2"
-              >Bulan</label
-            ><select
-              id="month"
-              class="w-full p-3 border-b-2 border-slate-200 bg-transparent outline-none"
-            >
-              <option>Pilih Bulan</option>
-              <option>January</option>
-              <option>Februari</option>
-              <option>Maret</option>
-              <option>April</option>
-              <option>Mei</option>
-              <option>Juni</option>
-              <option>Juli</option>
-              <option>Agustus</option>
-              <option>September</option>
-              <option>Oktober</option>
-              <option>November</option>
-              <option>Desember</option>
-            </select>
-          </div>
-          <div class="flex-1">
-            <label for="year" class="block text-slate-600 font-semibold mb-2"
-              >Tahun</label
+      
+      {% comment %} {% if messages %} {% for message in messages %}
+      <div
+        class="bg-green-100 border border-green-400 text-green-700 px-4 py-3 rounded-lg relative mb-6"
+        role="alert"
+      >
+        <span class="block sm:inline">{{ message }}</span>
+      </div>
+      {% endfor %} {% endif %} {% endcomment %}
+
+      <form method="POST" class="bg-white p-8 rounded-2xl shadow-lg space-y-6">
+        {% csrf_token %}
+
+        <div class="bg-white rounded-2xl p-8 shadow-sm">
+          <div class="mb-8">
+            <label
+              id="company_name"
+              name="company_name"
+              class="block font-semibold mb-2"
+              >Nama Perusahaan</label
             ><input
               type="text"
-              id="year"
-              class="w-full p-3 border-b-2 border-slate-200 outline-none"
+              id="company_name"
+              name="company_name"
+              class="w-full p-3 border border-slate-300 rounded-lg"
+              placeholder="Masukkan Nama Perusahaan"
+              value="{{ profile_data.company_name | default:'' }}"
+              required
             />
           </div>
+          <div class="flex gap-8 mb-8">
+            <div>
+              <label for="month" class="block mb-2 font-semibold"
+                >Bulan Laporan</label
+              >
+              <select
+                id="month"
+                name="month"
+                class="w-full p-3 border border-slate-300 rounded-lg"
+              >
+                {% with current_month=profile_data.month|default:'' %}
+                <option value="Januari" {% if current_month == 'Januari' %}selected{% endif %}>Januari</option>
+                <option value="Februari" {% if current_month == 'Februari' %}selected{% endif %}>Februari</option>
+                <option value="Maret" {% if current_month == 'Maret' %}selected{% endif %}>Maret</option>
+                <option value="April" {% if current_month == 'April' %}selected{% endif %}>April</option>
+                <option value="Mei" {% if current_month == 'Mei' %}selected{% endif %}>Mei</option>
+                <option value="Juni" {% if current_month == 'Juni' %}selected{% endif %}>Juni</option>
+                <option value="Juli" {% if current_month == 'Juli' %}selected{% endif %}>Juli</option>
+                <option value="Agustus" {% if current_month == 'Agustus' %}selected{% endif %}>Agustus</option>
+                <option value="September" {% if current_month == 'September' %}selected{% endif %}>September</option>
+                <option value="Oktober" {% if current_month == 'Oktober' %}selected{% endif %}>Oktober</option>
+                <option value="November" {% if current_month == 'November' %}selected{% endif %}>November</option>
+                <option value="Desember" {% if current_month == 'Desember' %}selected{% endif %}>Desember</option>
+                {% endwith %}
+              </select>
+            </div>
+            <div>
+            <label for="year" class="block mb-2 font-semibold"
+              >Tahun Laporan</label
+            >
+            <select
+              id="year"
+              name="year"
+              class="w-full p-3 border border-slate-300 rounded-lg"
+            >
+              {% with current_year=profile_data.year|default:'' %}
+              <option value="2024" {% if current_year == '2024' %}selected{% endif %}>2024</option>
+              <option value="2025" {% if current_year == '2025' %}selected{% endif %}>2025</option>
+              <option value="2026" {% if current_year == '2026' %}selected{% endif %}>2026</option>
+              <option value="2027" {% if current_year == '2027' %}selected{% endif %}>2027</option>
+              {% endwith %}
+            </select>
+          </div>
+          </div>
+          <div class="mb-8">
+            <label
+              for="business_status"
+              class="block text-slate-600 font-semibold mb-2"
+              >Status usaha</label
+            >
+            <select
+              id="business_status"
+              name="business_status"
+              class="w-full p-3 border border-slate-300 rounded-lg">
+              {% with status=profile_data.business_status|default:'' %}
+              <option value="">Pilih Status</option>
+              <option value="orang_pribadi" {% if status == 'orang_pribadi' %}selected{% endif %}>Orang Pribadi</option>
+              <option value="badan_usaha" {% if status == 'badan_usaha' %}selected{% endif %}>Badan Usaha (CV/PT)</option>
+              {% endwith %}
+            </select>
+            
+          </div>
+          <div id="ptkp-field-wrapper" class="mb-8 hidden">
+            <label
+              for="ptkp-status"
+              class="block text-slate-600 font-semibold mb-2"
+              >Status PTKP</label
+            >
+            <select
+              id="ptkp-status"
+              class="w-full p-3 border-b-2 border-slate-200 bg-transparent outline-none"
+            >
+              <option>Pilih Status PTKP</option>
+              <option>TK/0</option>
+              <option>TK/1</option>
+              <option>TK/2</option>
+              <option>TK/3</option>
+              <option>K/0</option>
+              <option>K/1</option>
+              <option>K/2</option>
+              <option>K/3</option>
+              <option>K/I/0</option>
+              <option>K/I/1</option>
+              <option>K/I/2</option>
+              <option>K/I/3</option>
+            </select>
+          </div>
+          <div class="mb-8">
+            <label
+              for="umkm_incentive"
+              class="block text-slate-600 font-semibold mb-2"
+              >Sudah daftar insentif pajak UMKM</label
+            >
+            <select
+              id="umkm_incentive"
+              name="umkm_incentive"
+              class="w-full p-3 border border-slate-300 rounded-lg">
+              {% with umkm=profile_data.umkm_incentive|default:'' %}
+              <option value="Sudah" {% if umkm == 'Sudah' %}selected{% endif %}>Sudah</option>
+              <option value="Belum" {% if umkm == 'Belum' %}selected{% endif %}>Belum</option>
+              {% endwith %}
+            </select>
+          </div>
+          <div class="mb-8">
+            <label for="omzet" class="block text-slate-600 font-semibold mb-2"
+              >Omzet</label
+            >
+            <input
+              type="number"
+              id="omzet"
+              name="omzet"
+              class="w-full p-3 border border-slate-300 rounded-lg"
+              placeholder="Masukkan Omzet"
+              value="{{ profile_data.omzet | default:'' }}"
+              required
+            />
+          </div>
+          <div class="mb-8">
+            <label
+              for="business_type"
+              class="block text-slate-600 font-semibold mb-2"
+              >Jenis usaha</label
+            >
+            <select
+              id="business_type"
+              name="business_type"
+              class="w-full p-3 border border-slate-300 rounded-lg"
+              required>
+              {% with btype=profile_data.business_type|default:'' %}
+              <option value="">Pilih Jenis Usaha</option>
+              <option value="dagang" {% if btype == 'dagang' %}selected{% endif %}>Dagang</option>
+              <option value="manufaktur" {% if btype == 'manufaktur' %}selected{% endif %}>Manufaktur</option>
+              {% endwith %}
+            </select>
+          </div>
+          <div class="text-right mt-16">
+            <button type="submit" class="py-3 px-12 bg-[#8C705A] text-white font-semibold rounded-lg hover:bg-[#a1826a]" >
+              Next
+            </button>
+          </div>
+
         </div>
-        <div class="mb-8">
-          <label
-            for="business-status"
-            class="block text-slate-600 font-semibold mb-2"
-            >Status usaha</label
-          >
-          <select
-            id="business-status"
-            class="w-full p-3 border-b-2 border-slate-200 bg-transparent outline-none"
-          >
-            <option value="">Pilih Status</option>
-            <option value="orang_pribadi">Orang Pribadi</option>
-            <option value="badan_usaha">Badan Usaha (CV/PT)</option>
-          </select>
-        </div>
-        <div id="ptkp-field-wrapper" class="mb-8 hidden">
-          <label
-            for="ptkp-status"
-            class="block text-slate-600 font-semibold mb-2"
-            >Status PTKP</label
-          >
-          <select
-            id="ptkp-status"
-            class="w-full p-3 border-b-2 border-slate-200 bg-transparent outline-none"
-          >
-            <option>Pilih Status PTKP</option>
-            <option>TK/0</option>
-            <option>TK/1</option>
-            <option>TK/2</option>
-            <option>TK/3</option>
-            <option>K/0</option>
-            <option>K/1</option>
-            <option>K/2</option>
-            <option>K/3</option>
-            <option>K/I/0</option>
-            <option>K/I/1</option>
-            <option>K/I/2</option>
-            <option>K/I/3</option>
-          </select>
-        </div>
-        <div class="mb-8">
-          <label
-            for="umkm-incentive"
-            class="block text-slate-600 font-semibold mb-2"
-            >Sudah daftar insentif pajak UMKM</label
-          >
-          <select
-            id="umkm-incentive"
-            class="w-full p-3 border-b-2 border-slate-200 bg-transparent outline-none"
-          >
-            <option>Pilih Jawaban</option>
-            <option value="sudah">Sudah</option>
-            <option value="belum">Belum</option>
-          </select>
-        </div>
-        <div class="mb-8">
-          <label for="omzet" class="block text-slate-600 font-semibold mb-2"
-            >Omzet</label
-          >
-          <input
-            type="text"
-            id="omzet"
-            placeholder="Masukkan Omzet Bulanan"
-            class="w-full p-3 border-b-2 border-slate-200 focus:border-slate-400 outline-none"
-          />
-        </div>
-        <div class="mb-8">
-          <label
-            for="business-type"
-            class="block text-slate-600 font-semibold mb-2"
-            >Jenis usaha</label
-          >
-          <select
-            id="business-type"
-            class="w-full p-3 border-b-2 border-slate-200 bg-transparent outline-none"
-          >
-            <option value="">Pilih Jenis Usaha</option>
-            <option value="dagang">Dagang</option>
-            <option value="manufaktur">Manufaktur</option>
-          </select>
-        </div>
-        <div class="text-right mt-16">
-          <button
-            id="profile-next-btn"
-            type="button"
-            class="py-3 px-12 bg-[#8C705A] text-white font-semibold rounded-lg hover:bg-[#a1826a]"
-          >
-            Next
-          </button>
-        </div>
-      </div>
+      </form>
     </main>
   </div>
 
-  <script src="{% static 'core/js/profile.js' %}"></script>
   <div
     id="success-alert"
     class="fixed inset-0 bg-black/40 flex justify-center items-center z-50 transition-opacity opacity-0 pointer-events-none"
@@ -264,5 +230,27 @@
       </p>
     </div>
   </div>
-</body>
+</div>
+
+
+{% block extra_js %}
+<script>
+document.addEventListener('DOMContentLoaded', function () {
+    const businessStatusSelect = document.getElementById('business_status');
+    const ptkpField = document.getElementById('ptkp-field-wrapper');
+
+    // Pastikan kita di halaman yang benar
+    if (businessStatusSelect && ptkpField) {
+        businessStatusSelect.addEventListener('change', function () {
+            if (this.value === 'orang_pribadi') {
+                ptkpField.classList.remove('hidden');
+            } else {
+                ptkpField.classList.add('hidden');
+            }
+        });
+    }
+});
+</script>
+<script src="{% static 'core/js/profile.js' %}"></script>
+{% endblock %}
 {% endblock %}
