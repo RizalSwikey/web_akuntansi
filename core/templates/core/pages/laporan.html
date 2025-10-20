@@ -1,1 +1,182 @@
 laporan page
+{% extends "base.html" %} {% load static %} {% block title %}Dashboard - Profile
+Perusahaan{% endblock %} {% block content %}
+<body class="bg-[#F4F6F9] p-4 md:p-6">
+  <div class="flex gap-6">
+    <aside
+      id="sidebar"
+      class="group bg-[#4A5C51] text-white p-6 rounded-2xl flex flex-col justify-between transition-[width] duration-300 ease-in-out w-[280px] [&.collapsed]:w-24"
+    >
+      <div>
+        <div class="flex items-center justify-between mb-12">
+          <div
+            class="bg-white text-black font-bold text-lg py-2 px-4 rounded-md text-center group-[.collapsed]:hidden"
+          >
+            <strong>Logo</strong>
+          </div>
+          <button
+            id="menu-toggle-btn"
+            class="text-white p-2 rounded-md hover:bg-[#5a7065]"
+          >
+            <svg
+              class="w-6 h-6"
+              xmlns="http://www.w3.org/2000/svg"
+              fill="none"
+              viewBox="0 0 24 24"
+              stroke-width="1.5"
+              stroke="currentColor"
+            >
+              <path
+                stroke-linecap="round"
+                stroke-linejoin="round"
+                d="M3.75 6.75h16.5M3.75 12h16.5m-16.5 5.25h16.5"
+              />
+            </svg>
+          </button>
+        </div>
+        
+        {% include 'core/sections/side_menu.html' %}
+
+      </div>
+      <button
+        class="w-full py-4 bg-[#8C705A] font-semibold rounded-lg hover:bg-[#a1826a] flex items-center justify-center gap-4"
+      >
+        <svg
+          class="w-6 h-6 group-[.collapsed]:hidden"
+          xmlns="http://www.w3.org/2000/svg"
+          fill="none"
+          viewBox="0 0 24 24"
+          stroke-width="1.5"
+          stroke="currentColor"
+        >
+          <path
+            stroke-linecap="round"
+            stroke-linejoin="round"
+            d="M15.75 9V5.25A2.25 2.25 0 0 0 13.5 3h-6a2.25 2.25 0 0 0-2.25 2.25v13.5A2.25 2.25 0 0 0 7.5 21h6a2.25 2.25 0 0 0 2.25-2.25V15M12 9l-3 3m0 0 3 3m-3-3h12.75"
+          /></svg
+        ><span class="group-[.collapsed]:hidden">Logout</span
+        ><svg
+          class="w-6 h-6 hidden group-[.collapsed]:block"
+          xmlns="http://www.w3.org/2000/svg"
+          fill="none"
+          viewBox="0 0 24 24"
+          stroke-width="1.5"
+          stroke="currentColor"
+        >
+          <path
+            stroke-linecap="round"
+            stroke-linejoin="round"
+            d="M15.75 9V5.25A2.25 2.25 0 0 0 13.5 3h-6a2.25 2.25 0 0 0-2.25 2.25v13.5A2.25 2.25 0 0 0 7.5 21h6a2.25 2.25 0 0 0 2.25-2.25V15M12 9l-3 3m0 0 3 3m-3-3h12.75"
+          />
+        </svg>
+      </button>
+    </aside>
+
+    <main id="main-content" class="flex-1">
+      <h1 class="text-3xl font-bold mb-6">Laporan Laba Rugi</h1>
+
+      <div class="bg-white rounded-2xl p-8 shadow-sm">
+        <div class="text-center mb-10">
+          <h2 class="text-xl font-bold">PT. MAJU BERSAMA</h2>
+          <p class="text-lg font-semibold">LAPORAN HARGA POKOK PRODUKSI</p>
+          <p class="text-md text-slate-500">Oktober 2025</p>
+        </div>
+        <div class="space-y-4 max-w-4xl mx-auto">
+          <div class="flex justify-between items-center border-b pb-2">
+            <span class="text-slate-700">Persediaan Awal</span
+            ><span class="font-semibold">Rp2,600,000</span>
+          </div>
+          <div class="flex justify-between items-center border-b pb-2">
+            <span class="text-slate-700">Pembelian (Neto)</span
+            ><span class="font-semibold">Rp7,725,000</span>
+          </div>
+          <div class="flex justify-between items-center border-b pb-2">
+            <span class="text-slate-700">Barang Siap untuk Dijual</span
+            ><span class="font-semibold">Rp10,325,000</span>
+          </div>
+          <div class="flex justify-between items-center border-b pb-2">
+            <span class="text-slate-700">Persediaan Akhir</span
+            ><span class="font-semibold">Rp2,150,000</span>
+          </div>
+          <div
+            class="flex justify-between items-center bg-slate-100 p-3 rounded-lg mt-4"
+          >
+            <span class="font-bold text-lg">Harga Pokok Produksi</span
+            ><span class="font-bold text-lg">Rp8,175,000</span>
+          </div>
+        </div>
+
+        <hr class="my-12 border-slate-200" />
+
+        <div class="text-center mb-10">
+          <h2 class="text-xl font-bold">PT. MAJU BERSAMA</h2>
+          <p class="text-lg font-semibold">LAPORAN LABA RUGI</p>
+          <p class="text-md text-slate-500">Oktober 2025</p>
+        </div>
+        <div class="space-y-4 max-w-4xl mx-auto">
+          <div class="font-bold text-lg">Pendapatan</div>
+          <div class="pl-6 border-b pb-2">
+            <div class="flex justify-between items-center py-1">
+              <span>Pendapatan Usaha</span><span>Rp32,000,000</span>
+            </div>
+            <div class="flex justify-between items-center py-1">
+              <span>Pendapatan Lain - Lain</span><span>Rp3,500,000</span>
+            </div>
+          </div>
+          <div class="flex justify-between items-center font-bold py-1 pl-6">
+            <span>Jumlah Pendapatan</span><span>Rp35,500,000</span>
+          </div>
+          <div class="font-bold text-lg pt-6">Beban</div>
+          <div class="pl-6 border-b pb-2">
+            <div class="flex justify-between items-center py-1">
+              <span>Beban Usaha - HPP</span><span>Rp8,175,000</span>
+            </div>
+            <div class="flex justify-between items-center py-1">
+              <span>Beban Usaha Lainnya</span><span>Rp0</span>
+            </div>
+            <div class="flex justify-between items-center py-1">
+              <span>Beban Lain - Lain</span><span>Rp0</span>
+            </div>
+          </div>
+          <div class="flex justify-between items-center font-bold py-1 pl-6">
+            <span>Jumlah Beban</span><span>Rp8,175,000</span>
+          </div>
+          <div class="space-y-2 pt-8">
+            <div
+              class="flex justify-between items-center font-semibold text-slate-700 py-2"
+            >
+              <span>Laba (Rugi) Sebelum Pajak Penghasilan</span
+              ><span class="font-bold text-black">Rp27,325,000</span>
+            </div>
+            <div
+              class="flex justify-between items-center font-semibold text-slate-700 py-2"
+            >
+              <span>Beban Pajak Penghasilan</span
+              ><span class="font-bold text-black">Rp177,500</span>
+            </div>
+            <div
+              class="flex justify-between items-center bg-slate-100 p-3 rounded-lg mt-4"
+            >
+              <span class="font-bold text-lg"
+                >Laba (Rugi) Setelah Pajak Penghasilan</span
+              ><span class="font-bold text-lg text-green-600"
+                >Rp27,147,500</span
+              >
+            </div>
+          </div>
+        </div>
+
+        <div class="text-right mt-16">
+          <button
+            class="py-3 px-12 bg-[#8C705A] text-white font-semibold rounded-lg hover:bg-[#a1826a]"
+          >
+            Save
+          </button>
+        </div>
+      </div>
+    </main>
+  </div>
+
+  <script src="js/sidebar.js"></script>
+</body>
+{% endblock %}
