@@ -257,7 +257,7 @@ def beban_usaha_view(request):
                 beban_type = request.POST.get('beban-type')
                 keterangan = request.POST.get('beban-name')
                 total = int(request.POST.get('beban-total', 0))
-                
+                print(beban_lain,keterangan,total)
                 if not keterangan or total <= 0:
                     messages.error(request, 'Keterangan dan Total harus diisi dengan benar.')
                 else:
@@ -310,6 +310,7 @@ def beban_usaha_view(request):
         'total_beban_lain': total_beban_lain,
         'grand_total_beban': grand_total_beban
     }
+    print('context', context)
     
     return render(request, 'core/pages/beban_usaha.html', context)
 

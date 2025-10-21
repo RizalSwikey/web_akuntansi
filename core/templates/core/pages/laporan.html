@@ -1,17 +1,13 @@
 {% extends "base.html" %} {% load static %} {% block title %}Dashboard - Laporan
 Laba Rugi{% endblock %} {% block content %}
 <div class="bg-[#F4F6F9]">
-  <div
-    id="sidebar-overlay"
-    class="fixed inset-0 bg-black/60 z-20 md:hidden hidden"
-  ></div>
-  <div class="relative min-h-screen md:flex md:gap-6 md:p-6">
-    {% include 'core/partials/side_menu.html' %}
+  <div class="flex gap-6">
+    {% include 'core/partials/sidebar.html' %}
 
     <main id="main-content" class="flex-1 p-8 overflow-y-auto">
     
     <div class="flex justify-between items-center mb-8">
-      <h1 class="text-3xl font-bold text-red-600">Laporan Laba Rugi</h1>
+      <h1 class="text-3xl font-bold mb-6">Laporan Laba Rugi</h1>
       <div class="flex gap-4">
         <button class="bg-gray-700 text-white py-2 px-6 rounded-lg font-semibold hover:bg-gray-600">
           Export to Excel

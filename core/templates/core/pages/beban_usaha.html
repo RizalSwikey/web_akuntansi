@@ -6,11 +6,11 @@
 <div class="bg-white text-slate-800">
   <div class="flex gap-6">
 
-    {% include 'core/partials/side_menu.html' %}
+    {% include 'core/partials/sidebar.html' %}
 
     <main id="main-content" class="flex-1 p-8 overflow-y-auto">
       <div class="flex justify-between items-center mb-8">
-        <h1 class="text-3xl font-bold text-red-600">Beban Usaha</h1>
+        <h1 class="text-3xl font-bold mb-6">Beban Usaha</h1>
         <button id="add-beban-btn" class="bg-black text-white py-2 px-6 rounded-lg font-semibold hover:bg-slate-800">
           Tambah Data +
         </button>
@@ -27,6 +27,7 @@
         <h2 class="text-xl font-bold mb-6">Beban Usaha</h2>
         <div class="grid grid-cols-10 gap-4 items-center border-b pb-2 font-semibold text-sm text-slate-600">
           <div class="col-span-1">Aksi</div>
+          <div class="col-span-7 p-3">Keterangan</div>
           <div class="col-span-7 p-3">Keterangan</div>
           <div class="col-span-2 p-3">Total</div>
         </div>
@@ -112,6 +113,19 @@
         <select id="beban-type" name="beban-type" class="w-full p-3 border border-slate-300 rounded-lg">
           <option value="Beban Usaha">Beban Usaha</option>
           <option value="Beban Lain-lain">Beban Lain-lain</option>
+        </select>
+      </div>
+
+      <div>
+        <label for="beban-type" class="block mb-2 font-semibold">Jenis Beban Usaha</label>
+        <select id="beban-type" name="beban-type" class="w-full p-3 border border-slate-300 rounded-lg">
+          <option value="">Pilih Jenis Beban</option>
+              <option value="Biaya Sewa">Biaya Sewa</option>
+              <option value="Biaya Transportasi">Biaya Transportasi</option>
+              <option value="Biaya Air dan Listrik">Biaya Air dan Listrik</option>
+              <option value="Biaya Pinjaman">Biaya Pinjaman</option>
+              <option value="Biaya Penyusutan">Biaya Penyusutan</option>
+              <option value="Biaya Lainnya">Biaya Lainnya</option>
         </select>
       </div>
 
