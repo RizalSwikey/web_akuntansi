@@ -32,6 +32,10 @@
           <div class="col-span-2">Total (Rp)</div>
         </div>
         <div id="pendapatan-usaha-rows" class="space-y-2"></div>
+        {% if not revenue_usaha %}
+        <p class="text-center text-slate-500 p-4">Belum ada data pendapatan usaha.</p>
+        {% endif %}
+        {% for item in revenue_usaha %}
         <div class="text-right font-bold text-lg mt-6">
           Jumlah Penjualan Usaha <span id="jumlah-penjualan-usaha">Rp 0</span>
         </div>

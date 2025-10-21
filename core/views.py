@@ -5,6 +5,7 @@ from django.shortcuts import render, redirect
 from django.contrib.auth.decorators import login_required
 from django.contrib import messages
 
+# @login_required
 def landing_page_view(request):
     """
     landing page
@@ -34,7 +35,7 @@ def login_view(request):
     return render(request, 'core/pages/login.html')
 
 
-
+# @login_required
 def logout_view(request):
     """
     Logs the user out and redirects to the landing page.
@@ -42,7 +43,7 @@ def logout_view(request):
     logout(request)
     return redirect('core:landing_page')
 
-
+# @login_required
 def profile_view(request):
     """
     profile page
@@ -73,9 +74,95 @@ def profile_view(request):
 
 def pendapatan_view(request):
     """
-    pendapatan page
+    Pendapatan page:
+    - Handles adding/deleting revenue items (Usaha vs. Lain-lain) to the session.
+    - Calculates totals for each category.
     """
-    return render(request, 'core/pages/pendapatan.html')
+    
+    # Load existing revenue data from session
+    # We will now store them in two separate lists
+    revenue_usaha = request.session.get('revenue_usaha', [])
+    revenue_lain = request.session.get('revenue_lain', [])
+
+    if request.method == 'POST':
+        action = request.POST.get('action')
+
+        if action == 'add':
+            try:
+                data_type = request.POST.get('data_type')
+                
+                if data_type == 'usaha':
+                    nama_produk = request.POST.get('modal-product-name')
+                    quantity = int(request.POST.get('modal-quantity', 0))
+                    price = int(request.POST.get('modal-price', 0))
+                    
+                    if not nama_produk or quantity <= 0 or price <= 0:
+                        messages.error(request, 'Nama produk, kuantitas, dan harga harus diisi dengan benar.')
+                    else:
+                        total = quantity * price
+                        revenue_usaha.append({
+                            'nama': nama_produk,
+                            'qty': quantity,
+                            'price': price,
+                            'total': total
+                        })
+                        request.session['revenue_usaha'] = revenue_usaha
+                        messages.success(request, f'Produk "{nama_produk}" berhasil ditambahkan.')
+                
+                elif data_type == 'lain':
+                    keterangan = request.POST.get('modal-product-name-lain') # Using the "other" name field
+                    total = int(request.POST.get('modal-total', 0))
+                    
+                    if not keterangan or total <= 0:
+                        messages.error(request, 'Keterangan dan total harus diisi dengan benar.')
+                    else:
+                        revenue_lain.append({
+                            'nama': keterangan,
+                            'total': total
+                        })
+                        request.session['revenue_lain'] = revenue_lain
+                        messages.success(request, f'Pendapatan "{keterangan}" berhasil ditambahkan.')
+
+            except Exception as e:
+                messages.error(request, f'Terjadi kesalahan: {e}')
+
+        elif action == 'delete_usaha':
+            try:
+                item_index = int(request.POST.get('item_index', -1))
+                if 0 <= item_index < len(revenue_usaha):
+                    removed = revenue_usaha.pop(item_index)
+                    request.session['revenue_usaha'] = revenue_usaha
+                    messages.success(request, f'Produk "{removed["nama"]}" berhasil dihapus.')
+            except:
+                messages.error(request, 'Gagal menghapus item.')
+                
+        elif action == 'delete_lain':
+            try:
+                item_index = int(request.POST.get('item_index', -1))
+                if 0 <= item_index < len(revenue_lain):
+                    removed = revenue_lain.pop(item_index)
+                    request.session['revenue_lain'] = revenue_lain
+                    messages.success(request, f'Pendapatan "{removed["nama"]}" berhasil dihapus.')
+            except:
+                messages.error(request, 'Gagal menghapus item.')
+
+        # Redirect back to the same page after POST
+        return redirect('core:pendapatan')
+
+    # --- GET Request Logic ---
+    
+    # Calculate totals
+    total_usaha = sum(item['total'] for item in revenue_usaha)
+    total_lain = sum(item['total'] for item in revenue_lain)
+    
+    context = {
+        'revenue_usaha': revenue_usaha,
+        'revenue_lain': revenue_lain,
+        'total_usaha': total_usaha,
+        'total_lain': total_lain,
+    }
+    
+    return render(request, 'core/pages/pendapatan.html', context)
 
 
 def hpp_view(request):
