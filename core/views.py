@@ -241,8 +241,77 @@ def hpp_view(request):
 def beban_usaha_view(request):
     """
     beban usaha page
+    Handles adding/deleting expense items (Usaha vs. Lain-lain) to the session.
+    Calculates totals for each category.
     """
-    return render(request, 'core/pages/beban_usaha.html')
+    
+    # Load existing data from session, defaulting to empty lists
+    beban_usaha = request.session.get('beban_usaha', [])
+    beban_lain = request.session.get('beban_lain', [])
+
+    if request.method == 'POST':
+        action = request.POST.get('action')
+
+        if action == 'add_beban':
+            try:
+                beban_type = request.POST.get('beban-type')
+                keterangan = request.POST.get('beban-name')
+                total = int(request.POST.get('beban-total', 0))
+                
+                if not keterangan or total <= 0:
+                    messages.error(request, 'Keterangan dan Total harus diisi dengan benar.')
+                else:
+                    item = {'nama': keterangan, 'total': total}
+                    if beban_type == 'Beban Usaha':
+                        beban_usaha.append(item)
+                        request.session['beban_usaha'] = beban_usaha
+                        messages.success(request, f'Beban "{keterangan}" berhasil ditambahkan.')
+                    elif beban_type == 'Beban Lain-lain':
+                        beban_lain.append(item)
+                        request.session['beban_lain'] = beban_lain
+                        messages.success(request, f'Beban "{keterangan}" berhasil ditambahkan.')
+            
+            except Exception as e:
+                messages.error(request, f'Terjadi kesalahan: {e}')
+
+        elif action == 'delete_beban_usaha':
+            try:
+                item_index = int(request.POST.get('item_index', -1))
+                if 0 <= item_index < len(beban_usaha):
+                    removed = beban_usaha.pop(item_index)
+                    request.session['beban_usaha'] = beban_usaha
+                    messages.success(request, f'Beban "{removed["nama"]}" berhasil dihapus.')
+            except:
+                messages.error(request, 'Gagal menghapus item.')
+                
+        elif action == 'delete_beban_lain':
+            try:
+                item_index = int(request.POST.get('item_index', -1))
+                if 0 <= item_index < len(beban_lain):
+                    removed = beban_lain.pop(item_index)
+                    request.session['beban_lain'] = beban_lain
+                    messages.success(request, f'Beban "{removed["nama"]}" berhasil dihapus.')
+            except:
+                messages.error(request, 'Gagal menghapus item.')
+        
+        return redirect('core:beban_usaha')
+
+    # --- GET Request Logic ---
+    
+    # Calculate totals
+    total_beban_usaha = sum(item['total'] for item in beban_usaha)
+    total_beban_lain = sum(item['total'] for item in beban_lain)
+    grand_total_beban = total_beban_usaha + total_beban_lain
+
+    context = {
+        'beban_usaha': beban_usaha,
+        'beban_lain': beban_lain,
+        'total_beban_usaha': total_beban_usaha,
+        'total_beban_lain': total_beban_lain,
+        'grand_total_beban': grand_total_beban
+    }
+    
+    return render(request, 'core/pages/beban_usaha.html', context)
 
 
 def laporan_view(request):
