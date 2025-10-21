@@ -1,10 +1,11 @@
-{% extends "base.html" %} {% load static %}
-{% block title %}Dashboard - Profile Perusahaan {% endblock %} 
+{% extends "base.html" %}
+{% load static %}
+{% block title %}Dashboard - Harga Pokok Produksi {% endblock %}
 
 {% block content %}
 <div class="bg-white text-slate-800">
   <div class="flex gap-6">
-    
+
     {% include 'core/partials/side_menu.html' %}
 
     <main id="main-content" class="flex-1">
@@ -25,14 +26,18 @@
           <div>Nama Produk</div>
           <div>Kuantitas</div>
           <div>Keterangan</div>
-          <div>Harga Beli Satuan</div>
-          <div>Total</div>
+          <div>Harga Beli Satuan (Rp)</div> {# Updated header #}
+          <div>Total (Rp)</div> {# Updated header #}
         </div>
-        <div id="persediaan-awal-rows" class="space-y-2"></div>
+        <div id="persediaan-awal-rows" class="space-y-2">
+            {# Rows will be added here by JS #}
+        </div>
         <div class="text-right font-bold text-lg mt-6">
           JUMLAH PERSEDIAAN AWAL <span id="jumlah-persediaan-awal">Rp 0</span>
         </div>
-        <hr class="my-10" />
+
+        <hr class="my-10 border-slate-200" /> {# Added border style #}
+
         <h2 class="text-xl font-bold mb-4 text-center">PEMBELIAN</h2>
         <div
           class="grid grid-cols-4 gap-4 bg-slate-100 p-4 rounded-lg mb-2 text-slate-600 font-semibold"
@@ -40,23 +45,30 @@
           <div>Nama Produk</div>
           <div>Kuantitas</div>
           <div>Keterangan</div>
-          <div>Harga Satuan</div>
+          <div>Harga Satuan (Rp)</div> {# Updated header #}
         </div>
-        <div id="pembelian-rows-part1" class="space-y-2"></div>
+        <div id="pembelian-rows-part1" class="space-y-2">
+            {# Rows part 1 will be added here by JS #}
+        </div>
+
         <div
           class="grid grid-cols-5 gap-4 bg-slate-100 p-4 rounded-lg mb-2 text-slate-600 font-semibold mt-10"
         >
-          <div>Diskon Pembelian</div>
-          <div>Retur Pembelian</div>
-          <div>Jumlah Retur</div>
-          <div>Biaya Ongkir</div>
-          <div>Total Pembelian</div>
+          <div>Diskon Pembelian (Rp)</div> {# Updated header #}
+          <div>Retur Pembelian (Qty)</div> {# Updated header #}
+          <div>Jumlah Retur (Rp)</div> {# Updated header #}
+          <div>Biaya Ongkir (Rp)</div> {# Updated header #}
+          <div>Total Pembelian (Rp)</div> {# Updated header #}
         </div>
-        <div id="pembelian-rows-part2" class="space-y-2"></div>
+        <div id="pembelian-rows-part2" class="space-y-2">
+            {# Rows part 2 will be added here by JS #}
+        </div>
         <div class="text-right font-bold text-lg mt-6">
           JUMLAH PEMBELIAN <span id="jumlah-pembelian">Rp 0</span>
         </div>
-        <hr class="my-10" />
+
+        <hr class="my-10 border-slate-200" /> {# Added border style #}
+
         <h2 class="text-xl font-bold mb-4 text-center">PERSEDIAAN AKHIR</h2>
         <div
           class="grid grid-cols-5 gap-4 bg-slate-100 p-4 rounded-lg mb-2 text-slate-600 font-semibold"
@@ -64,18 +76,23 @@
           <div>Nama Produk</div>
           <div>Kuantitas</div>
           <div>Keterangan</div>
-          <div>Total</div>
-          <div>Status</div>
+          <div>Total (Rp)</div> {# Updated header #}
+          <div>Status</div> {# Changed header from Keterangan #}
         </div>
-        <div id="persediaan-akhir-rows" class="space-y-2"></div>
+        <div id="persediaan-akhir-rows" class="space-y-2">
+             {# Rows will be added here by JS #}
+        </div>
         <div class="text-right font-bold text-lg mt-6">
           JUMLAH PERSEDIAAN AKHIR
           <span id="jumlah-persediaan-akhir">Rp 0</span>
         </div>
+
         <div class="text-right mt-16">
+          {# Consider adding functionality or linking this button #}
           <button
             id="hpp-next-btn"
             class="py-3 px-12 bg-[#8C705A] text-white font-semibold rounded-lg hover:bg-[#a1826a]"
+            onclick="window.location.href='{% url 'core:beban_usaha' %}'" {# Example: Link to next page #}
           >
             Next
           </button>
@@ -83,6 +100,8 @@
       </div>
     </main>
   </div>
+
+  {# --- MODAL --- #}
   <div
     id="add-hpp-modal"
     class="fixed inset-0 bg-black/60 flex justify-center items-start z-50 overflow-y-auto py-10 transition-opacity opacity-0 pointer-events-none"
@@ -101,6 +120,8 @@
             required
           />
         </div>
+
+        {# Fields for Persediaan Awal #}
         <div id="hpp-awal-fields">
           <div class="mb-5">
             <label
@@ -111,6 +132,7 @@
               type="number"
               id="hpp-awal-kuantitas"
               class="w-full p-3 border border-slate-300 rounded-lg"
+              min="0" {# Added min value #}
             />
           </div>
           <div class="mb-5">
@@ -122,6 +144,7 @@
               type="text"
               id="hpp-awal-keterangan"
               class="w-full p-3 border border-slate-300 rounded-lg"
+              placeholder="Contoh: pcs, kg, box" {# Added placeholder #}
             />
           </div>
           <div class="mb-5">
@@ -133,9 +156,13 @@
               type="number"
               id="hpp-awal-harga"
               class="w-full p-3 border border-slate-300 rounded-lg"
+               min="0" {# Added min value #}
+               placeholder="Rp" {# Added placeholder #}
             />
           </div>
         </div>
+
+        {# Fields for Pembelian (Initially hidden) #}
         <div id="hpp-pembelian-fields" class="hidden">
           <div class="mb-5">
             <label
@@ -146,17 +173,19 @@
               type="number"
               id="hpp-pembelian-kuantitas"
               class="w-full p-3 border border-slate-300 rounded-lg"
+               min="0"
             />
           </div>
           <div class="mb-5">
             <label
               for="hpp-pembelian-keterangan"
               class="block mb-2 font-semibold text-slate-600"
-              >Keterangan</label
+              >Keterangan Kuantitas</label {# Clarified label #}
             ><input
               type="text"
               id="hpp-pembelian-keterangan"
               class="w-full p-3 border border-slate-300 rounded-lg"
+              placeholder="Contoh: pcs, kg, box"
             />
           </div>
           <div class="mb-5">
@@ -168,6 +197,8 @@
               type="number"
               id="hpp-pembelian-harga"
               class="w-full p-3 border border-slate-300 rounded-lg"
+               min="0"
+               placeholder="Rp"
             />
           </div>
           <div class="mb-5">
@@ -179,17 +210,23 @@
               type="number"
               id="hpp-pembelian-diskon"
               class="w-full p-3 border border-slate-300 rounded-lg"
+              min="0"
+              placeholder="Rp (jika tidak ada, isi 0)" {# Added placeholder #}
+              value="0" {# Default value 0 #}
             />
           </div>
           <div class="mb-5">
             <label
               for="hpp-pembelian-retur"
               class="block mb-2 font-semibold text-slate-600"
-              >Retur Pembelian</label
+              >Retur Pembelian (Qty)</label
             ><input
               type="number"
               id="hpp-pembelian-retur"
               class="w-full p-3 border border-slate-300 rounded-lg"
+              min="0"
+              placeholder="Jumlah unit diretur (jika tidak ada, isi 0)" {# Added placeholder #}
+              value="0" {# Default value 0 #}
             />
           </div>
           <div class="mb-5">
@@ -201,33 +238,43 @@
               type="number"
               id="hpp-pembelian-ongkir"
               class="w-full p-3 border border-slate-300 rounded-lg"
+              min="0"
+              placeholder="Rp (jika tidak ada, isi 0)" {# Added placeholder #}
+               value="0" {# Default value 0 #}
             />
           </div>
         </div>
+
+        {# Fields for Persediaan Akhir (Initially hidden) #}
         <div id="hpp-akhir-fields" class="hidden">
           <div class="mb-5">
             <label
               for="hpp-akhir-kuantitas"
               class="block mb-2 font-semibold text-slate-600"
-              >Kuantitas</label
+              >Kuantitas Tersisa</label {# Clarified label #}
             ><input
               type="number"
               id="hpp-akhir-kuantitas"
               class="w-full p-3 border border-slate-300 rounded-lg"
+              min="0"
+              placeholder="Jumlah unit di akhir periode" {# Added placeholder #}
             />
           </div>
           <div class="mb-5">
             <label
               for="hpp-akhir-keterangan"
               class="block mb-2 font-semibold text-slate-600"
-              >Keterangan</label
+              >Keterangan Kuantitas</label {# Clarified label #}
             ><input
               type="text"
               id="hpp-akhir-keterangan"
               class="w-full p-3 border border-slate-300 rounded-lg"
+               placeholder="Contoh: pcs, kg, box"
             />
           </div>
         </div>
+
+        {# Dropdown to select data type #}
         <div class="mb-8">
           <label
             for="hpp-jenis-data"
@@ -235,22 +282,25 @@
             >Jenis Data</label
           ><select
             id="hpp-jenis-data"
-            class="w-full p-3 border border-slate-300 rounded-lg bg-white"
+            class="w-full p-3 border border-slate-300 rounded-lg bg-white appearance-none" style="background-image: url('data:image/svg+xml,%3csvg xmlns=\'http://www.w3.org/2000/svg\' fill=\'none\' viewBox=\'0 0 20 20\'%3e%3cpath stroke=\'%236b7280\' stroke-linecap=\'round\' stroke-linejoin=\'round\' stroke-width=\'1.5\' d=\'M6 8l4 4 4-4\'/%3e%3c/svg%3e'); background-position: right 0.5rem center; background-repeat: no-repeat; background-size: 1.5em 1.5em;"
           >
             <option value="persediaan_awal">Persediaan Awal</option>
             <option value="pembelian">Pembelian</option>
             <option value="persediaan_akhir">Persediaan Akhir</option>
           </select>
         </div>
+
         <button
           type="submit"
           class="w-full bg-[#4A5C51] text-white p-3 rounded-lg font-semibold text-lg mt-4 hover:bg-[#3a4a40]"
         >
-          Selesai
+          Selesai & Tambah Data
         </button>
       </form>
     </div>
   </div>
+
+  {# --- ALERTS --- #}
   <div
     id="success-alert"
     class="fixed inset-0 bg-black/40 flex justify-center items-center z-50 transition-opacity opacity-0 pointer-events-none"
@@ -270,7 +320,7 @@
           d="M9 12.75L11.25 15 15 9.75M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
         />
       </svg>
-      <p class="text-lg font-semibold">data berhasil terkirim</p>
+      <p class="text-lg font-semibold">Data berhasil ditambahkan</p> {# Updated message #}
     </div>
   </div>
   <div
@@ -293,13 +343,14 @@
         />
       </svg>
       <p class="text-lg font-semibold">
-        Check ulang data anda<br />Pastikan tidak ada yang kosong
-      </p>
+        Gagal menambahkan data!<br />Pastikan semua field terisi dengan benar.
+      </p> {# Updated message #}
     </div>
   </div>
 </div>
+{% endblock %}
 
 {% block extra_js %}
+{# Load the correct JS file #}
 <script src="{% static 'core/js/hpp.js' %}"></script>
-{% endblock %}
 {% endblock %}

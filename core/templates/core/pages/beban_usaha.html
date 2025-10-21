@@ -1,13 +1,13 @@
-{% extends "base.html" %} 
-{% load static %} 
-{% block title %}Beban Usaha Tool{% endblock %} 
+{% extends "base.html" %}
+{% load static %}
+{% block title %}Dashboard - Beban Usaha{% endblock %} {# Corrected Title #}
 
 {% block content %}
 <div class="bg-white text-slate-800">
   <div class="flex gap-6">
 
     {% include 'core/partials/side_menu.html' %}
-    
+
     <main id="main-content" class="flex-1">
       <div class="flex justify-between items-center mb-6">
         <h1 class="text-3xl font-bold">Beban Usaha</h1>
@@ -23,32 +23,43 @@
         <div
           class="grid grid-cols-8 gap-4 bg-slate-100 p-4 rounded-lg mb-2 text-slate-600 font-semibold"
         >
+          {# Added Remove column placeholder visually, JS handles button placement #}
           <div class="col-span-1">Nomor</div>
           <div class="col-span-3">Jenis Beban Usaha</div>
           <div class="col-span-2">Keterangan</div>
-          <div class="col-span-2">Total Biaya</div>
+          <div class="col-span-2">Total Biaya (Rp)</div> {# Added Rp #}
         </div>
-        <div id="beban-usaha-rows" class="space-y-2"></div>
+        <div id="beban-usaha-rows" class="space-y-2">
+            {# Rows added by JS #}
+        </div>
         <div class="text-right font-bold text-lg mt-6">
           Jumlah Beban Usaha <span id="jumlah-beban-usaha">Rp 0</span>
         </div>
-        <hr class="my-10" />
+
+        <hr class="my-10 border-slate-200" /> {# Added border style #}
+
         <h2 class="text-xl font-bold mb-4 text-center">BEBAN LAIN LAIN</h2>
         <div
           class="grid grid-cols-8 gap-4 bg-slate-100 p-4 rounded-lg mb-2 text-slate-600 font-semibold"
         >
+          {# Added Remove column placeholder visually #}
           <div class="col-span-1">Nomor</div>
-          <div class="col-span-3">Jenis Beban Usaha</div>
+          <div class="col-span-3">Jenis Beban</div> {# Simplified header #}
           <div class="col-span-2">Keterangan</div>
-          <div class="col-span-2">Total Biaya</div>
+          <div class="col-span-2">Total Biaya (Rp)</div> {# Added Rp #}
         </div>
-        <div id="beban-lain-rows" class="space-y-2"></div>
+        <div id="beban-lain-rows" class="space-y-2">
+            {# Rows added by JS #}
+        </div>
         <div class="text-right font-bold text-lg mt-6">
           Jumlah Beban Lain Lain <span id="jumlah-beban-lain">Rp 0</span>
         </div>
+
         <div class="text-right mt-16">
+           {# Consider adding functionality or linking this button #}
           <button
             class="py-3 px-12 bg-[#8C705A] text-white font-semibold rounded-lg hover:bg-[#a1826a]"
+            onclick="window.location.href='{% url 'core:laporan' %}'" {# Example: Link to next page #}
           >
             Next
           </button>
@@ -56,6 +67,8 @@
       </div>
     </main>
   </div>
+
+  {# --- MODAL --- #}
   <div
     id="add-beban-modal"
     class="fixed inset-0 bg-black/60 flex justify-center items-center z-50 transition-opacity opacity-0 pointer-events-none"
@@ -66,23 +79,25 @@
           <label
             for="modal-nomor"
             class="block mb-2 font-semibold text-slate-600"
-            >Nomor</label
+            >Nomor Referensi</label {# Clarified label #}
           ><input
             type="text"
             id="modal-nomor"
-            placeholder="Nomor Produk"
+            placeholder="Contoh: INV/001, Nota/A1" {# Added placeholder #}
             class="w-full p-3 border border-slate-300 rounded-lg"
+            required {# Added required #}
           />
         </div>
         <div class="mb-5">
           <label
             for="modal-jenis-beban"
             class="block mb-2 font-semibold text-slate-600"
-            >Jenis Beban Usaha</label
+            >Jenis Beban</label {# Simplified label #}
           >
           <select
             id="modal-jenis-beban"
-            class="w-full p-3 border border-slate-300 rounded-lg bg-white"
+            class="w-full p-3 border border-slate-300 rounded-lg bg-white appearance-none" style="background-image: url('data:image/svg+xml,%3csvg xmlns=\'http://www.w3.org/2000/svg\' fill=\'none\' viewBox=\'0 0 20 20\'%3e%3cpath stroke=\'%236b7280\' stroke-linecap=\'round\' stroke-linejoin=\'round\' stroke-width=\'1.5\' d=\'M6 8l4 4 4-4\'/%3e%3c/svg%3e'); background-position: right 0.5rem center; background-repeat: no-repeat; background-size: 1.5em 1.5em;"
+            required {# Added required #}
           >
             <option value="">Pilih Jenis Beban</option>
             <option value="Biaya Sewa">Biaya Sewa</option>
@@ -90,6 +105,9 @@
             <option value="Biaya Air dan Listrik">Biaya Air dan Listrik</option>
             <option value="Biaya Pinjaman">Biaya Pinjaman</option>
             <option value="Biaya Penyusutan">Biaya Penyusutan</option>
+            <option value="Biaya Gaji Karyawan">Biaya Gaji Karyawan</option> {# Added option #}
+            <option value="Biaya Pemasaran">Biaya Pemasaran</option> {# Added option #}
+            <option value="Biaya Administrasi Bank">Biaya Administrasi Bank</option> {# Added option #}
             <option value="Biaya Lainnya">Biaya Lainnya</option>
           </select>
         </div>
@@ -101,8 +119,9 @@
           ><input
             type="text"
             id="modal-keterangan"
-            placeholder="Sewa Rumah Usaha"
+            placeholder="Contoh: Sewa ruko bulan Okt, Gaji staff" {# Updated placeholder #}
             class="w-full p-3 border border-slate-300 rounded-lg"
+            required {# Added required #}
           />
         </div>
         <div class="mb-5">
@@ -113,18 +132,21 @@
           ><input
             type="number"
             id="modal-total-biaya"
-            placeholder="Rp."
+            placeholder="Rp" {# Updated placeholder #}
             class="w-full p-3 border border-slate-300 rounded-lg"
+            min="0" {# Added min value #}
+            required {# Added required #}
           />
         </div>
         <div class="mb-8">
           <label
             for="modal-jenis-data"
             class="block mb-2 font-semibold text-slate-600"
-            >Jenis Data</label
+            >Kelompok Beban</label {# Clarified label #}
           ><select
             id="modal-jenis-data"
-            class="w-full p-3 border border-slate-300 rounded-lg bg-white"
+            class="w-full p-3 border border-slate-300 rounded-lg bg-white appearance-none" style="background-image: url('data:image/svg+xml,%3csvg xmlns=\'http://www.w3.org/2000/svg\' fill=\'none\' viewBox=\'0 0 20 20\'%3e%3cpath stroke=\'%236b7280\' stroke-linecap=\'round\' stroke-linejoin=\'round\' stroke-width=\'1.5\' d=\'M6 8l4 4 4-4\'/%3e%3c/svg%3e'); background-position: right 0.5rem center; background-repeat: no-repeat; background-size: 1.5em 1.5em;"
+            required {# Added required #}
           >
             <option value="beban_usaha">Beban Usaha</option>
             <option value="beban_lain">Beban Lain Lain</option>
@@ -134,11 +156,13 @@
           type="submit"
           class="w-full bg-[#4A5C51] text-white p-3 rounded-lg font-semibold text-lg mt-4 hover:bg-[#3a4a40]"
         >
-          Selesai
+          Selesai & Tambah Data
         </button>
       </form>
     </div>
   </div>
+
+  {# --- ALERTS --- #}
   <div
     id="success-alert"
     class="fixed inset-0 bg-black/40 flex justify-center items-center z-50 transition-opacity opacity-0 pointer-events-none"
@@ -158,7 +182,7 @@
           d="M9 12.75L11.25 15 15 9.75M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
         />
       </svg>
-      <p class="text-lg font-semibold">data berhasil terkirim</p>
+      <p class="text-lg font-semibold">Data beban berhasil ditambahkan</p> {# Updated message #}
     </div>
   </div>
   <div
@@ -181,120 +205,14 @@
         />
       </svg>
       <p class="text-lg font-semibold">
-        Check ulang data anda<br />Pastikan tidak ada yang kosong
-      </p>
+        Gagal menambahkan data!<br />Pastikan semua field terisi.
+      </p> {# Updated message #}
     </div>
   </div>
-
-  <script>
-    // === KODE UNTUK SIDEBAR ===
-    document.addEventListener("DOMContentLoaded", function () {
-      const menuToggleBtn = document.getElementById("menu-toggle-btn");
-      const sidebar = document.getElementById("sidebar");
-      if (menuToggleBtn && sidebar) {
-        menuToggleBtn.addEventListener("click", () =>
-          sidebar.classList.toggle("collapsed")
-        );
-      }
-
-      // === KODE UNTUK BEBAN USAHA ===
-      const addBebanBtn = document.getElementById("add-beban-btn");
-      const addBebanModal = document.getElementById("add-beban-modal");
-      const bebanForm = document.getElementById("beban-form");
-      const successAlert = document.getElementById("success-alert");
-      const errorAlert = document.getElementById("error-alert");
-
-      if (
-        addBebanBtn &&
-        addBebanModal &&
-        bebanForm &&
-        successAlert &&
-        errorAlert
-      ) {
-        const openModal = () =>
-          addBebanModal.classList.remove("opacity-0", "pointer-events-none");
-        const closeModal = () => {
-          addBebanModal.classList.add("opacity-0", "pointer-events-none");
-          bebanForm.reset();
-        };
-        const showAlert = (alertElement) => {
-          alertElement.classList.remove("opacity-0", "pointer-events-none");
-          setTimeout(() => {
-            alertElement.classList.add("opacity-0", "pointer-events-none");
-          }, 2000);
-        };
-        const formatRupiah = (number) =>
-          new Intl.NumberFormat("id-ID").format(number);
-        const trashIconSVG = `<svg class="w-5 h-5 pointer-events-none" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="m14.74 9-.346 9m-4.788 0L9.26 9m9.968-3.21c.342.052.682.107 1.022.166m-1.022-.165L18.16 19.673a2.25 2.25 0 0 1-2.244 2.077H8.084a2.25 2.25 0 0 1-2.244-2.077L4.772 5.79m14.456 0a48.108 48.108 0 0 0-3.478-.397m-12 .562c.34-.059.68-.114 1.022-.165m0 0a48.11 48.11 0 0 1 3.478-.397m7.5 0v-.916c0-1.18-.91-2.134-2.09-2.201a51.964 51.964 0 0 0-3.32 0c-1.18.067-2.09 1.022-2.09 2.201v.916m7.5 0a48.667 48.667 0 0 0-7.5 0" /></svg>`;
-
-        addBebanBtn.addEventListener("click", openModal);
-        addBebanModal.addEventListener("click", (e) => {
-          if (e.target === addBebanModal) closeModal();
-        });
-        bebanForm.addEventListener("submit", function (event) {
-          event.preventDefault();
-          const nomor = document.getElementById("modal-nomor").value.trim();
-          const jenisBeban = document.getElementById("modal-jenis-beban").value;
-          const keterangan = document
-            .getElementById("modal-keterangan")
-            .value.trim();
-          const totalBiaya = document.getElementById("modal-total-biaya").value;
-          const jenisData = document.getElementById("modal-jenis-data").value;
-          if (!nomor || !jenisBeban || !keterangan || !totalBiaya) {
-            showAlert(errorAlert);
-            return;
-          }
-          const total = parseInt(totalBiaya) || 0;
-          const newRowHTML = `<div class="data-row grid grid-cols-8 gap-4 items-center py-2 px-4" data-total="${total}"><div class="col-span-1 flex items-center gap-3"><button class="remove-row-btn text-slate-400 hover:text-red-500">${trashIconSVG}</button><span>${nomor}</span></div><div class="col-span-3">${jenisBeban}</div><div class="col-span-2">${keterangan}</div><div class="col-span-2">${formatRupiah(
-            total
-          )}</div></div>`;
-          if (jenisData === "beban_usaha") {
-            document
-              .getElementById("beban-usaha-rows")
-              .insertAdjacentHTML("beforeend", newRowHTML);
-            updateGrandTotal("jumlah-beban-usaha", "#beban-usaha-rows");
-          } else {
-            document
-              .getElementById("beban-lain-rows")
-              .insertAdjacentHTML("beforeend", newRowHTML);
-            updateGrandTotal("jumlah-beban-lain", "#beban-lain-rows");
-          }
-          closeModal();
-          showAlert(successAlert);
-        });
-
-        function updateGrandTotal(targetId, rowsSelector) {
-          let grandTotal = 0;
-          document
-            .querySelectorAll(`${rowsSelector} .data-row`)
-            .forEach((row) => {
-              grandTotal += parseFloat(row.dataset.total) || 0;
-            });
-          document.getElementById(
-            targetId
-          ).textContent = `Rp ${new Intl.NumberFormat("id-ID").format(
-            grandTotal
-          )}`;
-        }
-
-        document
-          .getElementById("main-content")
-          .addEventListener("click", function (event) {
-            const removeBtn = event.target.closest(".remove-row-btn");
-            if (removeBtn) {
-              const row = removeBtn.closest(".data-row");
-              if (row) {
-                const parentId = row.parentElement.id;
-                row.remove();
-                if (parentId === "beban-usaha-rows")
-                  updateGrandTotal("jumlah-beban-usaha", "#beban-usaha-rows");
-                else if (parentId === "beban-lain-rows")
-                  updateGrandTotal("jumlah-beban-lain", "#beban-lain-rows");
-              }
-            }
-          });
-      }
-    });
-  </script>
 </div>
+{% endblock %}
+
+{% block extra_js %}
+{# Load the new external JS file #}
+<script src="{% static 'core/js/beban_usaha.js' %}"></script>
 {% endblock %}
