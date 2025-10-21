@@ -79,8 +79,7 @@ def pendapatan_view(request):
     - Calculates totals for each category.
     """
     
-    # Load existing revenue data from session
-    # We will now store them in two separate lists
+    # Load existing data from session, defaulting to empty lists
     revenue_usaha = request.session.get('revenue_usaha', [])
     revenue_lain = request.session.get('revenue_lain', [])
 
@@ -110,7 +109,8 @@ def pendapatan_view(request):
                         messages.success(request, f'Produk "{nama_produk}" berhasil ditambahkan.')
                 
                 elif data_type == 'lain':
-                    keterangan = request.POST.get('modal-product-name-lain') # Using the "other" name field
+                    # Use the correct field name from your HTML
+                    keterangan = request.POST.get('modal-product-name-lain') 
                     total = int(request.POST.get('modal-total', 0))
                     
                     if not keterangan or total <= 0:
@@ -167,9 +167,75 @@ def pendapatan_view(request):
 
 def hpp_view(request):
     """
-    hpp page
+    hpp page (Harga Pokok Produksi)
+    Handles 3 forms: Persediaan Awal, Pembelian, Persediaan Akhir.
+    Calculates HPP and saves all data to session.
     """
-    return render(request, 'core/pages/hpp.html')
+    
+    # Load all HPP data from session
+    hpp_data = request.session.get('hpp_data', {
+        'persediaan_awal': 0,
+        'pembelian': [],
+        'persediaan_akhir': 0
+    })
+
+    if request.method == 'POST':
+        action = request.POST.get('action')
+
+        if action == 'save_awal':
+            hpp_data['persediaan_awal'] = int(request.POST.get('persediaan-awal', 0))
+            messages.success(request, 'Persediaan Awal berhasil disimpan.')
+
+        elif action == 'add_pembelian':
+            try:
+                nama = request.POST.get('pembelian-name')
+                qty = int(request.POST.get('pembelian-qty', 0))
+                harga = int(request.POST.get('pembelian-price', 0))
+                
+                if not nama or qty <= 0 or harga <= 0:
+                    messages.error(request, 'Nama, kuantitas, dan harga pembelian harus diisi with benar.')
+                else:
+                    total = qty * harga
+                    hpp_data['pembelian'].append({'nama': nama, 'qty': qty, 'harga': harga, 'total': total})
+                    messages.success(request, f'Pembelian "{nama}" berhasil ditambahkan.')
+            except Exception as e:
+                messages.error(request, f'Gagal menambahkan pembelian: {e}')
+
+        elif action == 'delete_pembelian':
+            try:
+                item_index = int(request.POST.get('item_index', -1))
+                if 0 <= item_index < len(hpp_data['pembelian']):
+                    removed = hpp_data['pembelian'].pop(item_index)
+                    messages.success(request, f'Pembelian "{removed["nama"]}" berhasil dihapus.')
+            except:
+                messages.error(request, 'Gagal menghapus item pembelian.')
+
+        elif action == 'save_akhir':
+            hpp_data['persediaan_akhir'] = int(request.POST.get('persediaan-akhir', 0))
+            messages.success(request, 'Persediaan Akhir berhasil disimpan.')
+        
+        # Save all changes back to the session
+        request.session['hpp_data'] = hpp_data
+        return redirect('core:hpp')
+
+    # --- GET Request Logic ---
+    
+    # Calculate totals
+    total_pembelian = sum(item['total'] for item in hpp_data['pembelian'])
+    barang_tersedia = hpp_data['persediaan_awal'] + total_pembelian
+    
+    # Calculate HPP (COGS)
+    # HPP = Barang Tersedia Untuk Dijual - Persediaan Akhir
+    hpp_total = barang_tersedia - hpp_data['persediaan_akhir']
+
+    context = {
+        'hpp_data': hpp_data,
+        'total_pembelian': total_pembelian,
+        'barang_tersedia': barang_tersedia,
+        'hpp_total': hpp_total
+    }
+    
+    return render(request, 'core/pages/hpp.html', context)
 
 
 def beban_usaha_view(request):
