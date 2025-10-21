@@ -1,4 +1,3 @@
-// File: js/pendapatan.js
 document.addEventListener("DOMContentLoaded", function () {
   const addIncomeBtn = document.getElementById("add-income-btn");
   const addIncomeModal = document.getElementById("add-income-modal");

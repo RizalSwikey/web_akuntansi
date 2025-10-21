@@ -7,6 +7,7 @@ Laba Rugi{% endblock %} {% block content %}
   ></div>
   <div class="relative min-h-screen md:flex md:gap-6 md:p-6">
     {% include 'core/partials/side_menu.html' %}
+
     <button id="mobile-menu-btn" class="md:hidden fixed top-4 left-4 z-40 ...">
       <svg>...</svg>
     </button>
@@ -17,6 +18,4 @@ Laba Rugi{% endblock %} {% block content %}
     </main>
   </div>
 </div>
-{% endblock %} {% block extra_js %}
-<script src="{% static 'core/js/sidebar.js' %}"></script>
 {% endblock %}

@@ -215,7 +215,7 @@
       <p class="text-lg font-semibold">Profil berhasil disimpan!</p> {# Updated message #}
     </div>
   </div>
-
+  
   <div
     id="error-alert"
     class="fixed inset-0 bg-black/40 flex justify-center items-center z-50 transition-opacity opacity-0 pointer-events-none"
@@ -243,30 +243,29 @@
 </div>
 {% endblock %}
 
+
 {% block extra_js %}
-{# Removed inline script, using external profile.js instead #}
 <script src="{% static 'core/js/profile.js' %}"></script>
 
-{# Script to show success alert based on Django messages #}
 <script>
-document.addEventListener('DOMContentLoaded', function() {
+  document.addEventListener('DOMContentLoaded', function() {
     {% if messages %}
         {% for message in messages %}
-            {% if message.tags == 'success' %}
-                const successAlert = document.getElementById('success-alert');
+        {% if message.tags == 'success' %}
+            const successAlert = document.getElementById('success-alert');
                 if (successAlert) {
                   successAlert.classList.remove('opacity-0', 'pointer-events-none');
                   setTimeout(() => {
                     successAlert.classList.add('opacity-0', 'pointer-events-none');
                   }, 2500); // Hide after 2.5 seconds
                 }
-            {% elif message.tags == 'error' %}
-                 const errorAlert = document.getElementById('error-alert');
+                {% elif message.tags == 'error' %}
+                const errorAlert = document.getElementById('error-alert');
                  if (errorAlert) {
                     errorAlert.querySelector('p').innerHTML = "{{ message|escapejs }}"; // Update message text
                     errorAlert.classList.remove('opacity-0', 'pointer-events-none');
                     setTimeout(() => {
-                        errorAlert.classList.add('opacity-0', 'pointer-events-none');
+                      errorAlert.classList.add('opacity-0', 'pointer-events-none');
                     }, 3000); // Hide after 3 seconds
                  }
             {% endif %}

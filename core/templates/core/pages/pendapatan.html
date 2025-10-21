@@ -1,5 +1,7 @@
-{% extends "base.html" %} {% load static %} {% block title %}Dashboard -
-Pendapatan{% endblock %} {% block content %}
+{% extends "base.html" %} 
+{% load static %} 
+{% block title %}Dashboard - Pendapatan{% endblock %} 
+{% block content %}
 <div class="bg-[#F4F6F9]">
   <div
     id="sidebar-overlay"
@@ -54,7 +56,6 @@ Pendapatan{% endblock %} {% block content %}
         {% if not revenue_usaha %}
         <p class="text-center text-slate-500 p-4">Belum ada data pendapatan usaha.</p>
         {% endif %}
-        {% for item in revenue_usaha %}
         <div class="text-right font-bold text-lg mt-6">
           Jumlah Penjualan Usaha <span id="jumlah-penjualan-usaha">Rp 0</span>
         </div>
@@ -173,7 +174,8 @@ Pendapatan{% endblock %} {% block content %}
     ...
   </div>
 </div>
-{% endblock %} {% block extra_js %}
-<script src="{% static 'core/js/sidebar.js' %}"></script>
-<script src="{% static 'core/js/pendapatan.js' %}"></script>
 {% endblock %}
+
+{% block extra_js %}
+<script src="{% static 'core/js/pendapatan.js' %}"></script>
+{% endblock %} 
