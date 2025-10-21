@@ -8,349 +8,129 @@
 
     {% include 'core/partials/side_menu.html' %}
 
-    <main id="main-content" class="flex-1">
-      <div class="flex justify-between items-center mb-6">
-        <h1 class="text-3xl font-bold">Harga Pokok Produksi</h1>
-        <button
-          id="add-hpp-btn"
-          class="bg-[#4A5C51] text-white font-semibold py-2 px-6 rounded-lg hover:bg-[#3a4a40]"
-        >
-          TAMBAH
-        </button>
-      </div>
-      <div class="bg-white rounded-2xl p-8 shadow-sm">
-        <h2 class="text-xl font-bold mb-4 text-center">PERSEDIAAN AWAL</h2>
-        <div
-          class="grid grid-cols-5 gap-4 bg-slate-100 p-4 rounded-lg mb-2 text-slate-600 font-semibold"
-        >
-          <div>Nama Produk</div>
-          <div>Kuantitas</div>
-          <div>Keterangan</div>
-          <div>Harga Beli Satuan (Rp)</div> {# Updated header #}
-          <div>Total (Rp)</div> {# Updated header #}
+    <main id="main-content" class="flex-1 p-8 overflow-y-auto">
+      <h1 class="text-3xl font-bold mb-8 text-red-600">Harga Pokok Produksi (HPP)</h1>
+      
+      {% if messages %} 
+        {% for message in messages %}
+        <div class="{% if message.tags == 'error' %}bg-red-100 border-red-400 text-red-700{% else %}bg-green-100 border-green-400 text-green-700{% endif %} border px-4 py-3 rounded-lg relative mb-6" role="alert">
+          <span class="block sm:inline">{{ message }}</span>
         </div>
-        <div id="persediaan-awal-rows" class="space-y-2">
-            {# Rows will be added here by JS #}
-        </div>
-        <div class="text-right font-bold text-lg mt-6">
-          JUMLAH PERSEDIAAN AWAL <span id="jumlah-persediaan-awal">Rp 0</span>
-        </div>
+        {% endfor %} 
+      {% endif %}
+      <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
+        
+        <div class="lg:col-span-2 space-y-8">
 
-        <hr class="my-10 border-slate-200" /> {# Added border style #}
+          <form id="hpp-form-awal" method="POST" class="bg-white p-8 rounded-2xl shadow-lg">
+            {% csrf_token %}
+            <input type="hidden" name="action" value="save_awal">
+            <h2 class="text-xl font-bold mb-6">Persediaan Awal</h2>
+            <div>
+              <label for="persediaan-awal" class="block mb-2 font-semibold">Jumlah Persediaan Awal (Rp)</label>
+              <input type="number" id="persediaan-awal" name="persediaan-awal" class="w-full p-3 border border-slate-300 rounded-lg" placeholder="0" value="{{ hpp_data.persediaan_awal | floatformat:0 }}">
+            </div>
+            <button type="submit" class="mt-4 w-full bg-black text-white p-3 rounded-lg font-semibold text-lg hover:bg-slate-800">
+              Simpan Persediaan Awal
+            </button>
+          </form>
 
-        <h2 class="text-xl font-bold mb-4 text-center">PEMBELIAN</h2>
-        <div
-          class="grid grid-cols-4 gap-4 bg-slate-100 p-4 rounded-lg mb-2 text-slate-600 font-semibold"
-        >
-          <div>Nama Produk</div>
-          <div>Kuantitas</div>
-          <div>Keterangan</div>
-          <div>Harga Satuan (Rp)</div> {# Updated header #}
-        </div>
-        <div id="pembelian-rows-part1" class="space-y-2">
-            {# Rows part 1 will be added here by JS #}
-        </div>
+          <form id="hpp-form-pembelian" method="POST" class="bg-white p-8 rounded-2xl shadow-lg">
+            {% csrf_token %}
+            <input type="hidden" name="action" value="add_pembelian">
+            <h2 class="text-xl font-bold mb-6">Pembelian Persediaan</h2>
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+              <div>
+                <label for="pembelian-name" class="block mb-2 font-semibold">Nama</label>
+                <input type="text" id="pembelian-name" name="pembelian-name" class="w-full p-3 border border-slate-300 rounded-lg" placeholder="Cth: Bahan Baku A">
+              </div>
+              <div>
+                <label for="pembelian-qty" class="block mb-2 font-semibold">Kuantitas</label>
+                <input type="number" id="pembelian-qty" name="pembelian-qty" class="w-full p-3 border border-slate-300 rounded-lg" placeholder="0">
+              </div>
+              <div>
+                <label for="pembelian-price" class="block mb-2 font-semibold">Harga (Rp)</label>
+                <input type="number" id="pembelian-price" name="pembelian-price" class="w-full p-3 border border-slate-300 rounded-lg" placeholder="0">
+              </div>
+            </div>
+            <button type="submit" class="mt-4 w-full bg-black text-white p-3 rounded-lg font-semibold text-lg hover:bg-slate-800">
+              Tambah Pembelian
+            </button>
+          </form>
 
-        <div
-          class="grid grid-cols-5 gap-4 bg-slate-100 p-4 rounded-lg mb-2 text-slate-600 font-semibold mt-10"
-        >
-          <div>Diskon Pembelian (Rp)</div> {# Updated header #}
-          <div>Retur Pembelian (Qty)</div> {# Updated header #}
-          <div>Jumlah Retur (Rp)</div> {# Updated header #}
-          <div>Biaya Ongkir (Rp)</div> {# Updated header #}
-          <div>Total Pembelian (Rp)</div> {# Updated header #}
+          <form id="hpp-form-akhir" method="POST" class="bg-white p-8 rounded-2xl shadow-lg">
+            {% csrf_token %}
+            <input type="hidden" name="action" value="save_akhir">
+            <h2 class="text-xl font-bold mb-6">Persediaan Akhir</h2>
+            <div>
+              <label for="persediaan-akhir" class="block mb-2 font-semibold">Jumlah Persediaan Akhir (Rp)</label>
+              <input type="number" id="persediaan-akhir" name="persediaan-akhir" class="w-full p-3 border border-slate-300 rounded-lg" placeholder="0" value="{{ hpp_data.persediaan_akhir | floatformat:0 }}">
+            </div>
+            <button type="submit" class="mt-4 w-full bg-black text-white p-3 rounded-lg font-semibold text-lg hover:bg-slate-800">
+              Simpan Persediaan Akhir
+            </button>
+          </form>
         </div>
-        <div id="pembelian-rows-part2" class="space-y-2">
-            {# Rows part 2 will be added here by JS #}
-        </div>
-        <div class="text-right font-bold text-lg mt-6">
-          JUMLAH PEMBELIAN <span id="jumlah-pembelian">Rp 0</span>
-        </div>
+        <div class="lg:col-span-1 space-y-8">
+          
+          <div class="bg-white p-8 rounded-2xl shadow-lg">
+            <h2 class="text-xl font-bold mb-6">Tabel Pembelian</h2>
+            <div id="pembelian-table" class="space-y-4 max-h-64 overflow-y-auto">
+              {% if not hpp_data.pembelian %}
+              <p class="text-center text-slate-500 p-4">Belum ada data pembelian.</p>
+              {% endif %}
+              {% for item in hpp_data.pembelian %}
+              <div class="pembelian-row flex justify-between items-center border-b pb-2">
+                <div>
+                  <p class="font-semibold">{{ item.nama }}</p>
+                  <p class="text-sm text-slate-500">{{ item.qty }} x Rp {{ item.harga | floatformat:0 }}</p>
+                </div>
+                <div class="flex items-center gap-4">
+                  <span class="font-semibold">Rp {{ item.total | floatformat:0 }}</span>
+                  <form method="POST">
+                    {% csrf_token %}
+                    <input type="hidden" name="action" value="delete_pembelian">
+                    <input type="hidden" name="item_index" value="{{ forloop.counter0 }}">
+                    <button type="submit" class="remove-pembelian-btn text-red-500 hover:text-red-700" onclick="return confirm('Yakin ingin menghapus item ini?')">
+                      <svg class="w-5 h-5" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M6 18 18 6M6 6l12 12" /></svg>
+                    </button>
+                  </form>
+                </div>
+              </div>
+              {% endfor %}
+            </div>
+            <div class="flex justify-between items-center border-t pt-4 mt-4 font-bold">
+              <span class="text-lg">Total Pembelian:</span>
+              <span id="total-pembelian" class="text-lg">Rp {{ total_pembelian | floatformat:0 }}</span>
+            </div>
+          </div>
 
-        <hr class="my-10 border-slate-200" /> {# Added border style #}
-
-        <h2 class="text-xl font-bold mb-4 text-center">PERSEDIAAN AKHIR</h2>
-        <div
-          class="grid grid-cols-5 gap-4 bg-slate-100 p-4 rounded-lg mb-2 text-slate-600 font-semibold"
-        >
-          <div>Nama Produk</div>
-          <div>Kuantitas</div>
-          <div>Keterangan</div>
-          <div>Total (Rp)</div> {# Updated header #}
-          <div>Status</div> {# Changed header from Keterangan #}
-        </div>
-        <div id="persediaan-akhir-rows" class="space-y-2">
-             {# Rows will be added here by JS #}
-        </div>
-        <div class="text-right font-bold text-lg mt-6">
-          JUMLAH PERSEDIAAN AKHIR
-          <span id="jumlah-persediaan-akhir">Rp 0</span>
-        </div>
-
-        <div class="text-right mt-16">
-          {# Consider adding functionality or linking this button #}
-          <button
-            id="hpp-next-btn"
-            class="py-3 px-12 bg-[#8C705A] text-white font-semibold rounded-lg hover:bg-[#a1826a]"
-            onclick="window.location.href='{% url 'core:beban_usaha' %}'" {# Example: Link to next page #}
-          >
-            Next
-          </button>
+          <div id="hpp-results" class="bg-white p-8 rounded-2xl shadow-lg space-y-4">
+            <h2 class="text-xl font-bold mb-2">Perhitungan HPP</h2>
+            <div class="flex justify-between">
+              <span class="text-slate-500">Persediaan Awal</span>
+              <span id="result-awal" class="font-semibold">Rp {{ hpp_data.persediaan_awal | floatformat:0 }}</span>
+            </div>
+            <div class="flex justify-between">
+              <span class="text-slate-500">Total Pembelian</span>
+              <span id="result-pembelian" class="font-semibold">Rp {{ total_pembelian | floatformat:0 }}</span>
+            </div>
+            <div class="flex justify-between border-t pt-2">
+              <span class="text-slate-500">Barang Tersedia</span>
+              <span id="result-tersedia" class="font-semibold">Rp {{ barang_tersedia | floatformat:0 }}</span>
+            </div>
+            <div class="flex justify-between">
+              <span class="text-slate-500">Persediaan Akhir</span>
+              <span id="result-akhir" class="font-semibold">(Rp {{ hpp_data.persediaan_akhir | floatformat:0 }})</span>
+            </div>
+            <div class="flex justify-between items-center border-t pt-4 mt-4 font-bold">
+              <span class="text-xl">Total HPP</span>
+              <span id="result-hpp" class="text-2xl text-green-700">Rp {{ hpp_total | floatformat:0 }}</span>
+            </div>
+          </div>
         </div>
       </div>
     </main>
   </div>
-
-  {# --- MODAL --- #}
-  <div
-    id="add-hpp-modal"
-    class="fixed inset-0 bg-black/60 flex justify-center items-start z-50 overflow-y-auto py-10 transition-opacity opacity-0 pointer-events-none"
-  >
-    <div class="bg-white p-8 rounded-2xl shadow-xl w-full max-w-md">
-      <form id="hpp-form">
-        <div class="mb-5">
-          <label
-            for="hpp-product-name"
-            class="block mb-2 font-semibold text-slate-600"
-            >Nama produk</label
-          ><input
-            type="text"
-            id="hpp-product-name"
-            class="w-full p-3 border border-slate-300 rounded-lg"
-            required
-          />
-        </div>
-
-        {# Fields for Persediaan Awal #}
-        <div id="hpp-awal-fields">
-          <div class="mb-5">
-            <label
-              for="hpp-awal-kuantitas"
-              class="block mb-2 font-semibold text-slate-600"
-              >Kuantitas</label
-            ><input
-              type="number"
-              id="hpp-awal-kuantitas"
-              class="w-full p-3 border border-slate-300 rounded-lg"
-              min="0" {# Added min value #}
-            />
-          </div>
-          <div class="mb-5">
-            <label
-              for="hpp-awal-keterangan"
-              class="block mb-2 font-semibold text-slate-600"
-              >Keterangan kuantitas</label
-            ><input
-              type="text"
-              id="hpp-awal-keterangan"
-              class="w-full p-3 border border-slate-300 rounded-lg"
-              placeholder="Contoh: pcs, kg, box" {# Added placeholder #}
-            />
-          </div>
-          <div class="mb-5">
-            <label
-              for="hpp-awal-harga"
-              class="block mb-2 font-semibold text-slate-600"
-              >Harga Beli Satuan</label
-            ><input
-              type="number"
-              id="hpp-awal-harga"
-              class="w-full p-3 border border-slate-300 rounded-lg"
-               min="0" {# Added min value #}
-               placeholder="Rp" {# Added placeholder #}
-            />
-          </div>
-        </div>
-
-        {# Fields for Pembelian (Initially hidden) #}
-        <div id="hpp-pembelian-fields" class="hidden">
-          <div class="mb-5">
-            <label
-              for="hpp-pembelian-kuantitas"
-              class="block mb-2 font-semibold text-slate-600"
-              >Kuantitas</label
-            ><input
-              type="number"
-              id="hpp-pembelian-kuantitas"
-              class="w-full p-3 border border-slate-300 rounded-lg"
-               min="0"
-            />
-          </div>
-          <div class="mb-5">
-            <label
-              for="hpp-pembelian-keterangan"
-              class="block mb-2 font-semibold text-slate-600"
-              >Keterangan Kuantitas</label {# Clarified label #}
-            ><input
-              type="text"
-              id="hpp-pembelian-keterangan"
-              class="w-full p-3 border border-slate-300 rounded-lg"
-              placeholder="Contoh: pcs, kg, box"
-            />
-          </div>
-          <div class="mb-5">
-            <label
-              for="hpp-pembelian-harga"
-              class="block mb-2 font-semibold text-slate-600"
-              >Harga Satuan</label
-            ><input
-              type="number"
-              id="hpp-pembelian-harga"
-              class="w-full p-3 border border-slate-300 rounded-lg"
-               min="0"
-               placeholder="Rp"
-            />
-          </div>
-          <div class="mb-5">
-            <label
-              for="hpp-pembelian-diskon"
-              class="block mb-2 font-semibold text-slate-600"
-              >Diskon Pembelian</label
-            ><input
-              type="number"
-              id="hpp-pembelian-diskon"
-              class="w-full p-3 border border-slate-300 rounded-lg"
-              min="0"
-              placeholder="Rp (jika tidak ada, isi 0)" {# Added placeholder #}
-              value="0" {# Default value 0 #}
-            />
-          </div>
-          <div class="mb-5">
-            <label
-              for="hpp-pembelian-retur"
-              class="block mb-2 font-semibold text-slate-600"
-              >Retur Pembelian (Qty)</label
-            ><input
-              type="number"
-              id="hpp-pembelian-retur"
-              class="w-full p-3 border border-slate-300 rounded-lg"
-              min="0"
-              placeholder="Jumlah unit diretur (jika tidak ada, isi 0)" {# Added placeholder #}
-              value="0" {# Default value 0 #}
-            />
-          </div>
-          <div class="mb-5">
-            <label
-              for="hpp-pembelian-ongkir"
-              class="block mb-2 font-semibold text-slate-600"
-              >Biaya Ongkir</label
-            ><input
-              type="number"
-              id="hpp-pembelian-ongkir"
-              class="w-full p-3 border border-slate-300 rounded-lg"
-              min="0"
-              placeholder="Rp (jika tidak ada, isi 0)" {# Added placeholder #}
-               value="0" {# Default value 0 #}
-            />
-          </div>
-        </div>
-
-        {# Fields for Persediaan Akhir (Initially hidden) #}
-        <div id="hpp-akhir-fields" class="hidden">
-          <div class="mb-5">
-            <label
-              for="hpp-akhir-kuantitas"
-              class="block mb-2 font-semibold text-slate-600"
-              >Kuantitas Tersisa</label {# Clarified label #}
-            ><input
-              type="number"
-              id="hpp-akhir-kuantitas"
-              class="w-full p-3 border border-slate-300 rounded-lg"
-              min="0"
-              placeholder="Jumlah unit di akhir periode" {# Added placeholder #}
-            />
-          </div>
-          <div class="mb-5">
-            <label
-              for="hpp-akhir-keterangan"
-              class="block mb-2 font-semibold text-slate-600"
-              >Keterangan Kuantitas</label {# Clarified label #}
-            ><input
-              type="text"
-              id="hpp-akhir-keterangan"
-              class="w-full p-3 border border-slate-300 rounded-lg"
-               placeholder="Contoh: pcs, kg, box"
-            />
-          </div>
-        </div>
-
-        {# Dropdown to select data type #}
-        <div class="mb-8">
-          <label
-            for="hpp-jenis-data"
-            class="block mb-2 font-semibold text-slate-600"
-            >Jenis Data</label
-          ><select
-            id="hpp-jenis-data"
-            class="w-full p-3 border border-slate-300 rounded-lg bg-white appearance-none" style="background-image: url('data:image/svg+xml,%3csvg xmlns=\'http://www.w3.org/2000/svg\' fill=\'none\' viewBox=\'0 0 20 20\'%3e%3cpath stroke=\'%236b7280\' stroke-linecap=\'round\' stroke-linejoin=\'round\' stroke-width=\'1.5\' d=\'M6 8l4 4 4-4\'/%3e%3c/svg%3e'); background-position: right 0.5rem center; background-repeat: no-repeat; background-size: 1.5em 1.5em;"
-          >
-            <option value="persediaan_awal">Persediaan Awal</option>
-            <option value="pembelian">Pembelian</option>
-            <option value="persediaan_akhir">Persediaan Akhir</option>
-          </select>
-        </div>
-
-        <button
-          type="submit"
-          class="w-full bg-[#4A5C51] text-white p-3 rounded-lg font-semibold text-lg mt-4 hover:bg-[#3a4a40]"
-        >
-          Selesai & Tambah Data
-        </button>
-      </form>
-    </div>
-  </div>
-
-  {# --- ALERTS --- #}
-  <div
-    id="success-alert"
-    class="fixed inset-0 bg-black/40 flex justify-center items-center z-50 transition-opacity opacity-0 pointer-events-none"
-  >
-    <div class="bg-white p-8 rounded-2xl shadow-xl w-full max-w-sm text-center">
-      <svg
-        class="w-16 h-16 text-green-500 mx-auto mb-4"
-        xmlns="http://www.w3.org/2000/svg"
-        fill="none"
-        viewBox="0 0 24 24"
-        stroke-width="2"
-        stroke="currentColor"
-      >
-        <path
-          stroke-linecap="round"
-          stroke-linejoin="round"
-          d="M9 12.75L11.25 15 15 9.75M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
-        />
-      </svg>
-      <p class="text-lg font-semibold">Data berhasil ditambahkan</p> {# Updated message #}
-    </div>
-  </div>
-  <div
-    id="error-alert"
-    class="fixed inset-0 bg-black/40 flex justify-center items-center z-50 transition-opacity opacity-0 pointer-events-none"
-  >
-    <div class="bg-white p-8 rounded-2xl shadow-xl w-full max-w-sm text-center">
-      <svg
-        class="w-16 h-16 text-red-500 mx-auto mb-4"
-        xmlns="http://www.w3.org/2000/svg"
-        fill="none"
-        viewBox="0 0 24 24"
-        stroke-width="2"
-        stroke="currentColor"
-      >
-        <path
-          stroke-linecap="round"
-          stroke-linejoin="round"
-          d="M12 9v3.75m-9.303 3.376c-.866 1.5.217 3.374 1.948 3.374h14.71c1.73 0 2.813-1.874 1.948-3.374L13.949 3.378c-.866-1.5-3.032-1.5-3.898 0L2.697 16.126zM12 15.75h.007v.008H12v-.008z"
-        />
-      </svg>
-      <p class="text-lg font-semibold">
-        Gagal menambahkan data!<br />Pastikan semua field terisi dengan benar.
-      </p> {# Updated message #}
-    </div>
-  </div>
 </div>
-{% endblock %}
-
-{% block extra_js %}
-{# Load the correct JS file #}
-<script src="{% static 'core/js/hpp.js' %}"></script>
 {% endblock %}
