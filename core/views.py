@@ -323,9 +323,10 @@ def beban_usaha_view(request):
             try:
                 ExpenseItem.objects.create(
                     report=report,
-                    expense_type=request.POST.get('beban-type'), # 'usaha' or 'lain'
-                    name=request.POST.get('beban-name'),
-                    total=int(request.POST.get('beban-total', 0))
+                    expense_category=request.POST.get('kategori_beban'),
+                    expense_type=request.POST.get('jenis_beban'),
+                    name=request.POST.get('nama_beban'),
+                    total=int(request.POST.get('total_beban', 0))
                 )
                 messages.success(request, 'Beban berhasil ditambahkan.')
             except Exception as e:
@@ -347,20 +348,14 @@ def beban_usaha_view(request):
         return redirect('core:beban_usaha')
 
     # --- GET Request Logic ---
-    beban_usaha_items = report.expense_items.filter(expense_type='usaha')
-    beban_lain_items = report.expense_items.filter(expense_type='lain')
-    
-    total_beban_usaha = beban_usaha_items.aggregate(Sum('total'))['total__sum'] or 0
-    total_beban_lain = beban_lain_items.aggregate(Sum('total'))['total__sum'] or 0
-    grand_total_beban = total_beban_usaha + total_beban_lain
+    beban_usaha_items = report.expense_items.filter(expense_category='usaha')
+    beban_lain_items = report.expense_items.filter(expense_category='lain')
+
 
     context = {
         'report': report,
         'beban_usaha': beban_usaha_items, # Renamed for clarity in template
         'beban_lain': beban_lain_items,   # Renamed for clarity in template
-        'total_beban_usaha': total_beban_usaha,
-        'total_beban_lain': total_beban_lain,
-        'grand_total_beban': grand_total_beban,
         'completion_status': completion_status
     }
     
@@ -370,83 +365,64 @@ def beban_usaha_view(request):
 @login_required(login_url='core:login')
 def laporan_view(request):
     report = get_object_or_404(FinancialReport, user=request.user)
-    completion_status = get_completion_status(report)
     
+    # --- Check if HPP step completed ---
+    completion_status = get_completion_status(report)
     if not completion_status['hpp']:
         messages.error(request, 'Harap lengkapi semua langkah sebelumnya.')
         return redirect('core:hpp')
 
-    # --- Re-calculate HPP Grand Total ---
+    # --- HPP per Product Calculation ---
+    products = Product.objects.filter(report=report).distinct()
+    hpp_per_product = []
     grand_hpp = 0
-    products = Product.objects.filter(report=report, revenue_entries__revenue_type='usaha').distinct()
+
     for product in products:
-        awal = HppEntry.objects.filter(product=product, category='AWAL').first()
-        pembelian_list = HppEntry.objects.filter(product=product, category='PEMBELIAN')
-        akhir = HppEntry.objects.filter(product=product, category='AKHIR').first()
+        entries_qs = HppEntry.objects.filter(report=report, product=product)
+        # Convert QuerySet to dictionary by category
+        entries_dict = {
+            'AWAL': entries_qs.filter(category='AWAL').first(),
+            'PEMBELIAN': entries_qs.filter(category='PEMBELIAN'),
+            'AKHIR': entries_qs.filter(category='AKHIR').first(),
+        }
+        hpp_data = calculate_hpp_for_product(product, entries_dict)
+        grand_hpp += hpp_data['hpp']
 
-        total_awal = (awal.quantity * awal.unit_price) if awal else 0
-        total_pembelian_neto_product = 0
-        total_pembelian_qty_product = 0
-        avg_purchase_price_product = 0
-        for p in pembelian_list:
-            pembelian_bruto = p.quantity * p.unit_price
-            retur_rp = p.return_qty * p.unit_price
-            p_neto = pembelian_bruto - p.discount - retur_rp + p.shipping_cost
-            total_pembelian_neto_product += p_neto
-            total_pembelian_qty_product += p.quantity
-            
-        if total_pembelian_qty_product > 0:
-            avg_purchase_price_product = Decimal(total_pembelian_neto_product - sum(p.shipping_cost for p in pembelian_list)) / Decimal(total_pembelian_qty_product)
+        hpp_per_product.append({
+            'product_name': product.name,
+            **hpp_data
+        })
 
-        barang_tersedia_product = total_awal + total_pembelian_neto_product
-
-        total_akhir_product = 0
-        qty_awal = awal.quantity if awal else 0
-        if akhir:
-            if akhir.quantity > (qty_awal + total_pembelian_qty_product):
-                pass # Error handled in hpp_view, maybe add message here too
-            else:
-                if akhir.quantity <= qty_awal:
-                    cost_per_unit_akhir = awal.unit_price if awal and awal.unit_price > 0 else 0
-                    total_akhir_product = akhir.quantity * cost_per_unit_akhir
-                else:
-                    cost_awal_part = total_awal
-                    qty_from_purchase = akhir.quantity - qty_awal
-                    cost_purchase_part = qty_from_purchase * avg_purchase_price_product
-                    total_akhir_product = cost_awal_part + cost_purchase_part
-
-        hpp_product = barang_tersedia_product - total_akhir_product
-        grand_hpp += hpp_product
-
-    # --- Laba Rugi Calculation (Using Grand HPP) ---
+    # --- Laba Rugi Calculation ---
     total_pendapatan_usaha = report.revenue_items.filter(revenue_type='usaha').aggregate(Sum('total'))['total__sum'] or 0
     total_pendapatan_lain = report.revenue_items.filter(revenue_type='lain').aggregate(Sum('total'))['total__sum'] or 0
     jumlah_pendapatan = total_pendapatan_usaha + total_pendapatan_lain
 
-    beban_usaha_items = report.expense_items.filter(expense_type='usaha')
-    beban_lain_items = report.expense_items.filter(expense_type='lain')
+    beban_usaha_items = report.expense_items.filter(expense_category='usaha')
+    beban_lain_items = report.expense_items.filter(expense_category='lain')
     total_beban_usaha_lainnya = beban_usaha_items.aggregate(Sum('total'))['total__sum'] or 0
     total_beban_lain = beban_lain_items.aggregate(Sum('total'))['total__sum'] or 0
 
-    jumlah_beban = grand_hpp + total_beban_usaha_lainnya + total_beban_lain # Use calculated grand_hpp
+    jumlah_beban = grand_hpp + total_beban_usaha_lainnya + total_beban_lain
     laba_sebelum_pajak = jumlah_pendapatan - jumlah_beban
     pajak_penghasilan = 0
     laba_setelah_pajak = laba_sebelum_pajak - pajak_penghasilan
 
-    # Need HPP details for the first part of the report page
-    hpp_data = report.hpp_entries # Get all entries for detailed HPP report section
-    total_pembelian_all = hpp_data.filter(category='PEMBELIAN').aggregate(Sum('total_pembelian_neto')) # Need to add total_pembelian_neto calculation to model/view
-    # This part needs refinement based on how detailed HPP Laporan is needed
-
     context = {
         'report': report,
-        # HPP Laporan Data (Simplified for now - needs full calculation like in hpp_view)
-        'hpp_total': grand_hpp, # Pass the final calculated HPP
-        # Laba Rugi Data
-        'total_pendapatan_usaha': total_pendapatan_usaha, 'total_pendapatan_lain': total_pendapatan_lain, 'jumlah_pendapatan': jumlah_pendapatan,
-        'beban_usaha_items': beban_usaha_items, 'beban_lain_items': beban_lain_items,
-        'total_beban_usaha_lainnya': total_beban_usaha_lainnya, 'total_beban_lain': total_beban_lain, 'jumlah_beban': jumlah_beban,
-        'laba_sebelum_pajak': laba_sebelum_pajak, 'pajak_penghasilan': pajak_penghasilan, 'laba_setelah_pajak': laba_setelah_pajak,
+        'hpp_total': grand_hpp,
+        'hpp_per_product': hpp_per_product,
+        'total_pendapatan_usaha': total_pendapatan_usaha,
+        'total_pendapatan_lain': total_pendapatan_lain,
+        'jumlah_pendapatan': jumlah_pendapatan,
+        'beban_usaha_items': beban_usaha_items,
+        'beban_lain_items': beban_lain_items,
+        'total_beban_usaha_lainnya': total_beban_usaha_lainnya,
+        'total_beban_lain': total_beban_lain,
+        'jumlah_beban': jumlah_beban,
+        'laba_sebelum_pajak': laba_sebelum_pajak,
+        'pajak_penghasilan': pajak_penghasilan,
+        'laba_setelah_pajak': laba_setelah_pajak,
         'completion_status': completion_status,
     }
-    return render(request, 'core/pages/laporan.html', context) # Make sure laporan.html uses these context vars
+    return render(request, 'core/pages/laporan.html', context)

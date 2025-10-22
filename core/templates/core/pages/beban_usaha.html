@@ -89,12 +89,6 @@
         <div id="jumlah-beban-lain" class="col-span-2 p-3 text-lg">Rp {{ total_beban_lain | floatformat:0 }}</div>
       </div>
     </div>
-    <div class="bg-gray-800 text-white p-8 rounded-2xl shadow-lg">
-      <div class="flex justify-between items-center">
-        <h2 class="text-xl font-bold">Total Keseluruhan Beban</h2>
-        <span id="jumlah-total-beban" class="text-3xl font-bold">Rp {{ grand_total_beban | floatformat:0 }}</span>
-      </div>
-    </div>
     
     <form method="POST" class="flex justify-end mt-8">
       {% csrf_token %}
@@ -118,15 +112,15 @@
     <h2 class="text-2xl font-bold mb-4">Tambah Data Beban</h2>
     
     <div>
-      <label for="beban-type" class="block mb-2 font-semibold">Tipe Beban</label>
-      <select id="beban-type" name="beban-type" class="w-full p-3 border border-slate-300 rounded-lg">
+      <label for="kategori-beban" class="block mb-2 font-semibold">Tipe Beban</label>
+      <select id="kategori-beban" name="kategori_beban" class="w-full p-3 border border-slate-300 rounded-lg">
         <option value="usaha">Beban Usaha</option>
         <option value="lain">Beban Lain-lain</option>
       </select>
     </div>
      <div>
-      <label for="beban-type" class="block mb-2 font-semibold">Jenis Beban Usaha</label>
-      <select id="beban-type" name="beban-type" class="w-full p-3 border border-slate-300 rounded-lg">
+      <label for="jenis-beban" class="block mb-2 font-semibold">Jenis Beban Usaha</label>
+      <select id="jenis-beban" name="jenis_beban" class="w-full p-3 border border-slate-300 rounded-lg">
         <option value="usaha">Biaya Sewa</option>
         <option value="lain">Biaya Transportasi</option>
         <option value="usaha">Biaya Air & Listrik</option>
@@ -138,12 +132,12 @@
     </div>
 
     <div>
-      <label for="beban-name" class="block mb-2 font-semibold">Keterangan</label>
-      <input type="text" id="beban-name" name="beban-name" class="w-full p-3 border border-slate-300 rounded-lg" placeholder="Cth: Biaya Gaji" required>
+      <label for="nama-beban" class="block mb-2 font-semibold">Keterangan</label>
+      <input type="text" id="nama-beban" name="nama_beban" class="w-full p-3 border border-slate-300 rounded-lg" placeholder="Cth: Biaya Gaji" required>
     </div>
     <div>
-      <label for="beban-total" class="block mb-2 font-semibold">Total (Rp)</label>
-      <input type="number" id="beban-total" name="beban-total" class="w-full p-3 border border-slate-300 rounded-lg" placeholder="0" required>
+      <label for="total-beban" class="block mb-2 font-semibold">Total (Rp)</label>
+      <input type="number" id="total-beban" name="total_beban" class="w-full p-3 border border-slate-300 rounded-lg" placeholder="0" required>
     </div>
 
     <div class="flex justify-end gap-4 pt-4">
@@ -167,7 +161,7 @@ document.addEventListener("DOMContentLoaded", function () {
   const bebanForm = document.getElementById("beban-form");
 
   if (addBebanBtn && addBebanModal && bebanForm) {
-    const openModal = () =>
+    const openModal = () => 
       addBebanModal.classList.remove("opacity-0", "pointer-events-none");
     const closeModal = () => {
       addBebanModal.classList.add("opacity-0", "pointer-events-none");

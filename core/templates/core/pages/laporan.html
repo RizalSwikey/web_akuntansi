@@ -11,7 +11,7 @@
   <main id="main-content" class="flex-1 p-8 overflow-y-auto">
 
     <div class="flex justify-between items-center mb-8">
-      <h1 class="text-3xl font-bold text-red-600">Langkah 5: Laporan Laba Rugi</h1>
+      <h1 class="text-3xl font-bold">Laporan Laba Rugi</h1>
       <div class="flex gap-4">
         <button class="bg-gray-700 text-white py-2 px-6 rounded-lg font-semibold hover:bg-gray-600">
           Export to Excel
@@ -49,6 +49,23 @@
         <div class="flex justify-between items-center bg-slate-100 p-3 rounded-lg mt-4">
           <span class="font-bold text-lg">Harga Pokok Penjualan (HPP)</span>
           <span class="font-bold text-lg">Rp {{ hpp_total | floatformat:0 }}</span>
+        </div>
+        <div class="mt-6">
+          <span class="text-slate-700">HPP Per Produk</span>
+          <div class="space-y-2">
+            {% for item in hpp_per_product %}
+            <div class="flex justify-between border-b py-1 px-2 rounded">
+                <span>{{ item.product_name }}</span>
+                <span>
+                    {% if item.hpp is not None %}
+                        Rp {{ item.hpp | floatformat:0 }}
+                    {% else %}
+                        #DIV/0!
+                    {% endif %}
+                </span>
+              </div>
+            {% endfor %}
+          </div>
         </div>
       </div>
       <hr class="my-12 border-slate-300" />

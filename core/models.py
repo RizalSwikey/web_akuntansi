@@ -117,7 +117,12 @@ class ExpenseItem(models.Model):
         ('lain', 'Beban Lain-lain'),
     ]
     report = models.ForeignKey(FinancialReport, on_delete=models.CASCADE, related_name="expense_items")
-    expense_type = models.CharField(max_length=10, choices=TYPE_CHOICES, default='usaha')
+    expense_category = models.CharField(
+        max_length=20,
+        choices=TYPE_CHOICES,
+        default='usaha'
+    )
+    expense_type = models.CharField(max_length=50, blank=True, null=True)
     name = models.CharField(max_length=255)
     total = models.BigIntegerField(default=0)
 
