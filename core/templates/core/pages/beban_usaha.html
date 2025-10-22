@@ -1,156 +1,173 @@
 {% extends "base.html" %}
 {% load static %}
-{% block title %}Dashboard - Beban Usaha{% endblock %} {# Corrected Title #}
+
+{% block title %}Beban Usaha{% endblock %}
 
 {% block content %}
-<div class="bg-white text-slate-800">
-  <div class="flex gap-6">
+<div class="flex h-screen">
+  
+  {% include 'core/partials/sidebar.html' %}
 
-    {% include 'core/partials/sidebar.html' %}
+  <main id="main-content" class="flex-1 p-8 overflow-y-auto">
+    <div class="flex justify-between items-center mb-8">
+      <h1 class="text-3xl font-bold text-red-600">Langkah 4: Beban Usaha</h1>
+      <button id="add-beban-btn" class="bg-black text-white py-2 px-6 rounded-lg font-semibold hover:bg-slate-800">
+        Tambah Data +
+      </button>
+    </div>
 
-    <main id="main-content" class="flex-1 p-8 overflow-y-auto">
-      <div class="flex justify-between items-center mb-8">
-        <h1 class="text-3xl font-bold mb-6">Beban Usaha</h1>
-        <button id="add-beban-btn" class="bg-black text-white py-2 px-6 rounded-lg font-semibold hover:bg-slate-800">
-          Tambah Data +
-        </button>
+    {% if messages %} 
+      {% for message in messages %}
+      <div class="{% if message.tags == 'error' %}bg-red-100 border-red-400 text-red-700{% else %}bg-green-100 border-green-400 text-green-700{% endif %} border px-4 py-3 rounded-lg relative mb-6" role="alert">
+        <span class="block sm:inline">{{ message }}</span>
       </div>
-
-      {% if messages %} 
-        {% for message in messages %}
-        <div class="{% if message.tags == 'error' %}bg-red-100 border-red-400 text-red-700{% else %}bg-green-100 border-green-400 text-green-700{% endif %} border px-4 py-3 rounded-lg relative mb-6" role="alert">
-          <span class="block sm:inline">{{ message }}</span>
-        </div>
-        {% endfor %} 
-      {% endif %}
-      <div class="bg-white p-8 rounded-2xl shadow-lg mb-8">
-        <h2 class="text-xl font-bold mb-6">Beban Usaha</h2>
-        <div class="grid grid-cols-10 gap-4 items-center border-b pb-2 font-semibold text-sm text-slate-600">
-          <div class="col-span-1">Aksi</div>
-          <div class="col-span-7 p-3">Keterangan</div>
-          <div class="col-span-7 p-3">Keterangan</div>
-          <div class="col-span-2 p-3">Total</div>
-        </div>
-        <div id="beban-usaha-rows" class="divide-y">
-          
-          {% if not beban_usaha %}
-          <p class="text-center text-slate-500 p-4">Belum ada data beban usaha.</p>
-          {% endif %}
-          {% for item in beban_usaha %}
-          <div class="data-row grid grid-cols-10 gap-4 items-center">
-            <form method="POST" class="col-span-1 flex justify-center">
-              {% csrf_token %}
-              <input type="hidden" name="action" value="delete_beban_usaha">
-              <input type="hidden" name="item_index" value="{{ forloop.counter0 }}">
-              <button type="submit" class="remove-row-btn text-slate-400 hover:text-red-500 p-3" onclick="return confirm('Yakin ingin menghapus item ini?')">
-                <svg class="w-5 h-5 pointer-events-none" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="m14.74 9-.346 9m-4.788 0L9.26 9m9.968-3.21c.342.052.682.107 1.022.166m-1.022-.165L18.16 19.673a2.25 2.25 0 0 1-2.244 2.077H8.084a2.25 2.25 0 0 1-2.244-2.077L4.772 5.79m14.456 0a48.108 48.108 0 0 0-3.478-.397m-12 .562c.34-.059.68-.114 1.022-.165m0 0a48.11 48.11 0 0 1 3.478-.397m7.5 0v-.916c0-1.18-.91-2.134-2.09-2.201a51.964 51.964 0 0 0-3.32 0c-1.18.067-2.09 1.022-2.09 2.201v.916m7.5 0a48.667 48.667 0 0 0-7.5 0" /></svg>
-              </button>
-            </form>
-            <div class="col-span-7 p-3">{{ item.nama }}</div>
-            <div class="col-span-2 p-3 font-semibold">Rp {{ item.total | floatformat:0 }}</div>
-          </div>
-          {% endfor %}
-          </div>
-        <div class="grid grid-cols-10 gap-4 items-center border-t pt-4 mt-4 font-bold">
-          <div class="col-span-8 p-3 text-right">Total Beban Usaha:</div>
-          <div id="jumlah-beban-usaha" class="col-span-2 p-3 text-lg">Rp {{ total_beban_usaha | floatformat:0 }}</div>
-        </div>
+      {% endfor %} 
+    {% endif %}
+    <div class="bg-white p-8 rounded-2xl shadow-lg mb-8">
+      <h2 class="text-xl font-bold mb-6">Beban Usaha</h2>
+      <div class="grid grid-cols-10 gap-4 items-center border-b pb-2 font-semibold text-sm text-slate-600">
+        <div class="col-span-1">Aksi</div>
+        <div class="col-span-7 p-3">Keterangan</div>
+        <div class="col-span-2 p-3">Total</div>
       </div>
-      <div class="bg-white p-8 rounded-2xl shadow-lg">
-        <h2 class="text-xl font-bold mb-6">Beban Lain-lain (Opsional)</h2>
-        <div class="grid grid-cols-10 gap-4 items-center border-b pb-2 font-semibold text-sm text-slate-600">
-          <div class="col-span-1">Aksi</div>
-          <div class="col-span-7 p-3">Keterangan</div>
-          <div class="col-span-2 p-3">Total</div>
+      <div id="beban-usaha-rows" class="divide-y">
+        
+        {% if not beban_usaha %}
+        <p class="text-center text-slate-500 p-4">Belum ada data beban usaha.</p>
+        {% endif %}
+        {% for item in beban_usaha %}
+        <div class="data-row grid grid-cols-10 gap-4 items-center">
+          <form method="POST" class="col-span-1 flex justify-center">
+            {% csrf_token %}
+            <input type="hidden" name="action" value="delete_beban_item">
+            <input type="hidden" name="item_id" value="{{ item.id }}">
+            <button type="submit" class="remove-row-btn text-slate-400 hover:text-red-500 p-3" onclick="return confirm('Yakin ingin menghapus item ini?')">
+              <svg class="w-5 h-5 pointer-events-none" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="m14.74 9-.346 9m-4.788 0L9.26 9m9.968-3.21c.342.052.682.107 1.022.166m-1.022-.165L18.16 19.673a2.25 2.25 0 0 1-2.244 2.077H8.084a2.25 2.25 0 0 1-2.244-2.077L4.772 5.79m14.456 0a48.108 48.108 0 0 0-3.478-.397m-12 .562c.34-.059.68-.114 1.022-.165m0 0a48.11 48.11 0 0 1 3.478-.397m7.5 0v-.916c0-1.18-.91-2.134-2.09-2.201a51.964 51.964 0 0 0-3.32 0c-1.18.067-2.09 1.022-2.09 2.201v.916m7.5 0a48.667 48.667 0 0 0-7.5 0" /></svg>
+            </button>
+          </form>
+          <div class="col-span-7 p-3">{{ item.name }}</div>
+          <div class="col-span-2 p-3 font-semibold">Rp {{ item.total | floatformat:0 }}</div>
         </div>
-        <div id="beban-lain-rows" class="divide-y">
-          
-          {% if not beban_lain %}
-          <p class="text-center text-slate-500 p-4">Belum ada data beban lain-lain.</p>
-          {% endif %}
-          {% for item in beban_lain %}
-          <div class="data-row grid grid-cols-10 gap-4 items-center">
-            <form method="POST" class="col-span-1 flex justify-center">
-              {% csrf_token %}
-              <input type="hidden" name="action" value="delete_beban_lain">
-              <input type="hidden" name="item_index" value="{{ forloop.counter0 }}">
-              <button type="submit" class="remove-row-btn text-slate-400 hover:text-red-500 p-3" onclick="return confirm('Yakin ingin menghapus item ini?')">
-                <svg class="w-5 h-5 pointer-events-none" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="m14.74 9-.346 9m-4.788 0L9.26 9m9.968-3.21c.342.052.682.107 1.022.166m-1.022-.165L18.16 19.673a2.25 2.25 0 0 1-2.244 2.077H8.084a2.25 2.25 0 0 1-2.244-2.077L4.772 5.79m14.456 0a48.108 48.108 0 0 0-3.478-.397m-12 .562c.34-.059.68-.114 1.022-.165m0 0a48.11 48.11 0 0 1 3.478-.397m7.5 0v-.916c0-1.18-.91-2.134-2.09-2.201a51.964 51.964 0 0 0-3.32 0c-1.18.067-2.09 1.022-2.09 2.201v.916m7.5 0a48.667 48.667 0 0 0-7.5 0" /></svg>
-              </button>
-            </form>
-            <div class="col-span-7 p-3">{{ item.nama }}</div>
-            <div class="col-span-2 p-3 font-semibold">Rp {{ item.total | floatformat:0 }}</div>
-          </div>
-          {% endfor %}
-          </div>
-        <div class="grid grid-cols-10 gap-4 items-center border-t pt-4 mt-4 font-bold">
-          <div class="col-span-8 p-3 text-right">Total Beban Lain-lain:</div>
-          <div id="jumlah-beban-lain" class="col-span-2 p-3 text-lg">Rp {{ total_beban_lain | floatformat:0 }}</div>
+        {% endfor %}
         </div>
+      <div class="grid grid-cols-10 gap-4 items-center border-t pt-4 mt-4 font-bold">
+        <div class="col-span-8 p-3 text-right">Total Beban Usaha:</div>
+        <div id="jumlah-beban-usaha" class="col-span-2 p-3 text-lg">Rp {{ total_beban_usaha | floatformat:0 }}</div>
       </div>
-      <div class="bg-gray-800 text-white p-8 rounded-2xl shadow-lg">
-        <div class="flex justify-between items-center">
-          <h2 class="text-xl font-bold">Total Keseluruhan Beban</h2>
-          <span id="jumlah-total-beban" class="text-3xl font-bold">Rp {{ grand_total_beban | floatformat:0 }}</span>
-        </div>
+    </div>
+    <div class="bg-white p-8 rounded-2xl shadow-lg">
+      <h2 class="text-xl font-bold mb-6">Beban Lain-lain (Opsional)</h2>
+      <div class="grid grid-cols-10 gap-4 items-center border-b pb-2 font-semibold text-sm text-slate-600">
+        <div class="col-span-1">Aksi</div>
+        <div class="col-span-7 p-3">Keterangan</div>
+        <div class="col-span-2 p-3">Total</div>
       </div>
-
-      <div id="success-alert" class="hidden fixed bottom-5 right-5 bg-green-500 text-white py-3 px-6 rounded-lg shadow-lg transition-opacity opacity-0 pointer-events-none">Data berhasil ditambahkan!</div>
-      <div id="error-alert" class="hidden fixed bottom-5 right-5 bg-red-500 text-white py-3 px-6 rounded-lg shadow-lg transition-opacity opacity-0 pointer-events-none">Harap isi semua field!</div>
-
-    </main>
-  </div>
-
-  <div id="add-beban-modal" class="fixed inset-0 bg-black/60 flex justify-center items-center z-50 transition-opacity opacity-0 pointer-events-none">
-    <form id="beban-form" method="POST" class="bg-white p-8 rounded-2xl shadow-xl w-full max-w-lg space-y-6">
+      <div id="beban-lain-rows" class="divide-y">
+        
+        {% if not beban_lain %}
+        <p class="text-center text-slate-500 p-4">Belum ada data beban lain-lain.</p>
+        {% endif %}
+        {% for item in beban_lain %}
+        <div class="data-row grid grid-cols-10 gap-4 items-center">
+          <form method="POST" class="col-span-1 flex justify-center">
+            {% csrf_token %}
+            <input type="hidden" name="action" value="delete_beban_item">
+            <input type="hidden" name="item_id" value="{{ item.id }}">
+            <button type="submit" class="remove-row-btn text-slate-400 hover:text-red-500 p-3" onclick="return confirm('Yakin ingin menghapus item ini?')">
+              <svg class="w-5 h-5 pointer-events-none" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="m14.74 9-.346 9m-4.788 0L9.26 9m9.968-3.21c.342.052.682.107 1.022.166m-1.022-.165L18.16 19.673a2.25 2.25 0 0 1-2.244 2.077H8.084a2.25 2.25 0 0 1-2.244-2.077L4.772 5.79m14.456 0a48.108 48.108 0 0 0-3.478-.397m-12 .562c.34-.059.68-.114 1.022-.165m0 0a48.11 48.11 0 0 1 3.478-.397m7.5 0v-.916c0-1.18-.91-2.134-2.09-2.201a51.964 51.964 0 0 0-3.32 0c-1.18.067-2.09 1.022-2.09 2.201v.916m7.5 0a48.667 48.667 0 0 0-7.5 0" /></svg>
+            </button>
+          </form>
+          <div class="col-span-7 p-3">{{ item.name }}</div>
+          <div class="col-span-2 p-3 font-semibold">Rp {{ item.total | floatformat:0 }}</div>
+        </div>
+        {% endfor %}
+        </div>
+      <div class="grid grid-cols-10 gap-4 items-center border-t pt-4 mt-4 font-bold">
+        <div class="col-span-8 p-3 text-right">Total Beban Lain-lain:</div>
+        <div id="jumlah-beban-lain" class="col-span-2 p-3 text-lg">Rp {{ total_beban_lain | floatformat:0 }}</div>
+      </div>
+    </div>
+    <div class="bg-gray-800 text-white p-8 rounded-2xl shadow-lg">
+      <div class="flex justify-between items-center">
+        <h2 class="text-xl font-bold">Total Keseluruhan Beban</h2>
+        <span id="jumlah-total-beban" class="text-3xl font-bold">Rp {{ grand_total_beban | floatformat:0 }}</span>
+      </div>
+    </div>
+    
+    <form method="POST" class="flex justify-end mt-8">
       {% csrf_token %}
-      <input type="hidden" name="action" value="add_beban">
-      
-      <h2 class="text-2xl font-bold mb-4">Tambah Data Beban</h2>
-      
-      <div>
-        <label for="beban-type" class="block mb-2 font-semibold">Tipe Beban</label>
-        <select id="beban-type" name="beban-type" class="w-full p-3 border border-slate-300 rounded-lg">
-          <option value="Beban Usaha">Beban Usaha</option>
-          <option value="Beban Lain-lain">Beban Lain-lain</option>
-        </select>
-      </div>
-
-      <div>
-        <label for="beban-type" class="block mb-2 font-semibold">Jenis Beban Usaha</label>
-        <select id="beban-type" name="beban-type" class="w-full p-3 border border-slate-300 rounded-lg">
-          <option value="">Pilih Jenis Beban</option>
-              <option value="Biaya Sewa">Biaya Sewa</option>
-              <option value="Biaya Transportasi">Biaya Transportasi</option>
-              <option value="Biaya Air dan Listrik">Biaya Air dan Listrik</option>
-              <option value="Biaya Pinjaman">Biaya Pinjaman</option>
-              <option value="Biaya Penyusutan">Biaya Penyusutan</option>
-              <option value="Biaya Lainnya">Biaya Lainnya</option>
-        </select>
-      </div>
-
-      <div>
-        <label for="beban-name" class="block mb-2 font-semibold">Keterangan</label>
-        <input type="text" id="beban-name" name="beban-name" class="w-full p-3 border border-slate-300 rounded-lg" placeholder="Cth: Biaya Gaji">
-      </div>
-      <div>
-        <label for="beban-total" class="block mb-2 font-semibold">Total (Rp)</label>
-        <input type="number" id="beban-total" name="beban-total" class="w-full p-3 border border-slate-300 rounded-lg" placeholder="0">
-      </div>
-
-      <div class="flex justify-end gap-4 pt-4">
-        <button type="button" id="modal-close-btn" class="py-2 px-6 rounded-lg font-semibold border hover:bg-slate-100">
-          Batal
-        </button>
-        <button type="submit" class="bg-black text-white py-2 px-6 rounded-lg font-semibold hover:bg-slate-800">
-          Simpan
-        </button>
-      </div>
+      <button 
+        type="submit"
+        name="next_step"
+        class="bg-black text-white py-3 px-8 rounded-lg font-semibold text-lg hover:bg-slate-800"
+      >
+        Lanjut ke Laporan &rarr;
+      </button>
     </form>
+
+  </main>
   </div>
+
+<div id="add-beban-modal" class="fixed inset-0 bg-black/60 flex justify-center items-center z-50 transition-opacity opacity-0 pointer-events-none">
+  <form id="beban-form" method="POST" class="bg-white p-8 rounded-2xl shadow-xl w-full max-w-lg space-y-6">
+    {% csrf_token %}
+    <input type="hidden" name="action" value="add_beban">
+    
+    <h2 class="text-2xl font-bold mb-4">Tambah Data Beban</h2>
+    
+    <div>
+      <label for="beban-type" class="block mb-2 font-semibold">Tipe Beban</label>
+      <select id="beban-type" name="beban-type" class="w-full p-3 border border-slate-300 rounded-lg">
+        <option value="usaha">Beban Usaha</option>
+        <option value="lain">Beban Lain-lain</option>
+      </select>
+    </div>
+
+    <div>
+      <label for="beban-name" class="block mb-2 font-semibold">Keterangan</label>
+      <input type="text" id="beban-name" name="beban-name" class="w-full p-3 border border-slate-300 rounded-lg" placeholder="Cth: Biaya Gaji" required>
+    </div>
+    <div>
+      <label for="beban-total" class="block mb-2 font-semibold">Total (Rp)</label>
+      <input type="number" id="beban-total" name="beban-total" class="w-full p-3 border border-slate-300 rounded-lg" placeholder="0" required>
+    </div>
+
+    <div class="flex justify-end gap-4 pt-4">
+      <button type="button" id="modal-close-btn" class="py-2 px-6 rounded-lg font-semibold border hover:bg-slate-100">
+        Batal
+      </button>
+      <button type="submit" class="bg-black text-white py-2 px-6 rounded-lg font-semibold hover:bg-slate-800">
+        Simpan
+      </button>
+    </div>
+  </form>
 </div>
 {% endblock %}
 
 {% block extra_js %}
-<script src="{% static 'core/js/beban_usaha.js' %}"></script>
+<script>
+document.addEventListener("DOMContentLoaded", function () {
+  const addBebanBtn = document.getElementById("add-beban-btn");
+  const addBebanModal = document.getElementById("add-beban-modal");
+  const modalCloseBtn = document.getElementById("modal-close-btn");
+  const bebanForm = document.getElementById("beban-form");
+
+  if (addBebanBtn && addBebanModal && bebanForm) {
+    const openModal = () =>
+      addBebanModal.classList.remove("opacity-0", "pointer-events-none");
+    const closeModal = () => {
+      addBebanModal.classList.add("opacity-0", "pointer-events-none");
+      bebanForm.reset();
+    };
+
+    addBebanBtn.addEventListener("click", openModal);
+    modalCloseBtn.addEventListener("click", closeModal);
+    addBebanModal.addEventListener(
+      "click",
+      (e) => e.target === addBebanModal && closeModal()
+    );
+  }
+});
+</script>
+<script src="{% static 'core/js/profile.js' %}"></script>
 {% endblock %}

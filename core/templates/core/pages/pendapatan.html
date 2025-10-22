@@ -1,125 +1,121 @@
-{% extends "base.html" %} 
-{% load static %} 
-{% block title %}Dashboard - Pendapatan{% endblock %} 
+{% extends "base.html" %}
+{% load static %}
+
+{% block title %}Pendapatan{% endblock %}
 
 {% block content %}
-<div class="bg-[#F4F6F9]">
-  <div class="flex gap-6">
-    {% include 'core/partials/sidebar.html' %}
+<div class="flex h-screen">
 
-    <button id="mobile-menu-btn" class="md:hidden fixed top-4 left-4 z-40 text-slate-800 p-2 bg-white rounded-md shadow-md">
-      <svg
-        class="w-6 h-6"
-        xmlns="http://www.w3.org/2000/svg"
-        fill="none"
-        viewBox="0 0 24 24"
-        stroke-width="1.5"
-        stroke="currentColor"
+  {% include 'core/partials/sidebar.html' %}
+
+  <main id="main-content" class="flex-1 p-8 overflow-y-auto">
+    <div class="flex justify-between items-center mb-8">
+      <h1 class="text-3xl font-bold text-red-600">Langkah 2: Pendapatan</h1>
+      <button id="add-income-btn" class="bg-black text-white py-2 px-6 rounded-lg font-semibold hover:bg-slate-800">
+        Tambah Data +
+      </button>
+    </div>
+
+    {% if messages %}
+      {% for message in messages %}
+      <div class="{% if message.tags == 'error' %}bg-red-100 border-red-400 text-red-700{% elif message.tags == 'warning' %}bg-yellow-100 border-yellow-400 text-yellow-700{% else %}bg-green-100 border-green-400 text-green-700{% endif %} border px-4 py-3 rounded-lg relative mb-6" role="alert">
+        <span class="block sm:inline">{{ message }}</span>
+      </div>
+      {% endfor %}
+    {% endif %}
+    <div class="bg-white p-8 rounded-2xl shadow-lg mb-8">
+      <h2 class="text-xl font-bold mb-6">Pendapatan dari Usaha</h2>
+      <p class="text-slate-600 mb-4">Harap tambahkan minimal satu pendapatan usaha untuk melanjutkan ke langkah berikutnya.</p>
+      <div class="grid grid-cols-10 gap-4 items-center border-b pb-2 font-semibold text-sm text-slate-600">
+        <div class="col-span-1">Aksi</div>
+        <div class="col-span-3 p-3">Nama Produk</div>
+        <div class="col-span-2 p-3">Kuantitas</div>
+        <div class="col-span-2 p-3">Harga Jual</div>
+        <div class="col-span-2 p-3">Total</div>
+      </div>
+      <div id="pendapatan-usaha-rows" class="divide-y">
+
+        {% if not revenue_usaha %}
+        <p class="text-center text-slate-500 p-4">Belum ada data pendapatan usaha.</p>
+        {% endif %}
+        {% for item in revenue_usaha %}
+        <div class="data-row grid grid-cols-10 gap-4 items-center">
+          <form method="POST" class="col-span-1 flex justify-center">
+            {% csrf_token %}
+            <input type="hidden" name="action" value="delete_revenue_item">
+            <input type="hidden" name="item_id" value="{{ item.id }}">
+            <button type="submit" class="remove-row-btn text-slate-400 hover:text-red-500 p-3" onclick="return confirm('Yakin ingin menghapus item ini?')">
+              <svg class="w-5 h-5 pointer-events-none" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="m14.74 9-.346 9m-4.788 0L9.26 9m9.968-3.21c.342.052.682.107 1.022.166m-1.022-.165L18.16 19.673a2.25 2.25 0 0 1-2.244 2.077H8.084a2.25 2.25 0 0 1-2.244-2.077L4.772 5.79m14.456 0a48.108 48.108 0 0 0-3.478-.397m-12 .562c.34-.059.68-.114 1.022-.165m0 0a48.11 48.11 0 0 1 3.478-.397m7.5 0v-.916c0-1.18-.91-2.134-2.09-2.201a51.964 51.964 0 0 0-3.32 0c-1.18.067-2.09 1.022-2.09 2.201v.916m7.5 0a48.667 48.667 0 0 0-7.5 0" /></svg>
+            </button>
+          </form>
+          <div class="col-span-3 p-3">{{ item.product.name }}</div>
+          <div class="col-span-2 p-3">{{ item.quantity }}</div>
+          <div class="col-span-2 p-3">Rp {{ item.selling_price | floatformat:0 }}</div>
+          <div class="col-span-2 p-3 font-semibold">Rp {{ item.total | floatformat:0 }}</div>
+        </div>
+        {% endfor %}
+        </div>
+      <div class="grid grid-cols-10 gap-4 items-center border-t pt-4 mt-4 font-bold">
+        <div class="col-span-8 p-3 text-right">Total Pendapatan dari Usaha:</div>
+        <div id="jumlah-penjualan-usaha" class="col-span-2 p-3 text-lg">Rp {{ total_usaha | floatformat:0 }}</div>
+      </div>
+    </div>
+    <div class="bg-white p-8 rounded-2xl shadow-lg mb-8">
+      <h2 class="text-xl font-bold mb-6">Pendapatan Lain-lain (Opsional)</h2>
+      <div class="grid grid-cols-10 gap-4 items-center border-b pb-2 font-semibold text-sm text-slate-600">
+        <div class="col-span-1">Aksi</div>
+        <div class="col-span-7 p-3">Keterangan</div>
+        <div class="col-span-2 p-3">Total</div>
+      </div>
+      <div id="pendapatan-lain-rows" class="divide-y">
+
+        {% if not revenue_lain %}
+        <p class="text-center text-slate-500 p-4">Belum ada data pendapatan lain-lain.</p>
+        {% endif %}
+        {% for item in revenue_lain %}
+        <div class="data-row grid grid-cols-10 gap-4 items-center">
+          <form method="POST" class="col-span-1 flex justify-center">
+            {% csrf_token %}
+            <input type="hidden" name="action" value="delete_revenue_item">
+            <input type="hidden" name="item_id" value="{{ item.id }}">
+            <button type="submit" class="remove-row-btn text-slate-400 hover:text-red-500 p-3" onclick="return confirm('Yakin ingin menghapus item ini?')">
+              <svg class="w-5 h-5 pointer-events-none" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="m14.74 9-.346 9m-4.788 0L9.26 9m9.968-3.21c.342.052.682.107 1.022.166m-1.022-.165L18.16 19.673a2.25 2.25 0 0 1-2.244 2.077H8.084a2.25 2.25 0 0 1-2.244-2.077L4.772 5.79m14.456 0a48.108 48.108 0 0 0-3.478-.397m-12 .562c.34-.059.68-.114 1.022-.165m0 0a48.11 48.11 0 0 1 3.478-.397m7.5 0v-.916c0-1.18-.91-2.134-2.09-2.201a51.964 51.964 0 0 0-3.32 0c-1.18.067-2.09 1.022-2.09 2.201v.916m7.5 0a48.667 48.667 0 0 0-7.5 0" /></svg>
+            </button>
+          </form>
+          <div class="col-span-7 p-3">{{ item.name }}</div>
+          <div class="col-span-2 p-3 font-semibold">Rp {{ item.total | floatformat:0 }}</div>
+        </div>
+        {% endfor %}
+        </div>
+      <div class="grid grid-cols-10 gap-4 items-center border-t pt-4 mt-4 font-bold">
+        <div class="col-span-8 p-3 text-right">Total Pendapatan Lain-lain:</div>
+        <div id="jumlah-penjualan-lain" class="col-span-2 p-3 text-lg">Rp {{ total_lain | floatformat:0 }}</div>
+      </div>
+    </div>
+    <form method="POST" class="flex justify-end mt-8">
+      {% csrf_token %}
+      <button
+        type="submit"
+        name="next_step"
+        class="bg-black text-white py-3 px-8 rounded-lg font-semibold text-lg hover:bg-slate-800
+               {% if not completion_status.pendapatan %}disabled:opacity-50 cursor-not-allowed{% endif %}"
+        {% if not completion_status.pendapatan %}disabled title="Harap tambahkan minimal 1 pendapatan usaha"{% endif %}
       >
-        <path
-          stroke-linecap="round"
-          stroke-linejoin="round"
-          d="M3.75 6.75h16.5M3.75 12h16.5m-16.5 5.25h16.5"
-        />
-      </svg>
-    </button>
+        Lanjut ke HPP &rarr;
+      </button>
+    </form>
 
-    <main id="main-content" class="flex-1 p-8 overflow-y-auto">
-      <div class="flex justify-between items-center mb-8">
-        <h1 class="text-3xl font-bold mb-6">Pendapatan</h1>
-        <button id="add-income-btn" class="bg-black text-white py-2 px-6 rounded-lg font-semibold hover:bg-slate-800">
-          Tambah Data +
-        </button>
-      </div>
-
-      {% if messages %} 
-        {% for message in messages %}
-        <div class="{% if message.tags == 'error' %}bg-red-100 border-red-400 text-red-700{% else %}bg-green-100 border-green-400 text-green-700{% endif %} border px-4 py-3 rounded-lg relative mb-6" role="alert">
-          <span class="block sm:inline">{{ message }}</span>
-        </div>
-        {% endfor %} 
-      {% endif %}
-      <div class="bg-white p-8 rounded-2xl shadow-lg mb-8">
-        <h2 class="text-xl font-bold mb-6">Pendapatan dari Usaha</h2>
-        <div class="grid grid-cols-10 gap-4 items-center border-b pb-2 font-semibold text-sm text-slate-600">
-          <div class="col-span-1">Aksi</div>
-          <div class="col-span-3 p-3">Nama Produk</div>
-          <div class="col-span-2 p-3">Kuantitas</div>
-          <div class="col-span-2 p-3">Harga Jual</div>
-          <div class="col-span-2 p-3">Total</div>
-        </div>
-        <div id="pendapatan-usaha-rows" class="divide-y">
-          
-          {% if not revenue_usaha %}
-          <p class="text-center text-slate-500 p-4">Belum ada data pendapatan usaha.</p>
-          {% endif %}
-          {% for item in revenue_usaha %}
-          <div class="data-row grid grid-cols-10 gap-4 items-center">
-            <form method="POST" class="col-span-1 flex justify-center">
-              {% csrf_token %}
-              <input type="hidden" name="action" value="delete_usaha">
-              <input type="hidden" name="item_index" value="{{ forloop.counter0 }}">
-              <button type="submit" class="remove-row-btn text-slate-400 hover:text-red-500 p-3" onclick="return confirm('Yakin ingin menghapus item ini?')">
-                <svg class="w-5 h-5 pointer-events-none" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="m14.74 9-.346 9m-4.788 0L9.26 9m9.968-3.21c.342.052.682.107 1.022.166m-1.022-.165L18.16 19.673a2.25 2.25 0 0 1-2.244 2.077H8.084a2.25 2.25 0 0 1-2.244-2.077L4.772 5.79m14.456 0a48.108 48.108 0 0 0-3.478-.397m-12 .562c.34-.059.68-.114 1.022-.165m0 0a48.11 48.11 0 0 1 3.478-.397m7.5 0v-.916c0-1.18-.91-2.134-2.09-2.201a51.964 51.964 0 0 0-3.32 0c-1.18.067-2.09 1.022-2.09 2.201v.916m7.5 0a48.667 48.667 0 0 0-7.5 0" /></svg>
-              </button>
-            </form>
-            <div class="col-span-3 p-3">{{ item.nama }}</div>
-            <div class="col-span-2 p-3">{{ item.qty }}</div>
-            <div class="col-span-2 p-3">Rp {{ item.price | floatformat:0 }}</div>
-            <div class="col-span-2 p-3 font-semibold">Rp {{ item.total | floatformat:0 }}</div>
-          </div>
-          {% endfor %}
-          </div>
-        <div class="grid grid-cols-10 gap-4 items-center border-t pt-4 mt-4 font-bold">
-          <div class="col-span-8 p-3 text-right">Total Pendapatan dari Usaha:</div>
-          <div id="jumlah-penjualan-usaha" class="col-span-2 p-3 text-lg">Rp {{ total_usaha | floatformat:0 }}</div>
-        </div>
-      </div>
-      <div class="bg-white p-8 rounded-2xl shadow-lg">
-        <h2 class="text-xl font-bold mb-6">Pendapatan Lain-lain (Opsional)</h2>
-        <div class="grid grid-cols-10 gap-4 items-center border-b pb-2 font-semibold text-sm text-slate-600">
-          <div class="col-span-1">Aksi</div>
-          <div class="col-span-7 p-3">Keterangan</div>
-          <div class="col-span-2 p-3">Total</div>
-        </div>
-        <div id="pendapatan-lain-rows" class="divide-y">
-
-          {% if not revenue_lain %}
-          <p class="text-center text-slate-500 p-4">Belum ada data pendapatan lain-lain.</p>
-          {% endif %}
-          {% for item in revenue_lain %}
-          <div class="data-row grid grid-cols-10 gap-4 items-center">
-            <form method="POST" class="col-span-1 flex justify-center">
-              {% csrf_token %}
-              <input type="hidden" name="action" value="delete_lain">
-              <input type="hidden" name="item_index" value="{{ forloop.counter0 }}">
-              <button type="submit" class="remove-row-btn text-slate-400 hover:text-red-500 p-3" onclick="return confirm('Yakin ingin menghapus item ini?')">
-                <svg class="w-5 h-5 pointer-events-none" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="m14.74 9-.346 9m-4.788 0L9.26 9m9.968-3.21c.342.052.682.107 1.022.166m-1.022-.165L18.16 19.673a2.25 2.25 0 0 1-2.244 2.077H8.084a2.25 2.25 0 0 1-2.244-2.077L4.772 5.79m14.456 0a48.108 48.108 0 0 0-3.478-.397m-12 .562c.34-.059.68-.114 1.022-.165m0 0a48.11 48.11 0 0 1 3.478-.397m7.5 0v-.916c0-1.18-.91-2.134-2.09-2.201a51.964 51.964 0 0 0-3.32 0c-1.18.067-2.09 1.022-2.09 2.201v.916m7.5 0a48.667 48.667 0 0 0-7.5 0" /></svg>
-              </button>
-            </form>
-            <div class="col-span-7 p-3">{{ item.nama }}</div>
-            <div class="col-span-2 p-3 font-semibold">Rp {{ item.total | floatformat:0 }}</div>
-          </div>
-          {% endfor %}
-          </div>
-        <div class="grid grid-cols-10 gap-4 items-center border-t pt-4 mt-4 font-bold">
-          <div class="col-span-8 p-3 text-right">Total Pendapatan Lain-lain:</div>
-          <div id="jumlah-penjualan-lain" class="col-span-2 p-3 text-lg">Rp {{ total_lain | floatformat:0 }}</div>
-        </div>
-      </div>
-      <div id="success-alert" class="hidden fixed bottom-5 right-5 bg-green-500 text-white py-3 px-6 rounded-lg shadow-lg transition-opacity opacity-0 pointer-events-none">Data berhasil ditambahkan!</div>
-      <div id="error-alert" class="hidden fixed bottom-5 right-5 bg-red-500 text-white py-3 px-6 rounded-lg shadow-lg transition-opacity opacity-0 pointer-events-none">Harap isi semua field!</div>
-
-    </main>
+  </main>
   </div>
 
-  <div id="add-income-modal" class="fixed inset-0 bg-black/60 flex justify-center items-center z-50 transition-opacity opacity-0 pointer-events-none">
-  <form id="income-form" method="POST" class="bg-white p-8 rounded-2xl shadow-xl w-full max-w-lg space-y-6">
+<div id="add-income-modal"
+  class="fixed inset-0 bg-black/60 flex justify-center items-center z-50 transition-opacity opacity-0 pointer-events-none">
+  <form id="income-form" method="POST" action="{% url 'core:pendapatan' %}" class="bg-white p-8 rounded-2xl shadow-xl w-full max-w-lg space-y-6">
     {% csrf_token %}
     <input type="hidden" name="action" value="add">
-    
+
     <h2 class="text-2xl font-bold mb-4">Tambah Data Pendapatan</h2>
-    
+
     <div>
       <label for="modal-data-type" class="block mb-2 font-semibold">Tipe Data</label>
       <select id="modal-data-type" name="data_type" class="w-full p-3 border border-slate-300 rounded-lg">
@@ -131,27 +127,28 @@
     <div id="modal-usaha-fields" class="space-y-4">
       <div>
         <label for="modal-product-name" class="block mb-2 font-semibold">Nama Produk</label>
-        <input type="text" id="modal-product-name" name="modal-product-name" class="w-full p-3 border border-slate-300 rounded-lg" placeholder="Cth: Penjualan Kaos">
+        <input type="text" id="modal-product-name" name="modal-product-name" class="w-full p-3 border border-slate-300 rounded-lg" placeholder="Cth: Penjualan Kaos" required>
       </div>
       <div class="grid grid-cols-2 gap-4">
         <div>
           <label for="modal-quantity" class="block mb-2 font-semibold">Kuantitas</label>
-          <input type="number" id="modal-quantity" name="modal-quantity" class="w-full p-3 border border-slate-300 rounded-lg" placeholder="0">
+          <input type="number" id="modal-quantity" name="modal-quantity" class="w-full p-3 border border-slate-300 rounded-lg" placeholder="0" required>
         </div>
         <div>
           <label for="modal-price" class="block mb-2 font-semibold">Harga Jual (Rp)</label>
-          <input type="number" id="modal-price" name="modal-price" class="w-full p-3 border border-slate-300 rounded-lg" placeholder="0">
+          <input type="number" id="modal-price" name="modal-price" class="w-full p-3 border border-slate-300 rounded-lg" placeholder="0" required>
         </div>
       </div>
     </div>
 
-    <div id="modal-lain-total-field" class="hidden space-y-4"> <div>
+    <div id="modal-lain-total-field" class="hidden space-y-4">
+      <div>
         <label for="modal-product-name-lain" class="block mb-2 font-semibold">Keterangan</label>
-        <input type="text" id="modal-product-name-lain" name="modal-product-name-lain" class="w-full p-3 border border-slate-300 rounded-lg" placeholder="Cth: Sewa Gedung">
+        <input type="text" id="modal-product-name-lain" name="modal-product-name-lain" class="w-full p-3 border border-slate-300 rounded-lg" placeholder="Cth: Sewa Gedung" required>
       </div>
       <div>
         <label for="modal-total" class="block mb-2 font-semibold">Total (Rp)</label>
-        <input type="number" id="modal-total" name="modal-total" class="w-full p-3 border border-slate-300 rounded-lg" placeholder="0">
+        <input type="number" id="modal-total" name="modal-total" class="w-full p-3 border border-slate-300 rounded-lg" placeholder="0" required>
       </div>
     </div>
 
@@ -166,7 +163,62 @@
   </form>
 </div>
 {% endblock %}
-
 {% block extra_js %}
-<script src="{% static 'core/js/pendapatan.js' %}"></script>
-{% endblock %} 
+<script>
+document.addEventListener("DOMContentLoaded", function () {
+  const addIncomeBtn = document.getElementById("add-income-btn");
+  const addIncomeModal = document.getElementById("add-income-modal");
+  const modalCloseBtn = document.getElementById("modal-close-btn");
+  const incomeForm = document.getElementById("income-form");
+  const modalDataType = document.getElementById("modal-data-type");
+  const modalUsahaFields = document.getElementById("modal-usaha-fields");
+  const modalLainFields = document.getElementById("modal-lain-total-field");
+
+  const usahaName = document.getElementById("modal-product-name");
+  const usahaQty = document.getElementById("modal-quantity");
+  const usahaPrice = document.getElementById("modal-price");
+  const lainName = document.getElementById("modal-product-name-lain");
+  const lainTotal = document.getElementById("modal-total");
+
+  function setRequired(isUsaha) {
+    usahaName.required = isUsaha;
+    usahaQty.required = isUsaha;
+    usahaPrice.required = isUsaha;
+    lainName.required = !isUsaha;
+    lainTotal.required = !isUsaha;
+  }
+
+  function openModal() {
+    addIncomeModal.classList.remove("opacity-0");
+    setTimeout(() => addIncomeModal.classList.remove("pointer-events-none"), 100);
+    const isUsaha = modalDataType.value === "usaha";
+    modalUsahaFields.classList.toggle("hidden", !isUsaha);
+    modalLainFields.classList.toggle("hidden", isUsaha);
+    setRequired(isUsaha);
+  }
+
+  function closeModal() {
+  addIncomeModal.classList.add("opacity-0");
+  setTimeout(() => {
+    addIncomeModal.classList.add("pointer-events-none");
+    incomeForm.reset();
+    modalUsahaFields.classList.remove("hidden");
+    modalLainFields.classList.add("hidden");
+    setRequired(true);
+  }, 200);
+}
+
+  if (addIncomeBtn && addIncomeModal && incomeForm) {
+    addIncomeBtn.addEventListener("click", openModal);
+    modalCloseBtn.addEventListener("click", closeModal);
+    addIncomeModal.addEventListener("click", (e) => e.target === addIncomeModal && closeModal());
+    modalDataType.addEventListener("change", function () {
+      const isUsaha = this.value === "usaha";
+      modalUsahaFields.classList.toggle("hidden", !isUsaha);
+      modalLainFields.classList.toggle("hidden", isUsaha);
+      setRequired(isUsaha);
+    });
+  }
+});
+</script>
+{% endblock %}

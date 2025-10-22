@@ -1,13 +1,17 @@
-{% extends "base.html" %} {% load static %} {% block title %}Dashboard - Laporan
-Laba Rugi{% endblock %} {% block content %}
-<div class="bg-[#F4F6F9]">
-  <div class="flex gap-6">
-    {% include 'core/partials/sidebar.html' %}
+{% extends "base.html" %}
+{% load static %}
 
-    <main id="main-content" class="flex-1 p-8 overflow-y-auto">
-    
+{% block title %}Laporan Laba Rugi{% endblock %}
+
+{% block content %}
+<div class="flex h-screen">
+
+  {% include 'core/partials/sidebar.html' %}
+
+  <main id="main-content" class="flex-1 p-8 overflow-y-auto">
+
     <div class="flex justify-between items-center mb-8">
-      <h1 class="text-3xl font-bold mb-6">Laporan Laba Rugi</h1>
+      <h1 class="text-3xl font-bold text-red-600">Langkah 5: Laporan Laba Rugi</h1>
       <div class="flex gap-4">
         <button class="bg-gray-700 text-white py-2 px-6 rounded-lg font-semibold hover:bg-gray-600">
           Export to Excel
@@ -18,87 +22,110 @@ Laba Rugi{% endblock %} {% block content %}
       </div>
     </div>
 
-    <div class="bg-white p-10 rounded-2xl shadow-lg max-w-4xl mx-auto">
-      
+    <div class="bg-white rounded-2xl p-10 shadow-lg max-w-4xl mx-auto">
+
       <div class="text-center mb-10">
-        <h2 class="text-2xl font-bold">{{ profile_data.company_name | default:'Nama Perusahaan' }}</h2>
-        <h3 class="text-xl font-semibold">Laporan Laba Rugi</h3>
-        <p class="text-slate-500">Untuk Periode yang Berakhir {{ profile_data.month | default:'Bulan' }} {{ profile_data.year | default:'Tahun' }}</p>
+        <h2 class="text-2xl font-bold">{{ report.company_name | default:'Nama Perusahaan' }}</h2>
+        <p class="text-xl font-semibold">LAPORAN HARGA POKOK PENJUALAN</p>
+        <p class="text-md text-slate-500">{{ report.month | default:'Bulan' }} {{ report.year | default:'Tahun' }}</p>
       </div>
-
-      <div class="space-y-4">
-        
-        <div class="flex justify-between">
-          <span class="font-semibold">Pendapatan dari Usaha</span>
-          <span class="font-semibold">Rp {{ total_pendapatan_usaha | floatformat:0 }}</span>
+      <div class="space-y-4 max-w-2xl mx-auto mb-16">
+        <div class="flex justify-between items-center border-b pb-2">
+          <span class="text-slate-700">Persediaan Awal</span>
+          <span class="font-semibold">Rp {{ report.persediaan_awal | floatformat:0 }}</span>
         </div>
-
-        <div class="flex justify-between">
-          <span class="pl-4">Harga Pokok Penjualan (HPP)</span>
-          <span>(Rp {{ hpp_total | floatformat:0 }})</span>
+        <div class="flex justify-between items-center border-b pb-2">
+          <span class="text-slate-700">Pembelian (Neto)</span>
+          <span class="font-semibold">Rp {{ total_pembelian | floatformat:0 }}</span>
         </div>
-
-        <div class="flex justify-between border-t pt-4 mt-4">
-          <span class="text-lg font-bold">LABA KOTOR (GROSS PROFIT)</span>
-          <span class="text-lg font-bold">Rp {{ laba_kotor | floatformat:0 }}</span>
+        <div class="flex justify-between items-center border-b pb-2">
+          <span class="text-slate-700">Barang Siap untuk Dijual</span>
+          <span class="font-semibold">Rp {{ barang_tersedia | floatformat:0 }}</span>
         </div>
+        <div class="flex justify-between items-center border-b pb-2">
+          <span class="text-slate-700">Persediaan Akhir</span>
+          <span class="font-semibold">(Rp {{ report.persediaan_akhir | floatformat:0 }})</span>
+        </div>
+        <div class="flex justify-between items-center bg-slate-100 p-3 rounded-lg mt-4">
+          <span class="font-bold text-lg">Harga Pokok Penjualan (HPP)</span>
+          <span class="font-bold text-lg">Rp {{ hpp_total | floatformat:0 }}</span>
+        </div>
+      </div>
+      <hr class="my-12 border-slate-300" />
 
-        <div class="mt-6 space-y-2">
-          <h4 class="font-semibold">Beban Usaha</h4>
-          {% for item in beban_usaha %}
-          <div class="flex justify-between">
-            <span class="pl-4">{{ item.nama }}</span>
-            <span>(Rp {{ item.total | floatformat:0 }})</span>
+      <div class="text-center mb-10">
+        <h2 class="text-2xl font-bold">{{ report.company_name | default:'Nama Perusahaan' }}</h2>
+        <p class="text-xl font-semibold">LAPORAN LABA RUGI</p>
+        <p class="text-md text-slate-500">{{ report.month | default:'Bulan' }} {{ report.year | default:'Tahun' }}</p>
+      </div>
+      <div class="space-y-4 max-w-2xl mx-auto">
+        <div class="font-bold text-lg">Pendapatan</div>
+        <div class="pl-6 border-b pb-2">
+          <div class="flex justify-between items-center py-1">
+            <span>Pendapatan Usaha</span>
+            <span>Rp {{ total_pendapatan_usaha | floatformat:0 }}</span>
           </div>
-          {% endfor %}
-          <div class="flex justify-between font-semibold pt-2 border-t">
-            <span class="pl-4">Total Beban Usaha</span>
-            <span>(Rp {{ total_beban_usaha | floatformat:0 }})</span>
-          </div>
-          </div>
-
-        <div class="flex justify-between border-t pt-4 mt-4">
-          <span class="text-lg font-bold">LABA USAHA (OPERATING PROFIT)</span>
-          <span class="text-lg font-bold">Rp {{ laba_usaha | floatformat:0 }}</span>
-        </div>
-
-        <div class="mt-6 space-y-2">
-          <h4 class="font-semibold">Pendapatan dan Beban Lain-lain</h4>
-          <div class="flex justify-between">
-            <span class="pl-4">Pendapatan Lain-lain</span>
+          <div class="flex justify-between items-center py-1">
+            <span>Pendapatan Lain - Lain</span>
             <span>Rp {{ total_pendapatan_lain | floatformat:0 }}</span>
           </div>
-          {% for item in beban_lain %}
-          <div class="flex justify-between">
-            <span class="pl-4">{{ item.nama }}</span>
-            <span>(Rp {{ item.total | floatformat:0 }})</span>
+        </div>
+        <div class="flex justify-between items-center font-bold py-1 pl-6">
+          <span>Jumlah Pendapatan</span>
+          <span>Rp {{ jumlah_pendapatan | floatformat:0 }}</span>
+        </div>
+
+        <div class="font-bold text-lg pt-6">Beban</div>
+        <div class="pl-6 border-b pb-2">
+          <div class="flex justify-between items-center py-1">
+            <span>Beban Usaha - HPP</span>
+            <span>Rp {{ hpp_total | floatformat:0 }}</span>
+          </div>
+          {% for item in beban_usaha_items %}
+          <div class="flex justify-between items-center py-1">
+            <span>{{ item.name }}</span>
+            <span>Rp {{ item.total | floatformat:0 }}</span>
           </div>
           {% endfor %}
-          <div class="flex justify-between font-semibold pt-2 border-t">
-            <span class="pl-4">Total Beban Lain-lain</span>
-            <span>(Rp {{ total_beban_lain | floatformat:0 }})</span>
+           <div class="flex justify-between items-center py-1 font-semibold border-t mt-1 pt-1">
+            <span>Total Beban Usaha Lainnya</span>
+            <span>Rp {{ total_beban_usaha_lainnya | floatformat:0 }}</span>
           </div>
+          {% for item in beban_lain_items %}
+          <div class="flex justify-between items-center py-1 mt-2">
+            <span>{{ item.name }}</span>
+            <span>Rp {{ item.total | floatformat:0 }}</span>
           </div>
-        
-        <div class="flex justify-between border-t pt-4 mt-4">
-          <span class="text-lg font-bold">LABA SEBELUM PAJAK (EBT)</span>
-          <span class="text-lg font-bold">Rp {{ laba_sebelum_pa.jak | floatformat:0 }}</span>
+          {% endfor %}
+          <div class="flex justify-between items-center py-1 font-semibold border-t mt-1 pt-1">
+            <span>Total Beban Lain - Lain</span>
+            <span>Rp {{ total_beban_lain | floatformat:0 }}</span>
+          </div>
         </div>
-        
-        <div class="flex justify-between">
-          <span class="pl-4">Pajak Penghasilan (PPh)</span>
-          <span>(Rp {{ pajak | floatformat:0 }})</span>
+        <div class="flex justify-between items-center font-bold py-1 pl-6">
+          <span>Jumlah Beban</span>
+          <span>Rp {{ jumlah_beban | floatformat:0 }}</span>
         </div>
 
-        <div class="flex justify-between items-center bg-green-100 p-6 rounded-lg mt-6">
-          <span class="text-2xl font-bold text-green-800">LABA BERSIH (NET INCOME)</span>
-          <span class="text-2xl font-bold text-green-800">Rp {{ laba_bersih | floatformat:0 }}</span>
+        <div class="space-y-2 pt-8">
+          <div class="flex justify-between items-center font-semibold text-slate-700 py-2">
+            <span>Laba (Rugi) Sebelum Pajak Penghasilan</span>
+            <span class="font-bold text-black">Rp {{ laba_sebelum_pajak | floatformat:0 }}</span>
+          </div>
+          <div class="flex justify-between items-center font-semibold text-slate-700 py-2">
+            <span>Beban Pajak Penghasilan</span>
+            <span class="font-bold text-black">(Rp {{ pajak_penghasilan | floatformat:0 }})</span>
+          </div>
+          <div class="flex justify-between items-center bg-green-100 p-4 rounded-lg mt-4">
+            <span class="font-bold text-lg text-green-700">Laba (Rugi) Setelah Pajak Penghasilan</span>
+            <span class="font-bold text-lg text-green-700">Rp {{ laba_setelah_pajak | floatformat:0 }}</span>
+          </div>
         </div>
-
       </div>
-
-    </div>
+      </div>
     </main>
   </div>
-</div>
+{% endblock %}
+
+{% block extra_js %}
 {% endblock %}
