@@ -27,7 +27,8 @@
       <h2 class="text-xl font-bold mb-6">Beban Usaha</h2>
       <div class="grid grid-cols-10 gap-4 items-center border-b pb-2 font-semibold text-sm text-slate-600">
         <div class="col-span-1">Aksi</div>
-        <div class="col-span-7 p-3">Keterangan</div>
+        <div class="col-span-3 p-3">Keterangan</div>
+        <div class="col-span-3 p-3">Jenis Beban Usaha</div>
         <div class="col-span-2 p-3">Total</div>
       </div>
       <div id="beban-usaha-rows" class="divide-y">
@@ -57,9 +58,10 @@
     </div>
     <div class="bg-white p-8 rounded-2xl shadow-lg">
       <h2 class="text-xl font-bold mb-6">Beban Lain-lain (Opsional)</h2>
-      <div class="grid grid-cols-10 gap-4 items-center border-b pb-2 font-semibold text-sm text-slate-600">
+       <div class="grid grid-cols-10 gap-4 items-center border-b pb-2 font-semibold text-sm text-slate-600">
         <div class="col-span-1">Aksi</div>
-        <div class="col-span-7 p-3">Keterangan</div>
+        <div class="col-span-3 p-3">Keterangan</div>
+        <div class="col-span-3 p-3">Jenis Beban Usaha</div>
         <div class="col-span-2 p-3">Total</div>
       </div>
       <div id="beban-lain-rows" class="divide-y">
@@ -120,6 +122,18 @@
       <select id="beban-type" name="beban-type" class="w-full p-3 border border-slate-300 rounded-lg">
         <option value="usaha">Beban Usaha</option>
         <option value="lain">Beban Lain-lain</option>
+      </select>
+    </div>
+     <div>
+      <label for="beban-type" class="block mb-2 font-semibold">Jenis Beban Usaha</label>
+      <select id="beban-type" name="beban-type" class="w-full p-3 border border-slate-300 rounded-lg">
+        <option value="usaha">Biaya Sewa</option>
+        <option value="lain">Biaya Transportasi</option>
+        <option value="usaha">Biaya Air & Listrik</option>
+        <option value="lain">Biaya Pinjaman</option>
+        <option value="usaha">Biaya Penyusutan</option>
+        <option value="lain">Biaya Lainnya</option>
+
       </select>
     </div>
 
