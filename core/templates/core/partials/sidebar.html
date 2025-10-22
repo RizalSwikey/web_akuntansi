@@ -1,7 +1,7 @@
 {% load static %}
 
 <!-- This sidebar now requires the 'completion_status' object from the view -->
-<aside id="sidebar" class="bg-[#3A5041] text-white w-72 min-h-screen p-6 flex flex-col justify-between transition-all duration-300 relative group">
+<aside id="sidebar" class="bg-[#3A5041] text-white w-72 [&.collapsed]:w-24 min-h-screen p-6 flex flex-col justify-between transition-all duration-300 relative group">
   <div>
     <!-- Logo and Menu -->
     <div class="flex items-center justify-between pb-6 border-b border-gray-500">
@@ -9,9 +9,11 @@
           <span class="border border-slate-300 py-1 px-4 text-xl font-bold group-[.collapsed]:hidden">Logo</span>
           <strong class="group-[.collapsed]:hidden">JurnalKita</strong>
         </div>
-        <button id="menu-toggle-btn" class="text-white p-2 rounded-md hover:bg-[#5a7065]">
-          <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-6 h-6 transition-transform duration-300"><path stroke-linecap="round" stroke-linejoin="round" d="M15.75 19.5 8.25 12l7.5-7.5" /></svg>
-        </button>
+        <button id="menu-toggle-btn" data-flowbite-ignore class="text-white p-2 rounded-md hover:bg-[#5a7065]">
+  <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-6 h-6 transition-transform duration-300">
+    <path stroke-linecap="round" stroke-linejoin="round" d="M3.75 6.75h16.5M3.75 12h16.5m-16.5 5.25h16.5" />
+  </svg>
+</button>
     </div>
     
     <nav class="mt-8">
@@ -69,9 +71,9 @@
     </nav>
   </div>
   <a href="{% url 'core:logout' %}" class="w-full py-4 bg-[#8C705A] font-semibold rounded-lg hover:bg-[#a1826a] flex items-center justify-center gap-4">
-    <svg class="w-6 h-6 group-[.collapsed]:hidden" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M15.75 9V5.25A2.25 2.25 0 0 0 13.5 3h-6a2.25 2.25 0 0 0-2.25 2.25v13.5A2.25 2.25 0 0 0 7.5 21h6a2.25 2.25 0 0 0 2.25-2.25V15M12 9l-3 3m0 0 3 3m-3-3h12.75" /></svg>
-    <span class="group-[.collapsed]:hidden">Logout</span>
-  </a>
+  <svg class="w-6 h-6" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M15.75 9V5.25A2.25 2.25 0 0 0 13.5 3h-6a2.25 2.25 0 0 0-2.25 2.25v13.5A2.25 2.25 0 0 0 7.5 21h6a2.25 2.25 0 0 0 2.25-2.25V15M12 9l-3 3m0 0 3 3m-3-3h12.75" /></svg>
+  <span class="group-[.collapsed]:hidden">Logout</span>
+</a>
 </aside>
 
 <!-- This script is for the sidebar toggle -->
@@ -79,7 +81,7 @@
   document.addEventListener("DOMContentLoaded", function () {
     const menuToggleBtn = document.getElementById("menu-toggle-btn");
     const sidebar = document.getElementById("sidebar");
-    
+
     if (menuToggleBtn && sidebar) {
       menuToggleBtn.addEventListener("click", () =>
         sidebar.classList.toggle("collapsed")
