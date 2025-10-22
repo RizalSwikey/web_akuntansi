@@ -71,6 +71,7 @@
         </div>
       </div>
 
+{% comment %} pembelian section {% endcomment %}
       <div class="bg-white p-6 rounded-2xl shadow-lg">
         <h2 class="text-xl font-bold mb-4">Pembelian</h2>
 
@@ -94,9 +95,7 @@
                       <td class="p-3 font-medium">{{ product.name }}</td>
                       <td class="p-3 text-center">{{ p.quantity }}</td>
                       <td class="p-3 text-right">Rp {{ p.retur_qty|multiply:p.harga_satuan|intcomma }}</td>
-                      <td class="p-3 text-right font-semibold">
-                        Rp {{p.quantity|multiply:p.harga_satuan|subtract:p.diskon|subtract:p.retur_qty|multiply:p.harga_satuan|add:p.ongkir|intcomma}}
-                      </td>
+                      <td class="p-3 text-right font-semibold">Rp {{ p.total_pembelian|intcomma }}</td>
                       <td class="p-3 text-center">
                         <button onclick="openEditModal('PEMBELIAN', {{ product.id }}, {{ p.quantity }}, '{{ p.keterangan|default:'' }}', {{ p.harga_satuan }}, {{ p.diskon }}, {{ p.retur_qty }}, {{ p.ongkir }})"
                           class="text-blue-600 hover:text-blue-800 font-semibold">Edit</button>
@@ -204,10 +203,10 @@
 <div id="edit-modal" class="fixed inset-0 bg-black/60 flex justify-center items-center z-50 opacity-0 pointer-events-none transition-opacity p-4">
   <form id="edit-form" method="POST" action="{% url 'core:hpp' %}" class="bg-white p-8 rounded-2xl shadow-xl w-full max-w-3xl space-y-6">
     {% csrf_token %}
-    <input type="hidden" id="entry-type" name="entry_type">
+    <input type="hidden" name="action" value="edit_hpp_entry">
+    <input type="hidden" id="entry-type" name="category">
     <input type="hidden" id="product-id" name="product_id">
-    <input type="hidden" id="entry-id" name="entry_id"> 
-
+    <input type="hidden" id="entry-id" name="entry_id">
 
     <h2 id="modal-title" class="text-2xl font-bold mb-4">Edit Data</h2>
 
