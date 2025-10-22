@@ -1,525 +1,279 @@
 {% extends "base.html" %}
+{% load humanize %}
 {% load core_tags %}
 
 {% block title %}Harga Pokok Penjualan{% endblock %}
 
 {% block content %}
-<div class="flex h-screen">
 
+<div class="flex h-screen">
   {% include 'core/partials/sidebar.html' %}
 
   <main id="main-content" class="flex-1 p-8 overflow-y-auto">
-    <h1 class="text-3xl font-bold mb-8 text-red-600">Langkah 3: Harga Pokok Penjualan (HPP)</h1>
-
-    {% if messages %}
-      {% for message in messages %}
-      <div class="{% if message.tags == 'error' %}bg-red-100 border-red-400 text-red-700{% elif message.tags == 'warning' %}bg-yellow-100 border-yellow-400 text-yellow-700{% else %}bg-green-100 border-green-400 text-green-700{% endif %} border px-4 py-3 rounded-lg relative mb-6" role="alert">
-        <span class="block sm:inline">{{ message }}</span>
-      </div>
-      {% endfor %}
-    {% endif %}
-    <div class="space-y-8">
-
-      <div class="bg-white p-6 rounded-2xl shadow-lg">
-        <h2 class="text-xl font-bold mb-4">Persediaan Awal</h2>
-        <div class="overflow-x-auto">
-          <table class="w-full min-w-[700px] text-left text-sm">
-            <thead>
-              <tr class="border-b bg-slate-50">
-                <th class="p-3 font-semibold w-1/4">Nama Produk</th>
-                <th class="p-3 font-semibold text-center w-[100px]">Kuantitas</th>
-                <th class="p-3 font-semibold w-1/4">Keterangan</th>
-                <th class="p-3 font-semibold text-right w-[150px]">Harga Satuan (Rp)</th>
-                <th class="p-3 font-semibold text-right w-[150px]">Total (Rp)</th>
-                <th class="p-3 font-semibold text-center w-[80px]">Aksi</th>
-              </tr>
-            </thead>
-            <tbody>
-              {% if not products %}
-                <tr>
-                  <td colspan="6" class="p-4 text-center text-slate-500">
-                    Tambahkan produk di halaman Pendapatan terlebih dahulu.
-                  </td>
-                </tr>
-              {% else %}
-                {% for p_entry in pembelian_list %}
-  {% comment %} Calculate directly inline — no {% with %} nesting {% endcomment %}
-  <tr class="border-b hover:bg-gray-50">
-    <td class="p-3 font-medium">{{ product.name }}</td>
-    <td class="p-3 text-center">{{ p_entry.quantity }}</td>
-    <td class="p-3 text-slate-600">{{ p_entry.keterangan|default:"-" }}</td>
-    <td class="p-3 text-right">Rp {{ p_entry.harga_satuan|floatformat:0 }}</td>
-    <td class="p-3 text-right">Rp {{ p_entry.diskon|floatformat:0 }}</td>
-    <td class="p-3 text-center">{{ p_entry.retur_qty }}</td>
-
-    {# Calculate retur_rp directly here #}
-    <td class="p-3 text-right">
-      Rp {{ p_entry.retur_qty|multiply:p_entry.harga_satuan|floatformat:0 }}
-    </td>
-
-    <td class="p-3 text-right">Rp {{ p_entry.ongkir|floatformat:0 }}</td>
-
-    {# Inline total pembelian neto #}
-    <td class="p-3 text-right font-semibold">
-      Rp {{
-        p_entry.quantity
-        |multiply:p_entry.harga_satuan
-        |subtract:p_entry.diskon
-        |subtract:(p_entry.retur_qty|multiply:p_entry.harga_satuan)
-        |add:p_entry.ongkir
-        |floatformat:0
-      }}
-    </td>
-
-    <td class="p-3 text-center">
-      <button
-        type="button"
-        class="edit-btn text-blue-600 hover:text-blue-800 font-semibold"
-        data-modal-target="edit-modal-pembelian"
-        data-product-id="{{ product.id }}"
-        data-product-name="{{ product.name }}"
-        data-entry-id="{{ p_entry.id }}"
-        data-quantity="{{ p_entry.quantity }}"
-        data-keterangan="{{ p_entry.keterangan|default:'' }}"
-        data-harga-satuan="{{ p_entry.harga_satuan }}"
-        data-diskon="{{ p_entry.diskon }}"
-        data-retur-qty="{{ p_entry.retur_qty }}"
-        data-ongkir="{{ p_entry.ongkir }}">
-        Edit
-      </button>
-    </td>
-  </tr>
-{% empty %}
-  <tr>
-    <td colspan="10" class="p-4 text-center text-slate-500">
-      Belum ada pembelian untuk {{ product.name }}.
-    </td>
-  </tr>
-{% endfor %}
+    <div class="flex justify-between items-center mb-8">
+      <h1 class="text-3xl font-bold text-red-600">Langkah 3: Harga Pokok Penjualan (HPP)</h1>
+    </div>
 
 
+{% if messages %}
+  {% for message in messages %}
+  <div class="{% if message.tags == 'error' %}bg-red-100 border-red-400 text-red-700{% elif message.tags == 'warning' %}bg-yellow-100 border-yellow-400 text-yellow-700{% else %}bg-green-100 border-green-400 text-green-700{% endif %} border px-4 py-3 rounded-lg relative mb-6" role="alert">
+    <span class="block sm:inline">{{ message }}</span>
+  </div>
+  {% endfor %}
+{% endif %}
 
+<div class="space-y-10">
 
-              {% endif %}
-            </tbody>
-
-            <tfoot>
-              <tr class="font-bold bg-slate-50">
-                <td colspan="4" class="p-3 text-right">Total Persediaan Awal:</td>
-                <td class="p-3 text-right text-lg">Rp {{ grand_total_awal | floatformat:0 }}</td>
-                <td></td>
-              </tr>
-            </tfoot>
-          </table>
-        </div>
-      </div>
-      <div class="bg-white p-6 rounded-2xl shadow-lg">
-        <h2 class="text-xl font-bold mb-4">Pembelian</h2>
-         <div class="mb-4 text-right">
-             <button
-                type="button"
-                class="add-pembelian-btn bg-blue-600 text-white py-2 px-4 rounded-lg font-semibold hover:bg-blue-500 text-sm"
-                data-modal-target="edit-modal-pembelian"
-                {# This button will open the modal without pre-filling product #}
-              >
-                + Tambah Pembelian Baru
-              </button>
-         </div>
-        <div class="overflow-x-auto">
-          <table class="w-full min-w-[1200px] text-left text-sm">
-            <thead>
-              <tr class="border-b bg-slate-50">
-                <th class="p-3 font-semibold">Nama Produk</th>
-                <th class="p-3 font-semibold text-center">Kuantitas</th>
-                <th class="p-3 font-semibold">Keterangan</th>
-                <th class="p-3 font-semibold text-right">Harga Satuan (Rp)</th>
-                <th class="p-3 font-semibold text-right">Diskon (Rp)</th>
-                <th class="p-3 font-semibold text-center">Retur (Qty)</th>
-                 <th class="p-3 font-semibold text-right">Jml Retur (Rp)</th>
-                <th class="p-3 font-semibold text-right">Ongkir (Rp)</th>
-                <th class="p-3 font-semibold text-right">Total Pembelian (Rp)</th>
-                <th class="p-3 font-semibold text-center">Aksi</th>
-              </tr>
-            </thead>
-            <tbody>
-  {% if not products or not hpp_data_by_product %}
-    <tr>
-      <td colspan="10" class="p-4 text-center text-slate-500">
-        Tambahkan produk di halaman Pendapatan atau tambah pembelian baru.
-      </td>
-    </tr>
-  {% else %}
-    {% for product in products %}
-      {% with pembelian_list=hpp_data_by_product|get_item:product|get_item:'PEMBELIAN' %}
-        {% with calc_detail=calculation_details|get_item:product.id %}
-          
-          {% if pembelian_list %}
-            {% for p_entry in pembelian_list %}
-              <tr class="border-b hover:bg-gray-50">
-                <td class="p-3 font-medium">{{ product.name }}</td>
-                <td class="p-3 text-center">{{ p_entry.quantity }}</td>
-                <td class="p-3 text-slate-600">{{ p_entry.keterangan|default:"-" }}</td>
-                <td class="p-3 text-right">Rp {{ p_entry.harga_satuan|floatformat:0 }}</td>
-                <td class="p-3 text-right">Rp {{ p_entry.diskon|floatformat:0 }}</td>
-                <td class="p-3 text-center">{{ p_entry.retur_qty }}</td>
-                <td class="p-3 text-right">
-                  Rp {{ p_entry.retur_qty|multiply:p_entry.harga_satuan|floatformat:0 }}
-                </td>
-                <td class="p-3 text-right">Rp {{ p_entry.ongkir|floatformat:0 }}</td>
-                <td class="p-3 text-right font-semibold">
-                  Rp {{
-                    p_entry.quantity
-                    |multiply:p_entry.harga_satuan
-                    |subtract:p_entry.diskon
-                    |subtract:(p_entry.retur_qty|multiply:p_entry.harga_satuan)
-                    |add:p_entry.ongkir
-                    |floatformat:0
-                  }}
-                </td>
-                <td class="p-3 text-center">
-                  <button type="button"
-                    class="edit-btn text-blue-600 hover:text-blue-800 font-semibold"
-                    data-modal-target="edit-modal-pembelian"
-                    data-product-id="{{ product.id }}"
-                    data-product-name="{{ product.name }}"
-                    data-entry-id="{{ p_entry.id }}"
-                    data-quantity="{{ p_entry.quantity }}"
-                    data-keterangan="{{ p_entry.keterangan|default:'' }}"
-                    data-harga-satuan="{{ p_entry.harga_satuan }}"
-                    data-diskon="{{ p_entry.diskon }}"
-                    data-retur-qty="{{ p_entry.retur_qty }}"
-                    data-ongkir="{{ p_entry.ongkir }}">
-                    Edit
-                  </button>
-                </td>
-              </tr>
-            {% endfor %}
-          {% else %}
-            <tr>
-              <td colspan="10" class="p-4 text-center text-slate-500">
-                Belum ada pembelian untuk {{ product.name }}.
+  <!-- Persediaan Awal -->
+  <div class="bg-white p-8 rounded-2xl shadow-lg">
+    <h2 class="text-xl font-bold mb-6">Persediaan Awal</h2>
+    <div class="overflow-x-auto">
+      <table class="min-w-full text-sm border">
+        <thead class="bg-gray-100 font-semibold text-slate-700">
+          <tr>
+            <th class="p-3 text-left">Nama Produk</th>
+            <th class="p-3 text-right">Kuantitas</th>
+            <th class="p-3">Keterangan</th>
+            <th class="p-3 text-right">Harga Satuan (Rp)</th>
+            <th class="p-3 text-right">Total (Rp)</th>
+            <th class="p-3 text-center">Aksi</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for product, entries in hpp_data_by_product.items %}
+            {% with awal=entries.AWAL %}
+            <tr class="border-t">
+              <td class="p-3">{{ product.name }}</td>
+              <td class="p-3 text-right">{{ awal.quantity|default:"0" }}</td>
+              <td class="p-3">{{ awal.keterangan|default:"-" }}</td>
+              <td class="p-3 text-right">Rp {{ awal.harga_satuan|intcomma }}</td>
+              <td class="p-3 text-right">Rp {{ awal.quantity|multiply:awal.harga_satuan|intcomma }}</td>
+              <td class="p-3 text-center">
+                <button onclick="openEditModal('AWAL', {{ product.id }}, {{ awal.quantity|default:0 }}, '{{ awal.keterangan|default:'' }}', {{ awal.harga_satuan|default:0 }})"
+                  class="bg-blue-600 text-white py-1 px-3 rounded hover:bg-blue-700">Edit</button>
               </td>
             </tr>
-          {% endif %}
-
-          <tr class="border-b bg-slate-100 font-semibold">
-            <td colspan="8" class="p-3 text-right">
-              Total Pembelian {{ product.name }}:
-            </td>
-            <td class="p-3 text-right">
-              Rp {{ calc_detail.total_pembelian_neto|default:0|floatformat:0 }}
-            </td>
-            <td></td>
-          </tr>
-
-        {% endwith %}
-      {% endwith %}
-    {% endfor %}
-  {% endif %}
-</tbody>
-
-
-
-
-            <tfoot>
-              <tr class="font-bold bg-slate-50 border-t-2">
-                <td colspan="8" class="p-3 text-right">Total Semua Pembelian (Neto):</td>
-                <td class="p-3 text-right text-lg">Rp {{ grand_total_pembelian_neto | floatformat:0 }}</td>
-                <td></td>
-              </tr>
-            </tfoot>
-          </table>
-        </div>
-      </div>
-      <div class="bg-white p-6 rounded-2xl shadow-lg">
-        <h2 class="text-xl font-bold mb-4">Persediaan Akhir</h2>
-        <div class="overflow-x-auto">
-          <table class="w-full min-w-[800px] text-left text-sm">
-            <thead>
-              <tr class="border-b bg-slate-50">
-                <th class="p-3 font-semibold w-1/4">Nama Produk</th>
-                <th class="p-3 font-semibold text-center w-[100px]">Kuantitas</th>
-                <th class="p-3 font-semibold w-1/4">Keterangan</th>
-                <th class="p-3 font-semibold text-right w-[150px]">Total (Rp)</th>
-                <th class="p-3 font-semibold w-1/5">Status Validasi</th>
-                <th class="p-3 font-semibold text-center w-[80px]">Aksi</th>
-              </tr>
-            </thead>
-            <tbody>
-              {% if not products %}
-              <tr><td colspan="6" class="p-4 text-center text-slate-500">Tambahkan produk di halaman Pendapatan terlebih dahulu.</td></tr>
-              {% endif %}
-              {% for product in products %}
-                {% with akhir_entry=hpp_data_by_product|get_item:product|get_item:'AKHIR' calc_detail=calculation_details|get_item:product.id %}
-                <tr class="border-b">
-                  <td class="p-3 font-medium">{{ product.name }}</td>
-                  <td class="p-3 text-center">{{ akhir_entry.quantity | default:0 }}</td>
-                  <td class="p-3 text-slate-600">{{ akhir_entry.keterangan | default:'-' }}</td>
-                  <td class="p-3 text-right font-semibold">Rp {{ calc_detail.total_akhir | default:0 | floatformat:0 }}</td>
-                  <td class="p-3 text-xs">
-                     {% if calc_detail.validation_error_akhir %} <span class="text-red-600 block">{{ calc_detail.validation_error_akhir }}</span> {% endif %}
-                     {% if calc_detail.validation_error_penjualan %} <span class="text-orange-600 block">{{ calc_detail.validation_error_penjualan }}</span> {% endif %}
-                     {% if not calc_detail.validation_error_akhir and not calc_detail.validation_error_penjualan %} <span class="text-green-600">OK</span> {% endif %}
-                  </td>
-                  <td class="p-3 text-center">
-                    <button
-                      type="button"
-                      class="edit-btn text-blue-600 hover:text-blue-800 font-semibold"
-                      data-modal-target="edit-modal-akhir"
-                      data-product-id="{{ product.id }}"
-                      data-product-name="{{ product.name }}"
-                      data-entry-id="{{ akhir_entry.id | default:'' }}"
-                      data-quantity="{{ akhir_entry.quantity | default:0 }}"
-                      data-keterangan="{{ akhir_entry.keterangan | default:'' }}"
-                      {# Harga Satuan is not directly edited for Akhir #}
-                    >
-                      Edit
-                    </button>
-                  </td>
-                </tr>
-                {% endwith %}
-              {% endfor %}
-            </tbody>
-            <tfoot>
-              <tr class="font-bold bg-slate-50">
-                <td colspan="3" class="p-3 text-right">Total Persediaan Akhir:</td>
-                <td class="p-3 text-right text-lg">Rp {{ grand_total_akhir | floatformat:0 }}</td>
-                <td colspan="2"></td>
-              </tr>
-            </tfoot>
-          </table>
-        </div>
-      </div>
-      <form method="POST" class="flex justify-end mt-8">
-          {% csrf_token %}
-          <button
-            type="submit"
-            name="next_step"
-            class="bg-black text-white py-3 px-8 rounded-lg font-semibold text-lg hover:bg-slate-800
-                   {% if not completion_status.hpp %}disabled:opacity-50 cursor-not-allowed{% endif %}"
-            {% if not completion_status.hpp %}disabled title="Harap isi minimal satu data HPP untuk melanjutkan"{% endif %}
-          >
-            Lanjut ke Beban Usaha &rarr;
-          </button>
-        </form>
-
-    </div></main>
+            {% endwith %}
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
   </div>
 
-<div id="edit-modal-awal" class="fixed inset-0 bg-black/60 flex justify-center items-center z-50 transition-opacity opacity-0 pointer-events-none p-4 modal-container">
-  <form method="POST" class="bg-white p-8 rounded-2xl shadow-xl w-full max-w-lg space-y-6 modal-form">
+  <!-- PEMBELIAN -->
+  <div class="bg-white p-8 rounded-2xl shadow-lg">
+    <h2 class="text-xl font-bold mb-6">Pembelian</h2>
+    <div class="overflow-x-auto">
+      <table class="min-w-full text-sm border">
+        <thead class="bg-gray-100 font-semibold text-slate-700">
+          <tr>
+            <th class="p-3 text-left">Nama Produk</th>
+            <th class="p-3 text-right">Kuantitas</th>
+            <th class="p-3">Keterangan</th>
+            <th class="p-3 text-right">Harga Satuan (Rp)</th>
+            <th class="p-3 text-right">Diskon (Rp)</th>
+            <th class="p-3 text-right">Retur (Qty)</th>
+            <th class="p-3 text-right">Jml Retur (Rp)</th>
+            <th class="p-3 text-right">Ongkir (Rp)</th>
+            <th class="p-3 text-right">Total Pembelian (Rp)</th>
+            <th class="p-3 text-center">Aksi</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for product, entries in hpp_data_by_product.items %}
+            {% for p in entries.PEMBELIAN %}
+            <tr class="border-t">
+              <td class="p-3">{{ product.name }}</td>
+              <td class="p-3 text-right">{{ p.quantity }}</td>
+              <td class="p-3">{{ p.keterangan|default:"-" }}</td>
+              <td class="p-3 text-right">Rp {{ p.harga_satuan|intcomma }}</td>
+              <td class="p-3 text-right">Rp {{ p.diskon|intcomma }}</td>
+              <td class="p-3 text-right">{{ p.retur_qty }}</td>
+              <td class="p-3 text-right">Rp {{ p.retur_qty|multiply:p.harga_satuan|intcomma }}</td>
+              <td class="p-3 text-right">Rp {{ p.ongkir|intcomma }}</td>
+              <td class="p-3 text-right">
+                Rp {{ p.quantity|multiply:p.harga_satuan|subtract:p.diskon|subtract:p.retur_qty|multiply:p.harga_satuan|add:p.ongkir|intcomma }}
+              </td>
+              <td class="p-3 text-center">
+                <button onclick="openEditModal('PEMBELIAN', {{ product.id }}, {{ p.quantity }}, '{{ p.keterangan|default:'' }}', {{ p.harga_satuan }}, {{ p.diskon }}, {{ p.retur_qty }}, {{ p.ongkir }})"
+                  class="bg-blue-600 text-white py-1 px-3 rounded hover:bg-blue-700">Edit</button>
+              </td>
+            </tr>
+            {% endfor %}
+          {% endfor %}
+        </tbody>
+        <tfoot class="bg-gray-100 font-bold">
+          <tr>
+            <td colspan="8" class="text-right p-3">Total Semua Pembelian (Neto):</td>
+            <td colspan="2" class="p-3 text-right">Rp {{ grand_total_pembelian_neto|intcomma }}</td>
+          </tr>
+        </tfoot>
+      </table>
+    </div>
+  </div>
+
+  <!-- Persediaan Akhir -->
+  <div class="bg-white p-8 rounded-2xl shadow-lg">
+    <h2 class="text-xl font-bold mb-6">Persediaan Akhir</h2>
+    <div class="overflow-x-auto">
+      <table class="min-w-full text-sm border">
+        <thead class="bg-gray-100 font-semibold text-slate-700">
+          <tr>
+            <th class="p-3 text-left">Nama Produk</th>
+            <th class="p-3 text-right">Kuantitas</th>
+            <th class="p-3">Keterangan</th>
+            <th class="p-3 text-right">Total (Rp)</th>
+            <th class="p-3">Catatan</th>
+            <th class="p-3 text-center">Aksi</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for product, entries in hpp_data_by_product.items %}
+            {% with akhir=entries.AKHIR %}
+            <tr class="border-t">
+              <td class="p-3">{{ product.name }}</td>
+              <td class="p-3 text-right">{{ akhir.quantity|default:"0" }}</td>
+              <td class="p-3">{{ akhir.keterangan|default:"-" }}</td>
+              <td class="p-3 text-right">Rp {{ calculation_details|get_item:product.id|get_item:'total_akhir'|intcomma }}</td>
+              <td class="p-3">
+                {% with calc=calculation_details|get_item:product.id %}
+                  {% if calc.validation_error_akhir %}
+                    <span class="text-red-600">{{ calc.validation_error_akhir }}</span>
+                  {% elif calc.validation_error_penjualan %}
+                    <span class="text-yellow-600">{{ calc.validation_error_penjualan }}</span>
+                  {% else %}
+                    -
+                  {% endif %}
+                {% endwith %}
+              </td>
+              <td class="p-3 text-center">
+                <button onclick="openEditModal('AKHIR', {{ product.id }}, {{ akhir.quantity|default:0 }}, '{{ akhir.keterangan|default:'' }}')"
+                  class="bg-blue-600 text-white py-1 px-3 rounded hover:bg-blue-700">Edit</button>
+              </td>
+            </tr>
+            {% endwith %}
+          {% endfor %}
+        </tbody>
+        <tfoot class="bg-gray-100 font-bold">
+          <tr>
+            <td colspan="3" class="text-right p-3">Total Persediaan Akhir:</td>
+            <td colspan="3" class="p-3 text-right">Rp {{ grand_total_akhir|intcomma }}</td>
+          </tr>
+        </tfoot>
+      </table>
+    </div>
+  </div>
+
+  <!-- Next Step Button -->
+  <form method="POST" class="flex justify-end mt-8">
     {% csrf_token %}
-    <input type="hidden" name="action" value="edit_hpp_entry">
-    <input type="hidden" name="category" value="AWAL">
-    <input type="hidden" name="product_id" value="">
-    <input type="hidden" name="hpp_entry_id" value="">
-
-    <h2 class="text-2xl font-bold mb-4">Edit Persediaan Awal: <span class="product-name-modal"></span></h2>
-
-    <div>
-      <label for="modal-awal-quantity" class="block mb-2 font-semibold">Kuantitas</label>
-      <input type="number" id="modal-awal-quantity" name="quantity" class="w-full p-3 border border-slate-300 rounded-lg" placeholder="0" required>
-    </div>
-    <div>
-      <label for="modal-awal-keterangan" class="block mb-2 font-semibold">Keterangan (Opsional)</label>
-      <input type="text" id="modal-awal-keterangan" name="keterangan" class="w-full p-3 border border-slate-300 rounded-lg" placeholder="">
-    </div>
-     <div>
-      <label for="modal-awal-harga-satuan" class="block mb-2 font-semibold">Harga Satuan (Rp)</label>
-      <input type="number" id="modal-awal-harga-satuan" name="harga_satuan" class="w-full p-3 border border-slate-300 rounded-lg" placeholder="0" required>
-    </div>
-
-    <div class="flex justify-end gap-4 pt-4">
-      <button type="button" class="modal-close-btn py-2 px-6 rounded-lg font-semibold border hover:bg-slate-100">Batal</button>
-      <button type="submit" class="bg-black text-white py-2 px-6 rounded-lg font-semibold hover:bg-slate-800">Simpan</button>
-    </div>
+    <button type="submit" name="next_step"
+      class="bg-black text-white py-3 px-8 rounded-lg font-semibold text-lg hover:bg-slate-800 {% if not completion_status.hpp %}disabled:opacity-50 cursor-not-allowed{% endif %}"
+      {% if not completion_status.hpp %}disabled title="Harap isi minimal satu data HPP untuk melanjutkan"{% endif %}>
+      Lanjut ke Beban Usaha →
+    </button>
   </form>
 </div>
 
-<div id="edit-modal-pembelian" class="fixed inset-0 bg-black/60 flex justify-center items-center z-50 transition-opacity opacity-0 pointer-events-none p-4 modal-container">
-  <form method="POST" class="bg-white p-8 rounded-2xl shadow-xl w-full max-w-3xl space-y-6 modal-form">
-     {% csrf_token %}
-    <input type="hidden" name="action" value="edit_hpp_entry">
-    <input type="hidden" name="category" value="PEMBELIAN">
-    <input type="hidden" name="product_id" value=""> {# This will be set by JS if editing existing #}
-    <input type="hidden" name="hpp_entry_id" value="">
 
-    <h2 class="text-2xl font-bold mb-4">Tambah/Edit Pembelian: <span class="product-name-modal"></span></h2>
-
-    {# Dropdown to select Product when ADDING NEW #}
-     <div class="product-select-new hidden">
-         <label for="modal-pembelian-product-select" class="block mb-2 font-semibold">Pilih Produk</label>
-         <select id="modal-pembelian-product-select" name="product_id_select" class="w-full p-3 border border-slate-300 rounded-lg">
-             <option value="">-- Pilih Produk --</option>
-             {% for p in products %}
-                <option value="{{ p.id }}">{{ p.name }}</option>
-             {% endfor %}
-         </select>
-     </div>
-
-    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-       <div>
-        <label for="modal-pembelian-quantity" class="block mb-2 font-semibold">Kuantitas</label>
-        <input type="number" id="modal-pembelian-quantity" name="quantity" class="w-full p-3 border border-slate-300 rounded-lg" placeholder="0" required>
-      </div>
-       <div>
-        <label for="modal-pembelian-harga-satuan" class="block mb-2 font-semibold">Harga Satuan (Rp)</label>
-        <input type="number" id="modal-pembelian-harga-satuan" name="harga_satuan" class="w-full p-3 border border-slate-300 rounded-lg" placeholder="0" required>
-      </div>
-      <div>
-        <label for="modal-pembelian-diskon" class="block mb-2 font-semibold">Diskon (Rp)</label>
-        <input type="number" id="modal-pembelian-diskon" name="diskon" class="w-full p-3 border border-slate-300 rounded-lg" value="0">
-      </div>
-      <div>
-        <label for="modal-pembelian-retur-qty" class="block mb-2 font-semibold">Retur Pembelian (Qty)</label>
-        <input type="number" id="modal-pembelian-retur-qty" name="retur_qty" class="w-full p-3 border border-slate-300 rounded-lg" value="0">
-      </div>
-       <div>
-        <label for="modal-pembelian-ongkir" class="block mb-2 font-semibold">Biaya Ongkir (Rp)</label>
-        <input type="number" id="modal-pembelian-ongkir" name="ongkir" class="w-full p-3 border border-slate-300 rounded-lg" value="0">
-      </div>
-        <div class="md:col-span-2 lg:col-span-1">
-        <label for="modal-pembelian-keterangan" class="block mb-2 font-semibold">Keterangan (Opsional)</label>
-        <input type="text" id="modal-pembelian-keterangan" name="keterangan" class="w-full p-3 border border-slate-300 rounded-lg" placeholder="">
-      </div>
-    </div>
-
-    <div class="flex justify-end gap-4 pt-4">
-      <button type="button" class="modal-close-btn py-2 px-6 rounded-lg font-semibold border hover:bg-slate-100">Batal</button>
-      <button type="submit" class="bg-black text-white py-2 px-6 rounded-lg font-semibold hover:bg-slate-800">Simpan</button>
-    </div>
-  </form>
+  </main>
 </div>
 
-<div id="edit-modal-akhir" class="fixed inset-0 bg-black/60 flex justify-center items-center z-50 transition-opacity opacity-0 pointer-events-none p-4 modal-container">
-  <form method="POST" class="bg-white p-8 rounded-2xl shadow-xl w-full max-w-lg space-y-6 modal-form">
-     {% csrf_token %}
-    <input type="hidden" name="action" value="edit_hpp_entry">
-    <input type="hidden" name="category" value="AKHIR">
-    <input type="hidden" name="product_id" value="">
-    <input type="hidden" name="hpp_entry_id" value="">
+<!-- Unified Modal -->
 
-    <h2 class="text-2xl font-bold mb-4">Edit Persediaan Akhir: <span class="product-name-modal"></span></h2>
+<div id="edit-modal" class="fixed inset-0 bg-black/60 flex justify-center items-center z-50 opacity-0 pointer-events-none transition-opacity">
+  <form id="edit-form" method="POST" action="{% url 'core:hpp' %}" class="bg-white p-8 rounded-2xl shadow-xl w-full max-w-lg space-y-6">
+    {% csrf_token %}
+    <input type="hidden" id="entry-type" name="entry_type">
+    <input type="hidden" id="product-id" name="product_id">
 
+
+<h2 id="modal-title" class="text-2xl font-bold mb-4">Edit Data</h2>
+
+<div id="common-fields" class="space-y-4">
+  <div>
+    <label for="modal-quantity" class="block mb-2 font-semibold">Kuantitas</label>
+    <input type="number" id="modal-quantity" name="quantity" class="w-full p-3 border border-slate-300 rounded-lg" required>
+  </div>
+  <div>
+    <label for="modal-keterangan" class="block mb-2 font-semibold">Keterangan</label>
+    <input type="text" id="modal-keterangan" name="keterangan" class="w-full p-3 border border-slate-300 rounded-lg">
+  </div>
+</div>
+
+<div id="harga-field" class="space-y-4">
+  <div>
+    <label for="modal-harga-satuan" class="block mb-2 font-semibold">Harga Satuan (Rp)</label>
+    <input type="number" id="modal-harga-satuan" name="harga_satuan" class="w-full p-3 border border-slate-300 rounded-lg">
+  </div>
+</div>
+
+<div id="pembelian-fields" class="hidden space-y-4">
+  <div class="grid grid-cols-2 gap-4">
     <div>
-      <label for="modal-akhir-quantity" class="block mb-2 font-semibold">Kuantitas</label>
-      <input type="number" id="modal-akhir-quantity" name="quantity" class="w-full p-3 border border-slate-300 rounded-lg" placeholder="0" required>
+      <label for="modal-diskon" class="block mb-2 font-semibold">Diskon (Rp)</label>
+      <input type="number" id="modal-diskon" name="diskon" class="w-full p-3 border border-slate-300 rounded-lg">
     </div>
     <div>
-      <label for="modal-akhir-keterangan" class="block mb-2 font-semibold">Keterangan (Opsional)</label>
-      <input type="text" id="modal-akhir-keterangan" name="keterangan" class="w-full p-3 border border-slate-300 rounded-lg" placeholder="">
+      <label for="modal-retur-qty" class="block mb-2 font-semibold">Retur (Qty)</label>
+      <input type="number" id="modal-retur-qty" name="retur_qty" class="w-full p-3 border border-slate-300 rounded-lg">
     </div>
-     <input type="hidden" name="harga_satuan" value="0">
+  </div>
+  <div>
+    <label for="modal-ongkir" class="block mb-2 font-semibold">Ongkir (Rp)</label>
+    <input type="number" id="modal-ongkir" name="ongkir" class="w-full p-3 border border-slate-300 rounded-lg">
+  </div>
+</div>
+
+<div class="flex justify-end gap-4 pt-4">
+  <button type="button" id="modal-close-btn" class="py-2 px-6 rounded-lg font-semibold border hover:bg-slate-100">Batal</button>
+  <button type="submit" class="bg-black text-white py-2 px-6 rounded-lg font-semibold hover:bg-slate-800">Simpan</button>
+</div>
 
 
-    <div class="flex justify-end gap-4 pt-4">
-      <button type="button" class="modal-close-btn py-2 px-6 rounded-lg font-semibold border hover:bg-slate-100">Batal</button>
-      <button type="submit" class="bg-black text-white py-2 px-6 rounded-lg font-semibold hover:bg-slate-800">Simpan</button>
-    </div>
   </form>
 </div>
 
 {% endblock %}
 
 {% block extra_js %}
+
 <script>
-  document.addEventListener("DOMContentLoaded", function () {
-    const editButtons = document.querySelectorAll(".edit-btn");
-    const addPembelianBtn = document.querySelector(".add-pembelian-btn");
-    const closeButtons = document.querySelectorAll(".modal-close-btn");
-    const modals = document.querySelectorAll(".modal-container"); // Use container class
+document.addEventListener("DOMContentLoaded", function () {
+  const modal = document.getElementById("edit-modal");
+  const closeBtn = document.getElementById("modal-close-btn");
+  const form = document.getElementById("edit-form");
+  const pembelianFields = document.getElementById("pembelian-fields");
+  const hargaField = document.getElementById("harga-field");
 
-    const openModal = (modal, button) => {
-        const form = modal.querySelector('form');
-        form.reset(); // Reset form first
+  window.openEditModal = function (type, productId, qty = 0, ket = "", harga = 0, diskon = 0, returQty = 0, ongkir = 0) {
+    document.getElementById("entry-type").value = type;
+    document.getElementById("product-id").value = productId;
+    document.getElementById("modal-title").innerText = "Edit " + type.charAt(0) + type.slice(1).toLowerCase();
 
-        // Pre-fill common fields from button data attributes
-        form.querySelector('input[name="product_id"]').value = button.dataset.productId || ''; // May be empty for new purchase
-        form.querySelector('input[name="hpp_entry_id"]').value = button.dataset.entryId || '';
-        form.querySelector('.product-name-modal').textContent = button.dataset.productName || '';
-        form.querySelector('input[name="quantity"]').value = button.dataset.quantity || '0';
-        form.querySelector('input[name="keterangan"]').value = button.dataset.keterangan || '';
+    document.getElementById("modal-quantity").value = qty;
+    document.getElementById("modal-keterangan").value = ket || "";
 
-        // Handle Product Select visibility for NEW Pembelian
-        const productSelectDiv = form.querySelector('.product-select-new');
-        if (modal.id === 'edit-modal-pembelian' && !button.dataset.productId) {
-            if(productSelectDiv) productSelectDiv.classList.remove('hidden');
-            form.querySelector('input[name="product_id"]').value = ''; // Ensure hidden product_id is empty
-        } else {
-             if(productSelectDiv) productSelectDiv.classList.add('hidden');
-             // For edits, ensure the dropdown value doesn't override the hidden input
-             const productSelect = form.querySelector('#modal-pembelian-product-select');
-             if (productSelect) productSelect.value = '';
-        }
+    document.getElementById("modal-harga-satuan").value = harga || 0;
+    document.getElementById("modal-diskon").value = diskon || 0;
+    document.getElementById("modal-retur-qty").value = returQty || 0;
+    document.getElementById("modal-ongkir").value = ongkir || 0;
 
+    pembelianFields.classList.toggle("hidden", type !== "PEMBELIAN");
+    hargaField.classList.toggle("hidden", type === "AKHIR");
 
-        // Pre-fill category-specific fields
-        if (modal.id === 'edit-modal-awal') {
-          form.querySelector('input[name="harga_satuan"]').value = button.dataset.hargaSatuan || '0';
-        } else if (modal.id === 'edit-modal-pembelian') {
-          form.querySelector('input[name="harga_satuan"]').value = button.dataset.hargaSatuan || '0';
-          form.querySelector('input[name="diskon"]').value = button.dataset.diskon || '0';
-          form.querySelector('input[name="retur_qty"]').value = button.dataset.returQty || '0';
-          form.querySelector('input[name="ongkir"]').value = button.dataset.ongkir || '0';
-        } // No price for Akhir
+    modal.classList.remove("opacity-0", "pointer-events-none");
+  };
 
-        modal.classList.remove("opacity-0", "pointer-events-none");
-    };
+  function closeModal() {
+    modal.classList.add("opacity-0");
+    setTimeout(() => modal.classList.add("pointer-events-none"), 200);
+  }
 
-    const closeModal = (modal) => {
-        modal.classList.add("opacity-0", "pointer-events-none");
-    };
-
-    // Event listeners for EDIT buttons
-    editButtons.forEach(button => {
-      button.addEventListener("click", function() {
-        const targetModalId = this.dataset.modalTarget;
-        const modal = document.getElementById(targetModalId);
-        openModal(modal, this); // Pass button to pre-fill data
-      });
-    });
-
-    // Event listener for ADD NEW PEMBELIAN button
-    if (addPembelianBtn) {
-        addPembelianBtn.addEventListener("click", function() {
-            const targetModalId = this.dataset.modalTarget;
-            const modal = document.getElementById(targetModalId);
-            openModal(modal, this); // Pass button (dataset will be mostly empty)
-        });
-    }
-
-
-    // Event listeners for CLOSE buttons
-    closeButtons.forEach(button => {
-        button.addEventListener("click", function() {
-            closeModal(this.closest('.modal-container'));
-        });
-    });
-
-    // Event listeners for OVERLAY clicks
-    modals.forEach(modalDiv => {
-        modalDiv.addEventListener("click", (e) => {
-            if (e.target === modalDiv) {
-                closeModal(modalDiv);
-            }
-        });
-    });
-
-    // Handle product selection override for ADD NEW PEMBELIAN
-    const productSelect = document.getElementById('modal-pembelian-product-select');
-    if (productSelect) {
-        productSelect.addEventListener('change', function() {
-            // Update the hidden product_id field when dropdown changes
-             const form = this.closest('form');
-             const hiddenProductIdInput = form.querySelector('input[name="product_id"]');
-             hiddenProductIdInput.value = this.value; // Use selected value
-
-             // Update modal title if needed
-             const selectedOption = this.options[this.selectedIndex];
-             form.querySelector('.product-name-modal').textContent = selectedOption ? selectedOption.text : '';
-        });
-    }
-
-  });
+  closeBtn.addEventListener("click", closeModal);
+  modal.addEventListener("click", (e) => e.target === modal && closeModal());
+});
 </script>
+
 {% endblock %}

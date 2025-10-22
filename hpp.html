@@ -1,0 +1,162 @@
+{% extends "base.html" %}
+{% load static %}
+{% load humanize %}
+{% load core_tags %}
+
+{% block title %}Harga Pokok Penjualan{% endblock %}
+
+{% block content %}
+
+<div class="flex h-screen">
+  {% include 'core/partials/sidebar.html' %}
+
+  <main id="main-content" class="flex-1 p-8 overflow-y-auto">
+    <h1 class="text-3xl font-bold mb-8 text-red-600">Langkah 3: Harga Pokok Penjualan (HPP)</h1>
+
+
+{% if messages %}
+  {% for message in messages %}
+  <div class="mb-6 px-4 py-3 rounded-lg border {% if message.tags == 'error' %}bg-red-100 border-red-400 text-red-700{% elif message.tags == 'warning' %}bg-yellow-100 border-yellow-400 text-yellow-700{% else %}bg-green-100 border-green-400 text-green-700{% endif %}">
+    {{ message }}
+  </div>
+  {% endfor %}
+{% endif %}
+
+<div class="space-y-8">
+
+  <!-- PERSEDIAAN AWAL -->
+  <section class="bg-white p-6 rounded-2xl shadow-lg">
+    <h2 class="text-xl font-bold mb-4">Persediaan Awal</h2>
+    <div class="overflow-x-auto">
+      <table class="w-full min-w-[700px] text-left text-sm">
+        <thead class="bg-slate-50 border-b">
+          <tr>
+            <th class="p-3 font-semibold w-1/4">Nama Produk</th>
+            <th class="p-3 font-semibold text-center">Kuantitas</th>
+            <th class="p-3 font-semibold">Keterangan</th>
+            <th class="p-3 font-semibold text-right">Harga Satuan (Rp)</th>
+            <th class="p-3 font-semibold text-right">Total (Rp)</th>
+            <th class="p-3 font-semibold text-center">Aksi</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for product, entries in hpp_data_by_product.items %}
+            {% with awal=entries.AWAL %}
+            <tr class="border-b hover:bg-gray-50">
+              <td class="p-3 font-medium">{{ product.name }}</td>
+              <td class="p-3 text-center">{{ awal.quantity|default:0 }}</td>
+              <td class="p-3 text-slate-600">{{ awal.keterangan|default:"-" }}</td>
+              <td class="p-3 text-right">Rp {{ awal.harga_satuan|default:0|intcomma }}</td>
+              <td class="p-3 text-right">Rp {{ awal.quantity|multiply:awal.harga_satuan|intcomma }}</td>
+              <td class="p-3 text-center">
+                <button type="button" class="edit-btn text-blue-600 hover:text-blue-800 font-semibold" data-modal-target="edit-modal-awal" data-product-id="{{ product.id }}" data-product-name="{{ product.name }}" data-quantity="{{ awal.quantity|default:0 }}" data-keterangan="{{ awal.keterangan|default:'' }}" data-harga-satuan="{{ awal.harga_satuan|default:0 }}">Edit</button>
+              </td>
+            </tr>
+            {% endwith %}
+          {% empty %}
+            <tr><td colspan="6" class="p-4 text-center text-slate-500">Belum ada data Persediaan Awal.</td></tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  </section>
+
+  <!-- PEMBELIAN -->
+  <section class="bg-white p-6 rounded-2xl shadow-lg">
+    <h2 class="text-xl font-bold mb-4">Pembelian</h2>
+    <div class="mb-4 text-right">
+      <button type="button" class="add-pembelian-btn bg-blue-600 text-white py-2 px-4 rounded-lg font-semibold hover:bg-blue-500 text-sm" data-modal-target="edit-modal-pembelian">+ Tambah Pembelian Baru</button>
+    </div>
+    <div class="overflow-x-auto">
+      <table class="w-full min-w-[1000px] text-left text-sm">
+        <thead class="bg-slate-50 border-b">
+          <tr>
+            <th class="p-3 font-semibold">Nama Produk</th>
+            <th class="p-3 font-semibold text-center">Qty</th>
+            <th class="p-3 font-semibold">Keterangan</th>
+            <th class="p-3 font-semibold text-right">Harga Satuan (Rp)</th>
+            <th class="p-3 font-semibold text-right">Diskon (Rp)</th>
+            <th class="p-3 font-semibold text-center">Retur (Qty)</th>
+            <th class="p-3 font-semibold text-right">Ongkir (Rp)</th>
+            <th class="p-3 font-semibold text-right">Total (Rp)</th>
+            <th class="p-3 font-semibold text-center">Aksi</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for product, entries in hpp_data_by_product.items %}
+            {% for pembelian in entries.PEMBELIAN %}
+            <tr class="border-b hover:bg-gray-50">
+              <td class="p-3 font-medium">{{ product.name }}</td>
+              <td class="p-3 text-center">{{ pembelian.quantity }}</td>
+              <td class="p-3 text-slate-600">{{ pembelian.keterangan|default:"-" }}</td>
+              <td class="p-3 text-right">Rp {{ pembelian.harga_satuan|intcomma }}</td>
+              <td class="p-3 text-right">Rp {{ pembelian.diskon|intcomma }}</td>
+              <td class="p-3 text-center">{{ pembelian.retur_qty }}</td>
+              <td class="p-3 text-right">Rp {{ pembelian.ongkir|intcomma }}</td>
+              <td class="p-3 text-right font-semibold">Rp {{ pembelian.quantity|multiply:pembelian.harga_satuan|subtract:pembelian.diskon|subtract:(pembelian.retur_qty|multiply:pembelian.harga_satuan)|add:pembelian.ongkir|intcomma }}</td>
+              <td class="p-3 text-center">
+                <button type="button" class="edit-btn text-blue-600 hover:text-blue-800 font-semibold" data-modal-target="edit-modal-pembelian" data-product-id="{{ product.id }}" data-product-name="{{ product.name }}" data-quantity="{{ pembelian.quantity }}" data-keterangan="{{ pembelian.keterangan|default:'' }}" data-harga-satuan="{{ pembelian.harga_satuan }}" data-diskon="{{ pembelian.diskon }}" data-retur-qty="{{ pembelian.retur_qty }}" data-ongkir="{{ pembelian.ongkir }}">Edit</button>
+              </td>
+            </tr>
+            {% empty %}
+            <tr><td colspan="9" class="p-4 text-center text-slate-500">Tidak ada data pembelian.</td></tr>
+            {% endfor %}
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  </section>
+
+  <!-- PERSEDIAAN AKHIR -->
+  <section class="bg-white p-6 rounded-2xl shadow-lg">
+    <h2 class="text-xl font-bold mb-4">Persediaan Akhir</h2>
+    <div class="overflow-x-auto">
+      <table class="w-full min-w-[700px] text-left text-sm">
+        <thead class="bg-slate-50 border-b">
+          <tr>
+            <th class="p-3 font-semibold">Nama Produk</th>
+            <th class="p-3 font-semibold text-center">Kuantitas</th>
+            <th class="p-3 font-semibold">Keterangan</th>
+            <th class="p-3 font-semibold text-right">Total (Rp)</th>
+            <th class="p-3 font-semibold">Catatan</th>
+            <th class="p-3 font-semibold text-center">Aksi</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for product, entries in hpp_data_by_product.items %}
+            {% with akhir=entries.AKHIR calc=calculation_details|get_item:product.id %}
+            <tr class="border-b hover:bg-gray-50">
+              <td class="p-3 font-medium">{{ product.name }}</td>
+              <td class="p-3 text-center">{{ akhir.quantity|default:0 }}</td>
+              <td class="p-3 text-slate-600">{{ akhir.keterangan|default:"-" }}</td>
+              <td class="p-3 text-right">Rp {{ calc.total_akhir|intcomma }}</td>
+              <td class="p-3 text-xs">
+                {% if calc.validation_error_akhir %}<span class="text-red-600 block">{{ calc.validation_error_akhir }}</span>{% endif %}
+                {% if calc.validation_error_penjualan %}<span class="text-yellow-600 block">{{ calc.validation_error_penjualan }}</span>{% endif %}
+                {% if not calc.validation_error_akhir and not calc.validation_error_penjualan %}<span class="text-green-600">OK</span>{% endif %}
+              </td>
+              <td class="p-3 text-center">
+                <button type="button" class="edit-btn text-blue-600 hover:text-blue-800 font-semibold" data-modal-target="edit-modal-akhir" data-product-id="{{ product.id }}" data-product-name="{{ product.name }}" data-quantity="{{ akhir.quantity|default:0 }}" data-keterangan="{{ akhir.keterangan|default:'' }}">Edit</button>
+              </td>
+            </tr>
+            {% endwith %}
+          {% empty %}
+            <tr><td colspan="6" class="p-4 text-center text-slate-500">Belum ada data Persediaan Akhir.</td></tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  </section>
+
+  <form method="POST" class="flex justify-end mt-8">
+    {% csrf_token %}
+    <button type="submit" name="next_step" class="bg-black text-white py-3 px-8 rounded-lg font-semibold text-lg hover:bg-slate-800 {% if not completion_status.hpp %}disabled:opacity-50 cursor-not-allowed{% endif %}" {% if not completion_status.hpp %}disabled title="Harap isi minimal satu data HPP untuk melanjutkan"{% endif %}>Lanjut ke Beban Usaha →</button>
+  </form>
+</div>
+
+{% include "core/partials/modals_hpp_rest.html" %}
+
+
+  </main>
+</div>
+{% endblock %}

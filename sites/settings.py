@@ -40,6 +40,7 @@ INSTALLED_APPS = [
     'core',
     'tailwind',
     'theme',
+    'django.contrib.humanize',
 ]
 
 MIDDLEWARE = [

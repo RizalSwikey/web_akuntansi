@@ -2,11 +2,14 @@ from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib.auth.decorators import login_required
 from django.contrib import messages
 from django.contrib.auth import authenticate, login, logout
-from django.db.models import Sum, F, Avg, Case, When, Value, DecimalField
-from django.db.models.functions import Coalesce
-import decimal
+from django.db.models import Sum
 from .models import FinancialReport, Product, RevenueItem, HppEntry, ExpenseItem
 
+from decimal import Decimal
+import decimal
+from django.contrib import messages
+from django.contrib.auth.decorators import login_required
+from django.shortcuts import render, redirect, get_object_or_404
 
 # --- Helper function to get completion status ---
 def get_completion_status(report):
@@ -95,7 +98,6 @@ def pendapatan_view(request):
 
     if request.method == 'POST':
         action = request.POST.get('action')
-        print("DATA TYPE RECEIVED:", request.POST.get('data_type'))
 
         if action == 'add':
             try:
@@ -183,190 +185,185 @@ def pendapatan_view(request):
     return render(request, 'core/pages/pendapatan.html', context)
 
 
+
 @login_required(login_url='core:login')
 def hpp_view(request):
     """
-    PAGE 3: HPP (Harga Pokok Produksi) - Refactored for Manufacturing ('Dagang' type)
-    Gatekeeper: Pendapatan must be complete.
-    Handles modal edits for HppEntry objects per product.
-    Performs complex calculations.
+    PAGE 3: Harga Pokok Penjualan (HPP)
+    Handles Persediaan Awal, Pembelian, Persediaan Akhir for each product.
     """
     report = get_object_or_404(FinancialReport, user=request.user)
     completion_status = get_completion_status(report)
 
-    # Gatekeeper: Pendapatan must be complete
+    # --- Ensure Pendapatan Usaha Step is Complete ---
     if not completion_status['pendapatan']:
         messages.error(request, 'Harap tambahkan minimal satu pendapatan usaha terlebih dahulu.')
         return redirect('core:pendapatan')
 
+    # --- Load Products from Pendapatan Usaha ---
+    products = (
+        Product.objects
+        .filter(report=report, revenue_entries__revenue_type="usaha")
+        .prefetch_related("revenue_entries")
+        .distinct()
+    )
+
+    # --- Ensure Each Product Has All 3 HPP Categories ---
+    for product in products:
+        for category in ['AWAL', 'PEMBELIAN', 'AKHIR']:
+            defaults = {
+                'quantity': 0,
+                'harga_satuan': 0,
+                'keterangan': '',
+                'diskon': 0,
+                'retur_qty': 0,
+                'ongkir': 0,
+            }
+            HppEntry.objects.get_or_create(
+                report=report,
+                product=product,
+                category=category,
+                defaults=defaults
+            )
+
+    # --- Build Sales Data from Pendapatan Usaha ---
+    usaha_sales = []
+    for product in products:
+        ri = product.revenue_entries.first()
+        usaha_sales.append({
+            "product": product,
+            "quantity": ri.quantity if ri else 0,
+            "selling_price": ri.selling_price if ri else 0,
+            "total": ri.total if ri else 0,
+        })
+
+    # --- Handle POST Actions (Edit HPP) ---
     if request.method == 'POST':
         action = request.POST.get('action')
         product_id = request.POST.get('product_id')
         product = get_object_or_404(Product, id=product_id, report=report)
 
         if action == 'edit_hpp_entry':
-            category = request.POST.get('category') # AWAL, PEMBELIAN, AKHIR
-            hpp_entry_id = request.POST.get('hpp_entry_id') # Might be empty if creating new
+            category = request.POST.get('category')
 
             try:
-                # Get or Create the HppEntry for this specific product and category
-                if hpp_entry_id:
-                     entry = HppEntry.objects.get(id=hpp_entry_id, product=product, category=category)
-                else:
-                    # Use update_or_create to handle potential race conditions or initial creation
-                     entry, created = HppEntry.objects.update_or_create(
-                         report=report, product=product, category=category,
-                         defaults={} # We'll set fields below
-                     )
-
-                # Update fields based on category from modal form
-                entry.quantity = int(request.POST.get('quantity', 0))
-                entry.notes = request.POST.get('keterangan', '') # Use 'notes' if you used English names
-                entry.unit_price = int(request.POST.get('harga_satuan', 0)) # Use 'unit_price'
-
-                if category == 'PEMBELIAN':
-                    entry.discount = int(request.POST.get('diskon', 0)) # Use 'discount'
-                    entry.return_qty = int(request.POST.get('retur_qty', 0)) # Use 'return_quantity'
-                    entry.shipping_cost = int(request.POST.get('ongkir', 0)) # Use 'shipping_cost'
-
-                entry.save()
-                messages.success(request, f'Data HPP untuk {product.name} ({entry.get_category_display()}) berhasil disimpan.')
-
+                entry, created = HppEntry.objects.update_or_create(
+                    report=report,
+                    product=product,
+                    category=category,
+                    defaults={
+                        'quantity': int(request.POST.get('quantity', 0)),
+                        'keterangan': request.POST.get('keterangan', ''),
+                        'harga_satuan': int(request.POST.get('harga_satuan', 0)),
+                        'diskon': int(request.POST.get('diskon', 0)) if category == 'PEMBELIAN' else 0,
+                        'retur_qty': int(request.POST.get('retur_qty', 0)) if category == 'PEMBELIAN' else 0,
+                        'ongkir': int(request.POST.get('ongkir', 0)) if category == 'PEMBELIAN' else 0,
+                    }
+                )
+                messages.success(
+                    request,
+                    f"{'Ditambahkan' if created else 'Diperbarui'} data HPP ({entry.get_category_display()}) untuk {product.name}."
+                )
             except Exception as e:
-                messages.error(request, f'Gagal menyimpan data HPP: {e}')
+                messages.error(request, f"Gagal menyimpan data HPP: {e}")
 
-        # Note: We might need a separate delete action, especially for PEMBELIAN if multiple are allowed per product
-        # elif action == 'delete_hpp_pembelian':
-        #    ...
-
-        if 'next_step' in request.POST:
-             # Re-check completion status AFTER potential add/edit
-            completion_status = get_completion_status(report)
+        elif 'next_step' in request.POST:
             if not completion_status['hpp']:
-                 messages.warning(request, 'Harap isi minimal satu data HPP (misal: Persediaan Awal) sebelum melanjutkan.')
-                 return redirect('core:hpp') # Stay here if still incomplete
+                messages.warning(request, 'Harap isi minimal satu data HPP sebelum melanjutkan.')
+                return redirect('core:hpp')
             return redirect('core:beban_usaha')
+
         return redirect('core:hpp')
 
-    # --- GET Request Logic ---
-    # Fetch all products associated with 'usaha' revenue items for this report
-    products = Product.objects.filter(report=report, revenue_entries__revenue_type='usaha').distinct()
-
-    # Prepare data structure for the template {product: {AWAL: entry, PEMBELIAN: [entries], AKHIR: entry}}
+    # --- Build HPP Data Dictionary ---
     hpp_data_by_product = {}
     for product in products:
-        entries = HppEntry.objects.filter(product=product)
+        entries = HppEntry.objects.filter(product=product, report=report)
         hpp_data_by_product[product] = {
             'AWAL': entries.filter(category='AWAL').first(),
-            'PEMBELIAN': entries.filter(category='PEMBELIAN'), # Can have multiple purchases
+            'PEMBELIAN': entries.filter(category='PEMBELIAN'),
             'AKHIR': entries.filter(category='AKHIR').first(),
         }
 
-    # --- Perform Calculations (Per Product and Grand Totals) ---
+    # --- Perform Calculations ---
     grand_total_awal = 0
     grand_total_pembelian_neto = 0
     grand_total_barang_tersedia = 0
     grand_total_akhir = 0
     grand_hpp = 0
-    calculation_details = {} # Store per-product results for display
+    calculation_details = {}
 
     for product, entries in hpp_data_by_product.items():
         awal = entries.get('AWAL')
         pembelian_list = entries.get('PEMBELIAN')
         akhir = entries.get('AKHIR')
 
-        # 1. Calculate Total Awal (Using harga_satuan)
         total_awal = (awal.quantity * awal.harga_satuan) if awal else 0
         grand_total_awal += total_awal
 
-        # 2. Calculate Total Pembelian Neto (Using harga_satuan)
         total_pembelian_neto_product = 0
         total_pembelian_qty_product = 0
-        total_pembelian_cost_product = 0 # Sum of (qty * price) for purchases
+        total_pembelian_cost_product = 0
+
         for p in pembelian_list:
             pembelian_bruto = p.quantity * p.harga_satuan
-            # Formula: (7) = (6) x (4) -> (Retur Qty * Harga Satuan)
             retur_rp = p.retur_qty * p.harga_satuan
-            # Formula: (9) = (2)x(4) - (5) - (7) + (8) -> (Qty*Harga) - Diskon - ReturRp + Ongkir
             p_neto = pembelian_bruto - p.diskon - retur_rp + p.ongkir
             total_pembelian_neto_product += p_neto
             total_pembelian_qty_product += p.quantity
-            total_pembelian_cost_product += pembelian_bruto # Sum costs before discounts/returns/shipping for avg calc
+            total_pembelian_cost_product += pembelian_bruto
 
         grand_total_pembelian_neto += total_pembelian_neto_product
 
-        # Calculate average purchase price (needed for Akhir calc) - based on cost before other factors
-        avg_purchase_price_product = decimal.Decimal(0)
+        avg_purchase_price_product = Decimal(0)
         if total_pembelian_qty_product > 0:
-             # Avg Price = Total Bruto Cost / Total Qty Purchased
-            avg_purchase_price_product = decimal.Decimal(total_pembelian_cost_product) / decimal.Decimal(total_pembelian_qty_product)
+            avg_purchase_price_product = Decimal(total_pembelian_cost_product) / Decimal(total_pembelian_qty_product)
 
-
-        # 3. Calculate Barang Tersedia
-        barang_tersedia_product = total_awal + total_pembelian_neto_product # Should this use bruto? Check formula logic
-        # Let's assume Barang Tersedia uses Neto Pembelian for now based on HPP = BT - Akhir
+        barang_tersedia_product = total_awal + total_pembelian_neto_product
         grand_total_barang_tersedia += barang_tersedia_product
 
-        # 4. Calculate Total Akhir (using Average Cost logic) and perform validation (Using harga_satuan)
-        total_akhir_product = decimal.Decimal(0) # Use Decimal for precision
+        total_akhir_product = Decimal(0)
         validation_error_akhir = None
         validation_error_penjualan = None
         qty_awal = awal.quantity if awal else 0
         qty_tersedia = qty_awal + total_pembelian_qty_product
 
         if akhir:
-            # Validation 1: Qty Akhir <= Qty Tersedia
             if akhir.quantity > qty_tersedia:
                 validation_error_akhir = "Hitung kembali persediaan akhir (Qty Akhir > Qty Tersedia)"
             else:
-                 # Formula (simplified average cost):
-                 # (Qty Awal * Harga Awal) + (Qty Akhir - Qty Awal) * Avg Harga Pembelian
-                 if akhir.quantity <= qty_awal:
-                      # If ending inventory is less than or equal to beginning, use beginning cost
-                     cost_per_unit_akhir = decimal.Decimal(awal.harga_satuan) if awal and awal.harga_satuan > 0 else decimal.Decimal(0)
-                     total_akhir_product = decimal.Decimal(akhir.quantity) * cost_per_unit_akhir
-                 else:
-                      # If ending inventory is more than beginning, use weighted average logic
-                      cost_awal_part = decimal.Decimal(total_awal)
-                      qty_from_purchase = akhir.quantity - qty_awal
-                      cost_purchase_part = decimal.Decimal(qty_from_purchase) * avg_purchase_price_product
-                      total_akhir_product = cost_awal_part + cost_purchase_part
+                if akhir.quantity <= qty_awal:
+                    cost_per_unit_akhir = Decimal(awal.harga_satuan) if awal and awal.harga_satuan > 0 else Decimal(0)
+                    total_akhir_product = Decimal(akhir.quantity) * cost_per_unit_akhir
+                else:
+                    cost_awal_part = Decimal(total_awal)
+                    qty_from_purchase = akhir.quantity - qty_awal
+                    cost_purchase_part = Decimal(qty_from_purchase) * avg_purchase_price_product
+                    total_akhir_product = cost_awal_part + cost_purchase_part
 
-            # Validation 2: Check against Sales Quantity
-            try:
-                # Use filter().first() in case multiple revenue entries exist (though unlikely with unique constraint)
-                revenue_entry = RevenueItem.objects.filter(product=product, revenue_type='usaha').first()
-                if revenue_entry:
-                    qty_sold = revenue_entry.quantity
-                    qty_used_or_sold = qty_tersedia - akhir.quantity
-                    # Allow for rounding differences slightly? Or enforce exact match?
-                    if qty_used_or_sold != qty_sold:
-                         validation_error_penjualan = f"Periksa Qty Jual ({qty_sold}) vs Qty Keluar ({qty_used_or_sold}). Qty Tersedia: {qty_tersedia}, Qty Akhir: {akhir.quantity}"
-            except RevenueItem.DoesNotExist:
-                 pass # No sales recorded for this product
-        
-        # Convert Decimal back to int/BigInt if necessary for storage/display consistency, or keep Decimal
-        grand_total_akhir += int(total_akhir_product) # Convert here for summing
+            revenue_entry = RevenueItem.objects.filter(product=product, revenue_type='usaha').first()
+            if revenue_entry:
+                qty_sold = revenue_entry.quantity
+                qty_used_or_sold = qty_tersedia - akhir.quantity
+                if qty_used_or_sold != qty_sold:
+                    validation_error_penjualan = f"Periksa Qty Jual ({qty_sold}) vs Qty Keluar ({qty_used_or_sold})."
 
-
-        # 5. Calculate HPP per product
-        hpp_product = barang_tersedia_product - int(total_akhir_product) # Ensure consistent types
+        grand_total_akhir += int(total_akhir_product)
+        hpp_product = barang_tersedia_product - int(total_akhir_product)
         grand_hpp += hpp_product
 
         calculation_details[product.id] = {
             'total_awal': total_awal,
             'total_pembelian_neto': total_pembelian_neto_product,
             'barang_tersedia': barang_tersedia_product,
-            'total_akhir': int(total_akhir_product), # Store as int
+            'total_akhir': int(total_akhir_product),
             'hpp': hpp_product,
-            'avg_purchase_price': avg_purchase_price_product, # For debugging/display if needed
+            'avg_purchase_price': avg_purchase_price_product,
             'validation_error_akhir': validation_error_akhir,
             'validation_error_penjualan': validation_error_penjualan,
         }
 
-    print("Products found for HPP:", products)
-    print("Number of products:", products.count())
-
+    # --- Render Template ---
     context = {
         'report': report,
         'products': products,
@@ -377,10 +374,14 @@ def hpp_view(request):
         'grand_total_barang_tersedia': grand_total_barang_tersedia,
         'grand_total_akhir': grand_total_akhir,
         'grand_hpp': grand_hpp,
-        'completion_status': completion_status
+        'completion_status': completion_status,
+        'usaha_sales': usaha_sales,
     }
 
     return render(request, 'core/pages/hpp.html', context)
+
+
+
 
 
 @login_required(login_url='core:login')
