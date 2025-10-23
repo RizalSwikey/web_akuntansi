@@ -11,6 +11,7 @@ accounting_apps
 │  │  ├─ 0001_initial.py
 │  │  ├─ 0002_revenueitem_description.py
 │  │  ├─ 0003_remove_revenueitem_description_and_more.py
+│  │  ├─ 0004_expenseitem_expense_category_and_more.py
 │  │  └─ __init__.py
 │  ├─ models.py
 │  ├─ static
@@ -39,21 +40,28 @@ accounting_apps
 │  │     │  └─ profile.html
 │  │     └─ partials
 │  │        ├─ login_message.html
-│  │        ├─ modals_hpp_rest.html
 │  │        └─ sidebar.html
 │  ├─ templatetags
 │  │  ├─ core_tags.py
-│  │  ├─ math_filters.py
 │  │  └─ __init__.py
-│  ├─ tests.py
+│  ├─ tests
+│  │  ├─ test_hpp_calculator.py
+│  │  └─ __init__.py
 │  ├─ urls.py
+│  ├─ utils
+│  │  ├─ hpp_calculator.py
+│  │  └─ __init__.py
 │  ├─ views.py
 │  └─ __init__.py
+├─ docker-compose.yaml
+├─ Dockerfile.django
+├─ Dockerfile.tailwind
 ├─ Makefile
 ├─ manage.py
 ├─ Procfile.tailwind
 ├─ pyproject.toml
 ├─ README.md
+├─ requirements.txt
 ├─ sites
 │  ├─ asgi.py
 │  ├─ settings.py
@@ -64,7 +72,37 @@ accounting_apps
 │  ├─ admin
 │  │  ├─ css
 │  │  │  ├─ autocomplete.css
-......
+...........
+│  │        │  │  ├─ uk.js
+│  │        │  │  ├─ vi.js
+│  │        │  │  ├─ zh-CN.js
+│  │        │  │  └─ zh-TW.js
+│  │        │  ├─ LICENSE.md
+│  │        │  ├─ select2.full.js
+│  │        │  └─ select2.full.min.js
+│  │        └─ xregexp
+│  │           ├─ LICENSE.txt
+│  │           ├─ xregexp.js
+│  │           └─ xregexp.min.js
+│  ├─ core
+│  │  ├─ img
+│  │  │  ├─ Bottom.jpg
+│  │  │  ├─ j.ico
+│  │  │  ├─ jurnalkita.png
+│  │  │  ├─ jurnalkita_word.png
+│  │  │  ├─ left.jpg
+│  │  │  ├─ logo_jurnalkita.jpg
+│  │  │  └─ right.jpg
+│  │  └─ js
+│  │     ├─ beban_usaha.js
+│  │     ├─ hpp.js
+│  │     ├─ pendapatan.js
+│  │     ├─ profile.js
+│  │     └─ sidebar.js
+│  ├─ css
+│  └─ django-browser-reload
+│     ├─ reload-listener.js
+│     └─ reload-worker.js
 ├─ theme
 │  ├─ apps.py
 │  ├─ static

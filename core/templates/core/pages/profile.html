@@ -37,7 +37,7 @@
               name="company_name"
               class="w-full p-3 border border-slate-300 rounded-lg focus:border-slate-400 outline-none"
               placeholder="Masukkan Nama Perusahaan"
-              value="{{ profile_data.company_name | default:'' }}"
+              value="{{ report.company_name | default:'' }}"
               required
             />
           </div>
@@ -51,7 +51,7 @@
                 name="month"
                 class="w-full p-3 border border-slate-300 rounded-lg bg-transparent outline-none appearance-none" style="background-image: url('data:image/svg+xml,%3csvg xmlns=\'http://www.w3.org/2000/svg\' fill=\'none\' viewBox=\'0 0 20 20\'%3e%3cpath stroke=\'%236b7280\' stroke-linecap=\'round\' stroke-linejoin=\'round\' stroke-width=\'1.5\' d=\'M6 8l4 4 4-4\'/%3e%3c/svg%3e'); background-position: right 0.5rem center; background-repeat: no-repeat; background-size: 1.5em 1.5em;"
               >
-                {% with current_month=profile_data.month|default:'' %}
+                {% with current_month=report.month|default:'' %}
                 <option value="Januari" {% if current_month == 'Januari' %}selected{% endif %}>Januari</option>
                 <option value="Februari" {% if current_month == 'Februari' %}selected{% endif %}>Februari</option>
                 <option value="Maret" {% if current_month == 'Maret' %}selected{% endif %}>Maret</option>
@@ -76,7 +76,7 @@
                 name="year"
                 class="w-full p-3 border border-slate-300 rounded-lg bg-transparent outline-none appearance-none" style="background-image: url('data:image/svg+xml,%3csvg xmlns=\'http://www.w3.org/2000/svg\' fill=\'none\' viewBox=\'0 0 20 20\'%3e%3cpath stroke=\'%236b7280\' stroke-linecap=\'round\' stroke-linejoin=\'round\' stroke-width=\'1.5\' d=\'M6 8l4 4 4-4\'/%3e%3c/svg%3e'); background-position: right 0.5rem center; background-repeat: no-repeat; background-size: 1.5em 1.5em;"
               >
-                {% with current_year=profile_data.year|stringformat:"s"|default:'' %}
+                {% with current_year=report.year|stringformat:"s"|default:'' %}
                 {# Convert year to string for comparison if it's an integer #}
                 <option value="2024" {% if current_year == '2024' %}selected{% endif %}>2024</option>
                 <option value="2025" {% if current_year == '2025' %}selected{% endif %}>2025</option>
@@ -96,14 +96,14 @@
               id="business_status"
               name="business_status"
               class="w-full p-3 border border-slate-300 rounded-lg bg-transparent outline-none appearance-none" style="background-image: url('data:image/svg+xml,%3csvg xmlns=\'http://www.w3.org/2000/svg\' fill=\'none\' viewBox=\'0 0 20 20\'%3e%3cpath stroke=\'%236b7280\' stroke-linecap=\'round\' stroke-linejoin=\'round\' stroke-width=\'1.5\' d=\'M6 8l4 4 4-4\'/%3e%3c/svg%3e'); background-position: right 0.5rem center; background-repeat: no-repeat; background-size: 1.5em 1.5em;">
-              {% with status=profile_data.business_status|default:'' %}
+              {% with status=report.business_status|default:'' %}
               <option value="">Pilih Status</option>
               <option value="orang_pribadi" {% if status == 'orang_pribadi' %}selected{% endif %}>Orang Pribadi</option>
               <option value="badan_usaha" {% if status == 'badan_usaha' %}selected{% endif %}>Badan Usaha (CV/PT)</option>
               {% endwith %}
             </select>
           </div>
-          <div id="ptkp-field-wrapper" class="mb-8 {% if profile_data.business_status != 'orang_pribadi' %}hidden{% endif %}">
+          <div id="ptkp-field-wrapper" class="mb-8 {% if report.business_status != 'orang_pribadi' %}hidden{% endif %}">
             <label
               for="ptkp-status"
               class="block text-slate-600 font-semibold mb-2"
@@ -111,10 +111,10 @@
             >
              <select
               id="ptkp-status"
-              name="ptkp_status" {# Added name attribute #}
+              name="ptkp_status"
               class="w-full p-3 border border-slate-300 rounded-lg bg-transparent outline-none appearance-none" style="background-image: url('data:image/svg+xml,%3csvg xmlns=\'http://www.w3.org/2000/svg\' fill=\'none\' viewBox=\'0 0 20 20\'%3e%3cpath stroke=\'%236b7280\' stroke-linecap=\'round\' stroke-linejoin=\'round\' stroke-width=\'1.5\' d=\'M6 8l4 4 4-4\'/%3e%3c/svg%3e'); background-position: right 0.5rem center; background-repeat: no-repeat; background-size: 1.5em 1.5em;"
             >
-              {% with ptkp_status=profile_data.ptkp_status|default:'' %} {# Assuming ptkp_status is saved #}
+              {% with ptkp_status=report.ptkp_status|default:'' %} 
               <option value="">Pilih Status PTKP</option>
               <option value="TK/0" {% if ptkp_status == 'TK/0' %}selected{% endif %}>TK/0</option>
               <option value="TK/1" {% if ptkp_status == 'TK/1' %}selected{% endif %}>TK/1</option>
@@ -141,7 +141,7 @@
               id="umkm_incentive"
               name="umkm_incentive"
               class="w-full p-3 border border-slate-300 rounded-lg bg-transparent outline-none appearance-none" style="background-image: url('data:image/svg+xml,%3csvg xmlns=\'http://www.w3.org/2000/svg\' fill=\'none\' viewBox=\'0 0 20 20\'%3e%3cpath stroke=\'%236b7280\' stroke-linecap=\'round\' stroke-linejoin=\'round\' stroke-width=\'1.5\' d=\'M6 8l4 4 4-4\'/%3e%3c/svg%3e'); background-position: right 0.5rem center; background-repeat: no-repeat; background-size: 1.5em 1.5em;">
-              {% with umkm=profile_data.umkm_incentive|default:'' %}
+              {% with umkm=report.umkm_incentive|default:'' %}
                <option value="">Pilih Jawaban</option> {# Added default option #}
               <option value="Sudah" {% if umkm == 'Sudah' %}selected{% endif %}>Sudah</option>
               <option value="Belum" {% if umkm == 'Belum' %}selected{% endif %}>Belum</option>
@@ -158,7 +158,7 @@
               name="omzet"
               class="w-full p-3 border border-slate-300 rounded-lg focus:border-slate-400 outline-none"
               placeholder="Masukkan Omzet Bulanan"
-              value="{{ profile_data.omzet | default:'' }}"
+              value="{{ report.omzet | default:'' }}"
               required
             />
           </div>
@@ -173,7 +173,7 @@
               name="business_type"
               class="w-full p-3 border border-slate-300 rounded-lg bg-transparent outline-none appearance-none" style="background-image: url('data:image/svg+xml,%3csvg xmlns=\'http://www.w3.org/2000/svg\' fill=\'none\' viewBox=\'0 0 20 20\'%3e%3cpath stroke=\'%236b7280\' stroke-linecap=\'round\' stroke-linejoin=\'round\' stroke-width=\'1.5\' d=\'M6 8l4 4 4-4\'/%3e%3c/svg%3e'); background-position: right 0.5rem center; background-repeat: no-repeat; background-size: 1.5em 1.5em;"
               required>
-              {% with btype=profile_data.business_type|default:'' %}
+              {% with btype=report.business_type|default:'' %}
               <option value="">Pilih Jenis Usaha</option>
               <option value="dagang" {% if btype == 'dagang' %}selected{% endif %}>Dagang</option>
               <option value="manufaktur" {% if btype == 'manufaktur' %}selected{% endif %}>Manufaktur</option>
