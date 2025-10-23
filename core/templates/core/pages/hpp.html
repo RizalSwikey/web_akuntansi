@@ -41,7 +41,7 @@
                 {% with awal=entries.AWAL calc_detail=calculation_details|get_item:product.id %}
                 <tr class="border-b hover:bg-gray-50">
                   <td class="p-3 font-medium">{{ product.name }}</td>
-                  <td class="p-3 text-center">{{ awal.quantity|default:"0" }}</td>
+                  <td class="p-3 text-center">{{ awal.quantity|default:0 | intcomma}}</td>
                   
                   <td class="p-3 text-right font-semibold">
                     Rp {{ awal.quantity|multiply:awal.harga_satuan|intcomma }}
@@ -93,7 +93,7 @@
                     {% for p in pembelian_list %}
                     <tr class="border-b hover:bg-gray-50">
                       <td class="p-3 font-medium">{{ product.name }}</td>
-                      <td class="p-3 text-center">{{ p.quantity }}</td>
+                      <td class="p-3 text-center">{{ p.quantity | intcomma}}</td>
                       <td class="p-3 text-right">Rp {{ p.retur_qty|multiply:p.harga_satuan|intcomma }}</td>
                       <td class="p-3 text-right font-semibold">Rp {{ p.total_pembelian|intcomma }}</td>
                       <td class="p-3 text-center">
@@ -150,7 +150,7 @@
                 {% with akhir=entries.AKHIR calc_detail=calculation_details|get_item:product.id %}
                 <tr class="border-b hover:bg-gray-50">
                   <td class="p-3 font-medium">{{ product.name }}</td>
-                  <td class="p-3 text-center">{{ akhir.quantity|default:"0" }}</td>
+                  <td class="p-3 text-center">{{ akhir.quantity|default:"0" | intcomma}}</td>
                   <td class="p-3 text-slate-600">{{ akhir.keterangan|default:"-" }}</td>
                   <td class="p-3 text-right font-semibold">Rp {{ calc_detail.total_akhir|default:0|intcomma }}</td>
                   <td class="p-3 text-xs">
