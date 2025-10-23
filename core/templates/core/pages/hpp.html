@@ -31,9 +31,9 @@
             <thead>
               <tr class="border-b bg-slate-50">
                 <th class="p-3 font-semibold w-1/4">Nama Produk</th>
-                <th class="p-3 font-semibold text-center w-[100px]">Kuantitas</th>
+                <th class="p-3 font-semibold text-center w-[180px]">Kuantitas</th>
                 <th class="p-3 font-semibold text-right w-[150px]">Total (Rp)</th>
-                <th class="p-3 font-semibold text-center w-[80px]">Aksi</th>
+                <th class="p-3 font-semibold text-center w-[10px]">Aksi</th>
               </tr>
             </thead>
             <tbody>
@@ -62,7 +62,7 @@
             </tbody>
             <tfoot>
               <tr class="font-bold bg-slate-50">
-                <td colspan="4" class="p-3 text-right">Total Persediaan Awal:</td>
+                <td colspan="2" class="p-3 text-right">Total Persediaan Awal:</td>
                 <td class="p-3 text-right text-lg">Rp {{ grand_total_awal | intcomma }}</td>
                 <td></td>
               </tr>
@@ -122,7 +122,7 @@
             </tbody>
             <tfoot>
               <tr class="font-bold bg-slate-50 border-t-2">
-                <td colspan="8" class="p-3 text-right">Total Semua Pembelian:</td>
+                <td colspan="3" class="p-3 text-right">Total Semua Pembelian:</td>
                 <td class="p-3 text-right text-lg">Rp {{ grand_total_pembelian_neto|intcomma }}</td>
                 <td></td>
               </tr>
