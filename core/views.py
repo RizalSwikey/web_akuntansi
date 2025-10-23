@@ -375,6 +375,10 @@ def laporan_view(request):
     # --- HPP per Product Calculation ---
     products = Product.objects.filter(report=report).distinct()
     hpp_per_product = []
+    grand_total_awal = 0
+    grand_total_pembelian_neto = 0
+    grand_total_barang_tersedia = 0
+    grand_total_akhir = 0
     grand_hpp = 0
 
     for product in products:
@@ -386,6 +390,11 @@ def laporan_view(request):
             'AKHIR': entries_qs.filter(category='AKHIR').first(),
         }
         hpp_data = calculate_hpp_for_product(product, entries_dict)
+
+        grand_total_awal += hpp_data['total_awal']
+        grand_total_pembelian_neto += hpp_data['total_pembelian_neto']
+        grand_total_barang_tersedia += hpp_data['barang_tersedia']
+        grand_total_akhir += hpp_data['total_akhir']
         grand_hpp += hpp_data['hpp']
 
         hpp_per_product.append({
@@ -410,6 +419,10 @@ def laporan_view(request):
 
     context = {
         'report': report,
+        'grand_total_awal': grand_total_awal,
+        'grand_total_pembelian_neto': grand_total_pembelian_neto,
+        'grand_total_barang_tersedia': grand_total_barang_tersedia,
+        'grand_total_akhir': grand_total_akhir,
         'hpp_total': grand_hpp,
         'hpp_per_product': hpp_per_product,
         'total_pendapatan_usaha': total_pendapatan_usaha,
