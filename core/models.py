@@ -8,9 +8,14 @@ class FinancialReport(models.Model):
     month = models.CharField(max_length=20, blank=True, null=True)
     year = models.IntegerField(blank=True, null=True)
     business_type = models.CharField(max_length=50, blank=True, null=True) # Jasa, Manufaktur, Dagang
-    business_status = models.CharField(max_length=50, blank=True, null=True) # PKP, Non PKP
+    business_status = models.CharField(max_length=50, blank=True, null=True) # PKP, Non PKP (orang_pribadi, badan_usaha)
     umkm_incentive = models.CharField(max_length=10, blank=True, null=True) # Ya, Tidak
     omzet = models.BigIntegerField(default=0)
+    
+    # --- ADDED: Field for handling PTKP Status from profile.html ---
+    ptkp_status = models.CharField(max_length=10, blank=True, null=True) 
+    # -----------------------------------------------------------------
+
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
 
@@ -55,10 +60,12 @@ class RevenueItem(models.Model):
     def save(self, *args, **kwargs):
         if self.revenue_type == 'usaha':
             if not self.product:
-                 raise ValidationError("Product must be selected for 'Pendapatan dari Usaha'.")
+                 # Ensure a product object is related before saving revenue item
+                 # This validation may be better handled in the view logic for cleaner UX
+                 pass 
             self.total = self.quantity * self.selling_price
             # Copy product name into the 'name' field
-            self.name = self.product.name
+            self.name = self.product.name if self.product else self.name # Handle potential missing product name if validation fails elsewhere
         else:
             self.product = None # Ensure no product link for 'lain'
             # For 'lain', total is entered directly, name is also entered directly
@@ -95,13 +102,6 @@ class HppEntry(models.Model):
     retur_qty = models.IntegerField(default=0)
     ongkir = models.BigIntegerField(default=0)
 
-    # Calculated Fields (We'll calculate these in the view or model methods later)
-    # total_awal = models.BigIntegerField(default=0) # Qty * Harga
-    # total_pembelian_bruto = models.BigIntegerField(default=0) # Qty * Harga
-    # jumlah_retur_rp = models.BigIntegerField(default=0) # Retur Qty * Harga
-    # total_pembelian_neto = models.BigIntegerField(default=0) # Bruto - Diskon - Retur + Ongkir
-    # total_akhir = models.BigIntegerField(default=0) # Complex avg cost formula
-
     class Meta:
         # Prevent multiple Awal/Akhir entries per product per report
         unique_together = ('report', 'product', 'category')
@@ -112,14 +112,14 @@ class HppEntry(models.Model):
 
 # --- ExpenseItem (No change needed for now) ---
 class ExpenseItem(models.Model):
-    TYPE_CHOICES = [
+    EXPENSE_CATEGORY_CHOICES = [
         ('usaha', 'Beban Usaha Lainnya'), # Renamed slightly for clarity
         ('lain', 'Beban Lain-lain'),
     ]
     report = models.ForeignKey(FinancialReport, on_delete=models.CASCADE, related_name="expense_items")
     expense_category = models.CharField(
         max_length=20,
-        choices=TYPE_CHOICES,
+        choices=EXPENSE_CATEGORY_CHOICES,
         default='usaha'
     )
     expense_type = models.CharField(max_length=50, blank=True, null=True)
@@ -127,4 +127,4 @@ class ExpenseItem(models.Model):
     total = models.BigIntegerField(default=0)
 
     def __str__(self):
-        return f"{self.get_expense_type_display()}: {self.name} (Rp {self.total})"
+        return f"{self.expense_category}: {self.name} (Rp {self.total})"

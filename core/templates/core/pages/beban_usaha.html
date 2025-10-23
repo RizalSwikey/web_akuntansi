@@ -1,6 +1,6 @@
 {% extends "base.html" %}
 {% load static %}
-
+{% load humanize %}
 {% block title %}Beban Usaha{% endblock %}
 
 {% block content %}
@@ -47,13 +47,13 @@
             </button>
           </form>
           <div class="col-span-7 p-3">{{ item.name }}</div>
-          <div class="col-span-2 p-3 font-semibold">Rp {{ item.total | floatformat:0 }}</div>
+          <div class="col-span-2 p-3 font-semibold">Rp {{ item.total | floatformat:0 | intcomma}}</div>
         </div>
         {% endfor %}
         </div>
       <div class="grid grid-cols-10 gap-4 items-center border-t pt-4 mt-4 font-bold">
         <div class="col-span-8 p-3 text-right">Total Beban Usaha:</div>
-        <div id="jumlah-beban-usaha" class="col-span-2 p-3 text-lg">Rp {{ total_beban_usaha | floatformat:0 }}</div>
+        <div id="jumlah-beban-usaha" class="col-span-2 p-3 text-lg">Rp {{ total_beban_usaha | floatformat:0 | intcomma}}</div>
       </div>
     </div>
     <div class="bg-white p-8 rounded-2xl shadow-lg">
@@ -80,13 +80,13 @@
             </button>
           </form>
           <div class="col-span-7 p-3">{{ item.name }}</div>
-          <div class="col-span-2 p-3 font-semibold">Rp {{ item.total | floatformat:0 }}</div>
+          <div class="col-span-2 p-3 font-semibold">Rp {{ item.total | floatformat:0 | intcomma}}</div>
         </div>
         {% endfor %}
         </div>
       <div class="grid grid-cols-10 gap-4 items-center border-t pt-4 mt-4 font-bold">
         <div class="col-span-8 p-3 text-right">Total Beban Lain-lain:</div>
-        <div id="jumlah-beban-lain" class="col-span-2 p-3 text-lg">Rp {{ total_beban_lain | floatformat:0 }}</div>
+        <div id="jumlah-beban-lain" class="col-span-2 p-3 text-lg">Rp {{ total_beban_lain | floatformat:0 | intcomma}}</div>
       </div>
     </div>
     

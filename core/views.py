@@ -70,6 +70,7 @@ def profile_view(request):
         report.month = request.POST.get('month')
         report.year = request.POST.get('year')
         report.business_status = request.POST.get('business_status')
+        report.ptkp_status = request.POST.get('ptkp_status')
         report.umkm_incentive = request.POST.get('umkm_incentive')
         report.omzet = request.POST.get('omzet', 0)
         report.business_type = request.POST.get('business_type')
@@ -354,8 +355,8 @@ def beban_usaha_view(request):
 
     context = {
         'report': report,
-        'beban_usaha': beban_usaha_items, # Renamed for clarity in template
-        'beban_lain': beban_lain_items,   # Renamed for clarity in template
+        'total_beban_usaha': beban_usaha_items, # Renamed for clarity in template
+        'total_beban_lain': beban_lain_items,   # Renamed for clarity in template
         'completion_status': completion_status
     }
     
