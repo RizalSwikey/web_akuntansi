@@ -41,13 +41,13 @@
                 {% with awal=entries.AWAL calc_detail=calculation_details|get_item:product.id %}
                 <tr class="border-b hover:bg-gray-50">
                   <td class="p-3 font-medium">{{ product.name }}</td>
-                  <td class="p-3 text-center">{{ awal.quantity|default:0 | intcomma}}</td>
+                  <td class="p-3 text-center">{{ awal.quantity|intcomma }}</td>
                   
                   <td class="p-3 text-right font-semibold">
                     Rp {{ awal.quantity|multiply:awal.harga_satuan|intcomma }}
                   </td>
                   <td class="p-3 text-center">
-                    <button onclick="openEditModal('AWAL', {{ product.id }}, {{ awal.quantity|default:0 }}, '{{ awal.keterangan|default:'' }}', {{ awal.harga_satuan|default:0 }})"
+                    <button onclick="openEditModal('AWAL', {{ product.id }}, {{ awal.quantity }}, '{{ awal.keterangan|default:'' }}', {{ awal.harga_satuan }})"
                       class="text-blue-600 hover:text-blue-800 font-semibold">Edit</button>
                   </td>
                 </tr>
@@ -150,7 +150,7 @@
                 {% with akhir=entries.AKHIR calc_detail=calculation_details|get_item:product.id %}
                 <tr class="border-b hover:bg-gray-50">
                   <td class="p-3 font-medium">{{ product.name }}</td>
-                  <td class="p-3 text-center">{{ akhir.quantity|default:"0" | intcomma}}</td>
+                  <td class="p-3 text-center">{{ akhir.quantity | intcomma }}</td>
                   <td class="p-3 text-slate-600">{{ akhir.keterangan|default:"-" }}</td>
                   <td class="p-3 text-right font-semibold">Rp {{ calc_detail.total_akhir|default:0|intcomma }}</td>
                   <td class="p-3 text-xs">
@@ -163,7 +163,7 @@
                     {% endif %}
                   </td>
                   <td class="p-3 text-center">
-                    <button onclick="openEditModal('AKHIR', {{ product.id }}, {{ akhir.quantity|default:0 }}, '{{ akhir.keterangan|default:'' }}')"
+                    <button onclick="openEditModal('AKHIR', {{ product.id }}, {{ akhir.quantity }}, '{{ akhir.keterangan|default:'' }}')"
                       class="text-blue-600 hover:text-blue-800 font-semibold">Edit</button>
                   </td>
                 </tr>
@@ -223,7 +223,7 @@
     <div id="common-fields" class="space-y-4">
       <div>
         <label for="modal-quantity" class="block mb-2 font-semibold">Kuantitas</label>
-        <input type="number" id="modal-quantity" name="quantity" class="w-full p-3 border border-slate-300 rounded-lg" required>
+        <input type="number" id="modal-quantity" name="quantity" placeholder="0" class="w-full p-3 border border-slate-300 rounded-lg " required>
       </div>
     </div>
     
@@ -231,7 +231,7 @@
       <div id="harga-field" class="space-y-4">
         <div>
           <label for="modal-harga-satuan" class="block mb-2 font-semibold">Harga Satuan </label>
-          <input type="number" id="modal-harga-satuan" name="harga_satuan" class="w-full p-3 border border-slate-300 rounded-lg">
+          <input type="number" id="modal-harga-satuan" name="harga_satuan" placeholder="0" class="w-full p-3 border border-slate-300 rounded-lg">
         </div>
       </div>
       
@@ -248,15 +248,15 @@
       <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
         <div>
           <label for="modal-diskon" class="block mb-2 font-semibold">Diskon </label>
-          <input type="number" id="modal-diskon" name="diskon" class="w-full p-3 border border-slate-300 rounded-lg">
+          <input type="number" id="modal-diskon" placeholder="0" name="diskon" class="w-full p-3 border border-slate-300 rounded-lg">
         </div>
         <div>
           <label for="modal-retur-qty" class="block mb-2 font-semibold">Retur </label>
-          <input type="number" id="modal-retur-qty" name="retur_qty" class="w-full p-3 border border-slate-300 rounded-lg">
+          <input type="number" id="modal-retur-qty" placeholder="0" name="retur_qty" class="w-full p-3 border border-slate-300 rounded-lg">
         </div>
         <div>
           <label for="modal-ongkir" class="block mb-2 font-semibold">Ongkir </label>
-          <input type="number" id="modal-ongkir" name="ongkir" class="w-full p-3 border border-slate-300 rounded-lg">
+          <input type="number" id="modal-ongkir" placeholder="0" name="ongkir" class="w-full p-3 border border-slate-300 rounded-lg">
         </div>
       </div>
     </div>

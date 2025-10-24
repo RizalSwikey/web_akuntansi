@@ -218,11 +218,6 @@ def hpp_view(request):
                 product=product,
                 category=category,
                 defaults={
-                    'quantity': 0,
-                    'harga_satuan': 0,
-                    'diskon': 0,
-                    'retur_qty': 0,
-                    'ongkir': 0,
                     'keterangan': '',
                 }
             )
