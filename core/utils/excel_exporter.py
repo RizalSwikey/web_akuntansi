@@ -41,12 +41,12 @@ def generate_excel_file(report):
     ws["A11"].font = bold
     ws["B11"].font = bold
 
-    ws.append(["HPP", data["hpp_total"]])
+    ws.append(["HPP", data["total_hpp"]])
 
     # Beban usaha & lainnya
     for item in data["beban_usaha_items"]:
         ws.append([item.name, item.total])
-    ws.append(["Total Beban Usaha", data["total_beban_usaha_lainnya"]])
+    ws.append(["Total Beban Usaha", data["total_beban_usaha"]])
 
 
     for item in data["beban_lain_items"]:
