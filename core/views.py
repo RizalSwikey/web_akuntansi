@@ -7,6 +7,7 @@ from .models import FinancialReport, Product, RevenueItem, HppEntry, ExpenseItem
 from core.utils.hpp_calculator import calculate_hpp_for_product
 from core.utils.final_report import generate_final_report_data
 from core.utils.excel_exporter import generate_excel_file
+from core.utils.pdf_exporter import generate_pdf_file
 from django.http import HttpResponse
 
 
@@ -402,6 +403,7 @@ def laporan_view(request, report_id):
         return redirect('core:beban_usaha', report_id=report.id)
 
     data = generate_final_report_data(report)
+    
     return render(request, 'core/pages/laporan.html', {
         **data,
         'report': report,
@@ -423,8 +425,14 @@ def export_excel(request, report_id):
 
     return response
 
+
 @login_required(login_url='core:login')
 def export_pdf(request, report_id):
-    print("Export PDF belum tersedia.")
-    return redirect('core:laporan', report_id=report_id)
+    report = get_object_or_404(FinancialReport, id=report_id, user=request.user)
+    data = generate_final_report_data(report)
 
+    pdf_content, filename = generate_pdf_file(report, data, request=request)
+
+    response = HttpResponse(pdf_content, content_type="application/pdf")
+    response["Content-Disposition"] = f"attachment; filename={filename}"
+    return response

@@ -48,7 +48,7 @@ def generate_final_report_data(report):
         result = calculate_hpp_for_product(product, product_entries)
 
         total_awal = result.get("total_awal", 0)
-        total_pembelian = result.get("total_pembelian_neto", 0)
+        total_pembelian_neto = result.get("total_pembelian_neto", 0)
         total_akhir = result.get("total_akhir", 0)
 
         qty_awal = result.get("detail_awal", {}).get("qty", 0) if result.get("detail_awal") else 0
@@ -58,7 +58,7 @@ def generate_final_report_data(report):
         qty_terjual = qty_awal + qty_pembelian - qty_akhir
 
         # 🧮 HPP total and per unit (matching your Excel formula)
-        hpp_total = total_awal + total_pembelian - total_akhir
+        hpp_total = total_awal + total_pembelian_neto - total_akhir
         hpp_per_unit = hpp_total / qty_terjual if qty_terjual > 0 else 0
 
         total_hpp += hpp_total
@@ -68,12 +68,19 @@ def generate_final_report_data(report):
             "hpp_per_unit": hpp_per_unit,
             "hpp": hpp_total,
             "total_awal": total_awal,
-            "total_pembelian_neto": total_pembelian,
+            "total_pembelian_neto": total_pembelian_neto,
             "total_akhir": total_akhir,
             "detail_awal": {"qty": qty_awal},
             "detail_pembelian": {"qty": qty_pembelian},
             "detail_akhir": {"qty": qty_akhir},
         })
+
+    # --- Summarize HPP totals for laporan.html and laporan_pdf.html ---
+    total_persediaan_awal = sum(p['total_awal'] for p in hpp_per_product)
+    total_pembelian_neto = sum(p['total_pembelian_neto'] for p in hpp_per_product)
+    total_persediaan_akhir = sum(p['total_akhir'] for p in hpp_per_product)
+    total_hpp = sum(p['hpp'] for p in hpp_per_product)
+    barang_siap_dijual = total_persediaan_awal + total_pembelian_neto
 
     # =======================
     # 3️⃣ BEBAN (Expenses)
@@ -95,25 +102,49 @@ def generate_final_report_data(report):
     # =======================
     # ✅ Final assembled data
     # =======================
+    # return {
+    #     # Pendapatan
+    #     "total_pendapatan_usaha": total_pendapatan_usaha,
+    #     "total_pendapatan_lain": total_pendapatan_lain,
+    #     "jumlah_pendapatan": jumlah_pendapatan,
+
+    #     # HPP
+    #     "hpp_total": total_hpp,
+    #     "hpp_per_product": hpp_per_product,
+
+    #     # Beban
+    #     "beban_usaha_items": beban_usaha_items,
+    #     "beban_lain_items": beban_lain_items,
+    #     "total_beban_usaha": total_beban_usaha,
+    #     "total_beban_lain": total_beban_lain,
+    #     "jumlah_beban": jumlah_beban,
+
+    #     # Laba / Rugi
+    #     "laba_sebelum_pajak": laba_sebelum_pajak,
+    #     "pajak_penghasilan": pajak_penghasilan,
+    #     "laba_setelah_pajak": laba_setelah_pajak,
+    # }
+
     return {
-        # Pendapatan
         "total_pendapatan_usaha": total_pendapatan_usaha,
         "total_pendapatan_lain": total_pendapatan_lain,
         "jumlah_pendapatan": jumlah_pendapatan,
 
-        # HPP
-        "hpp_total": total_hpp,
+        "total_hpp": total_hpp,
         "hpp_per_product": hpp_per_product,
+        "total_persediaan_awal": total_persediaan_awal,
+        "total_pembelian_neto": total_pembelian_neto,
+        "barang_siap_dijual": barang_siap_dijual,
+        "total_persediaan_akhir": total_persediaan_akhir,
 
-        # Beban
+        # Keep your existing values
         "beban_usaha_items": beban_usaha_items,
         "beban_lain_items": beban_lain_items,
-        "total_beban_usaha_lainnya": total_beban_usaha,
+        "total_beban_usaha": total_beban_usaha,
         "total_beban_lain": total_beban_lain,
         "jumlah_beban": jumlah_beban,
-
-        # Laba / Rugi
         "laba_sebelum_pajak": laba_sebelum_pajak,
         "pajak_penghasilan": pajak_penghasilan,
         "laba_setelah_pajak": laba_setelah_pajak,
     }
+

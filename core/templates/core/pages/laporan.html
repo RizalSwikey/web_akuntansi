@@ -48,23 +48,23 @@
       <div class="space-y-4 max-w-2xl mx-auto mb-16">
         <div class="flex justify-between items-center border-b pb-2">
           <span class="text-slate-700">Persediaan Awal</span>
-          <span class="font-semibold">Rp {{ grand_total_awal | floatformat:0 | intcomma }}</span>
+          <span class="font-semibold">Rp {{ total_persediaan_awal | floatformat:0 | intcomma }}</span>
         </div>
         <div class="flex justify-between items-center border-b pb-2">
           <span class="text-slate-700">Pembelian (Neto)</span>
-          <span class="font-semibold">Rp {{ grand_total_pembelian_neto | floatformat:0 | intcomma}}</span>
+          <span class="font-semibold">Rp {{ total_pembelian_neto | floatformat:0 | intcomma}}</span>
         </div>
         <div class="flex justify-between items-center border-b pb-2">
           <span class="text-slate-700">Barang Siap untuk Dijual</span>
-          <span class="font-semibold">Rp {{ grand_total_barang_tersedia | floatformat:0 | intcomma}}</span>
+          <span class="font-semibold">Rp {{ barang_siap_dijual | floatformat:0 | intcomma}}</span>
         </div>
         <div class="flex justify-between items-center border-b pb-2">
           <span class="text-slate-700">Persediaan Akhir</span>
-          <span class="font-semibold">Rp {{ grand_total_akhir | floatformat:0 | intcomma}}</span>
+          <span class="font-semibold">Rp {{ total_persediaan_akhir | floatformat:0 | intcomma}}</span>
         </div>
         <div class="flex justify-between items-center bg-slate-100 p-3 rounded-lg mt-4">
           <span class="font-bold text-lg">Harga Pokok Penjualan (HPP)</span>
-          <span class="font-bold text-lg">Rp {{ hpp_total | floatformat:0 | intcomma}}</span>
+          <span class="font-bold text-lg">Rp {{ total_hpp | floatformat:0 | intcomma}}</span>
         </div>
         <div class="mt-6">
           <span class="text-slate-700">HPP Per Produk</span>
