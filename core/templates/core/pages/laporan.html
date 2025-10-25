@@ -12,18 +12,34 @@
 
     <div class="flex justify-between items-center mb-8">
       <h1 class="text-3xl font-bold">Laporan Laba Rugi</h1>
-      <div class="flex gap-4">
-        <button class="bg-gray-700 text-white py-2 px-6 rounded-lg font-semibold hover:bg-gray-600">
-          Export to Excel
+
+      <!-- START EXPORT SECTION -->
+      <div class="relative" id="export-dropdown-container">
+        <!-- Button to toggle the dropdown -->
+        <button id="export-toggle-btn" type="button" class="bg-gray-700 text-white py-2 px-6 rounded-lg font-semibold hover:bg-gray-600 flex items-center">
+          Export Laporan
+          <!-- Dropdown Arrow Icon -->
+          <svg class="w-4 h-4 ml-2" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
+            <path stroke-linecap="round" stroke-linejoin="round" d="m19.5 8.25-7.5 7.5-7.5-7.5" />
+          </svg>
         </button>
-        <button class="bg-red-700 text-white py-2 px-6 rounded-lg font-semibold hover:bg-red-600">
-          Download PDF
-        </button>
+        
+        <!-- Dropdown Menu -->
+        <div id="export-menu" class="absolute right-0 mt-2 w-48 bg-white rounded-lg shadow-xl z-10 hidden border border-slate-200 overflow-hidden">
+          <a href="{% url 'core:export_excel' report.id %}" class="block px-4 py-3 text-sm text-slate-700 hover:bg-slate-100 font-medium">
+            Excel
+          </a>
+          <a href="{% url 'core:export_pdf' report.id %}" class="block px-4 py-3 text-sm text-slate-700 hover:bg-slate-100 font-medium">
+            PDF
+          </a>
+        </div>
       </div>
+      <!-- END EXPORT SECTION -->
+
     </div>
 
     <div class="bg-white rounded-2xl p-10 shadow-lg max-w-4xl mx-auto">
-
+      <!-- START HPP SECTION -->
       <div class="text-center mb-10">
         <h2 class="text-2xl font-bold">{{ report.company_name | default:'Nama Perusahaan' }}</h2>
         <p class="text-xl font-semibold">LAPORAN HARGA POKOK PENJUALAN</p>
@@ -44,7 +60,7 @@
         </div>
         <div class="flex justify-between items-center border-b pb-2">
           <span class="text-slate-700">Persediaan Akhir</span>
-          <span class="font-semibold">(Rp {{ grand_total_akhir | floatformat:0 | intcomma}})</span>
+          <span class="font-semibold">Rp {{ grand_total_akhir | floatformat:0 | intcomma}}</span>
         </div>
         <div class="flex justify-between items-center bg-slate-100 p-3 rounded-lg mt-4">
           <span class="font-bold text-lg">Harga Pokok Penjualan (HPP)</span>
@@ -58,7 +74,7 @@
                 <span>{{ item.product_name }}</span>
                 <span>
                     {% if item.hpp is not None %}
-                        Rp {{ item.hpp | floatformat:0 | intcomma}}
+                        <span>Rp {{ item.hpp_per_unit|floatformat:0|intcomma }}</span>
                     {% else %}
                         missing hpp details
                     {% endif %}
@@ -68,8 +84,10 @@
           </div>
         </div>
       </div>
-      <hr class="my-12 border-slate-300" />
+      <!-- END HPP SECTION -->
 
+      <hr class="my-12 border-slate-300" />
+      <!-- START LABA RUGI SECTION -->
       <div class="text-center mb-10">
         <h2 class="text-2xl font-bold">{{ report.company_name | default:'Nama Perusahaan' }}</h2>
         <p class="text-xl font-semibold">LAPORAN LABA RUGI</p>
@@ -131,7 +149,7 @@
           </div>
           <div class="flex justify-between items-center font-semibold text-slate-700 py-2">
             <span>Beban Pajak Penghasilan</span>
-            <span class="font-bold text-black">(Rp {{ pajak_penghasilan | floatformat:0 | intcomma}})</span>
+            <span class="font-bold text-black">Rp {{ pajak_penghasilan | floatformat:0 | intcomma}}</span>
           </div>
           <div class="flex justify-between items-center bg-green-100 p-4 rounded-lg mt-4">
             <span class="font-bold text-lg text-green-700">Laba (Rugi) Setelah Pajak Penghasilan</span>
@@ -139,10 +157,32 @@
           </div>
         </div>
       </div>
+      <!-- START LABA RUGI SECTION -->
+
       </div>
     </main>
   </div>
 {% endblock %}
 
 {% block extra_js %}
+<script>
+document.addEventListener("DOMContentLoaded", function () {
+    const toggleBtn = document.getElementById("export-toggle-btn");
+    const menu = document.getElementById("export-menu");
+
+    if (toggleBtn && menu) {
+        toggleBtn.addEventListener("click", function () {
+            menu.classList.toggle("hidden");
+        });
+    }
+
+    // Close dropdown when clicking outside
+    document.addEventListener("click", function (e) {
+        const container = document.getElementById("export-dropdown-container");
+        if (!container.contains(e.target)) {
+            menu.classList.add("hidden");
+        }
+    });
+});
+</script>
 {% endblock %}

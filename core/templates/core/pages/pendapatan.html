@@ -109,7 +109,7 @@
 
 <div id="add-income-modal"
   class="fixed inset-0 bg-black/60 flex justify-center items-center z-50 transition-opacity opacity-0 pointer-events-none">
-  <form id="income-form" method="POST" action="{% url 'core:pendapatan' %}" class="bg-white p-8 rounded-2xl shadow-xl w-full max-w-lg space-y-6">
+  <form id="income-form" method="POST" action="{% url 'core:pendapatan' report.id %}" class="bg-white p-8 rounded-2xl shadow-xl w-full max-w-lg space-y-6">
     {% csrf_token %}
     <input type="hidden" name="action" value="add">
 

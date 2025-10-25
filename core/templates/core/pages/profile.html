@@ -22,7 +22,7 @@
         {% endfor %}
       {% endif %}
 
-      <form method="POST" action="{% url 'core:profile' %}" class="bg-white p-8 rounded-2xl shadow-lg space-y-6">
+      <form method="POST" action="{% url 'core:profile' report.id %}" class="bg-white p-8 rounded-2xl shadow-lg space-y-6">
         {% csrf_token %}
 
         <div class="bg-white rounded-2xl p-8 shadow-sm">

@@ -47,6 +47,7 @@
             </button>
           </form>
           <div class="col-span-3 p-3">{{ item.name }}</div>
+          <div class="col-span-3 p-3 text-slate-600">{{ item.expense_type }}</div>
           <div class="col-span-2 p-3 font-semibold">Rp {{ item.total | floatformat:0 | intcomma}}</div>
         </div>
         {% endfor %}
@@ -80,6 +81,7 @@
             </button>
           </form>
           <div class="col-span-3 p-3">{{ item.name }}</div>
+          <div class="col-span-3 p-3 text-slate-600">{{ item.expense_type }}</div>
           <div class="col-span-2 p-3 font-semibold">Rp {{ item.total | floatformat:0 | intcomma}}</div>
         </div>
         {% endfor %}
@@ -121,14 +123,13 @@
      <div>
       <label for="jenis-beban" class="block mb-2 font-semibold">Jenis Beban Usaha</label>
       <select id="jenis-beban" name="jenis_beban" class="w-full p-3 border border-slate-300 rounded-lg">
-        <option value="usaha">Biaya Gaji</option>
-        <option value="lain">Biaya Sewa</option>
-        <option value="usaha">Biaya Transportasi</option>
-        <option value="lain">Biaya Air & Listrik </option>
-        <option value="usaha">Biaya Pinjaman</option>
-        <option value="usaha">Biaya Penyusutan</option>
-        <option value="lain">Biaya Lainnya</option>
-
+        <option value="Biaya Gaji">Biaya Gaji</option>
+        <option value="Biaya Sewa">Biaya Sewa</option>
+        <option value="Biaya Transportasi">Biaya Transportasi</option>
+        <option value="Biaya Listrik & Air">Biaya Air & Listrik </option>
+        <option value="Biaya Pinjaman">Biaya Pinjaman</option>
+        <option value="Biaya Penyusutan">Biaya Penyusutan</option>
+        <option value="Biaya Lainnya">Biaya Lainnya</option>
       </select>
     </div>
 
@@ -178,5 +179,4 @@ document.addEventListener("DOMContentLoaded", function () {
   }
 });
 </script>
-<script src="{% static 'core/js/profile.js' %}"></script>
 {% endblock %}

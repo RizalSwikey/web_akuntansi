@@ -95,7 +95,7 @@
                       <td class="p-3 font-medium">{{ product.name }}</td>
                       <td class="p-3 text-center">{{ p.quantity | intcomma}}</td>
                       <td class="p-3 text-right">Rp {{ p.retur_qty|multiply:p.harga_satuan|intcomma }}</td>
-                      <td class="p-3 text-right font-semibold">Rp {{ p.total_pembelian|intcomma }}</td>
+                      <td class="p-3 text-right font-semibold">Rp {{ calc_detail.total_pembelian_neto|intcomma }}</td>
                       <td class="p-3 text-center">
                         <button onclick="openEditModal('PEMBELIAN', {{ product.id }}, {{ p.quantity }}, '{{ p.keterangan|default:'' }}', {{ p.harga_satuan }}, {{ p.diskon }}, {{ p.retur_qty }}, {{ p.ongkir }})"
                           class="text-blue-600 hover:text-blue-800 font-semibold">Edit</button>
@@ -201,7 +201,7 @@
 </div>
 
 <div id="edit-modal" class="fixed inset-0 bg-black/60 flex justify-center items-center z-50 opacity-0 pointer-events-none transition-opacity p-4">
-  <form id="edit-form" method="POST" action="{% url 'core:hpp' %}" class="bg-white p-8 rounded-2xl shadow-xl w-full max-w-3xl space-y-6">
+  <form id="edit-form" method="POST" action="{% url 'core:hpp' report.id %}" class="bg-white p-8 rounded-2xl shadow-xl w-full max-w-3xl space-y-6">
     {% csrf_token %}
     <input type="hidden" name="action" value="edit_hpp_entry">
     <input type="hidden" id="entry-type" name="category">

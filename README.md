@@ -12,6 +12,7 @@ accounting_apps
 │  │  ├─ 0002_revenueitem_description.py
 │  │  ├─ 0003_remove_revenueitem_description_and_more.py
 │  │  ├─ 0004_expenseitem_expense_category_and_more.py
+│  │  ├─ 0005_financialreport_ptkp_status.py
 │  │  └─ __init__.py
 │  ├─ models.py
 │  ├─ static
@@ -72,9 +73,10 @@ accounting_apps
 │  ├─ admin
 │  │  ├─ css
 │  │  │  ├─ autocomplete.css
-...........
-│  │        │  │  ├─ uk.js
-│  │        │  │  ├─ vi.js
+│  │  │  ├─ base.css
+│  │  │  ├─ changelists.css
+│  │  │  ├─ dark_mode.css
+.......
 │  │        │  │  ├─ zh-CN.js
 │  │        │  │  └─ zh-TW.js
 │  │        │  ├─ LICENSE.md
