@@ -1,0 +1,305 @@
+{% extends "base.html" %}
+{% load static %}
+{% load humanize%}
+{% block title %}HPP Manufaktur - Bahan Baku{% endblock %}
+
+{% block content %}
+<div class="flex h-screen">
+
+  {% include 'core/partials/sidebar.html' %}
+
+  <main id="main-content" class="flex-1 p-8 overflow-y-auto">
+    <div class="flex justify-between items-center mb-8">
+      <h1 class="text-3xl font-bold ">HPP Manufaktur</h1>
+    </div>
+
+    {% if messages %}
+      {% for message in messages %}
+      <div class="{% if message.tags == 'error' %}bg-red-100 border-red-400 text-red-700{% elif message.tags == 'warning' %}bg-yellow-100 border-yellow-400 text-yellow-700{% else %}bg-green-100 border-green-400 text-green-700{% endif %} border px-4 py-3 rounded-lg relative mb-6" role="alert">
+        <span class="block sm:inline">{{ message }}</span>
+      </div>
+      {% endfor %}
+    {% endif %}
+
+    <div class="bg-white p-8 rounded-2xl shadow-lg mb-8">
+      
+      <div class="flex justify-between items-center mb-6">
+          <h2 class="text-xl font-bold">Biaya Bahan Baku</h2>
+          <button id="open-modal-bahan-baku-btn" class="bg-black text-white py-2 px-6 rounded-lg font-semibold hover:bg-slate-800">
+            Tambah Data +
+          </button>
+      </div>
+      
+      <div class="mb-6">
+          <h3 class="text-lg font-semibold mb-3 text-slate-700">Persediaan Awal</h3>
+          <div class="grid grid-cols-12 gap-4 items-center border-b pb-2 font-semibold text-sm text-slate-500">
+            <div class="col-span-1">Aksi</div>
+            <div class="col-span-3 p-3">Nama Produk Jadi</div>
+            <div class="col-span-3 p-3">Nama Bahan Baku</div>
+            <div class="col-span-2 p-3">Kuantitas</div>
+            <div class="col-span-1 p-3">Harga Satuan</div>
+            <div class="col-span-2 p-3 text-right">Total</div>
+          </div>
+          <div id="bahan-baku-awal-rows" class="divide-y">
+            <p class="text-center text-slate-400 p-4 italic js-empty-state {% if bahan_baku_awal %}hidden{% endif %}">Belum ada data persediaan awal.</p>
+            {% for item in bahan_baku_awal %} {# Loop dari backend #}
+            <div class="data-row grid grid-cols-12 gap-4 items-center py-2">
+                 <div class="col-span-1 flex justify-center">
+                    <button data-item-id="{{ item.id }}" class="remove-row-btn text-slate-400 hover:text-red-500 p-2">
+                         <svg class="w-5 h-5 pointer-events-none" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="m14.74 9-.346 9m-4.788 0L9.26 9m9.968-3.21c.342.052.682.107 1.022.166m-1.022-.165L18.16 19.673a2.25 2.25 0 0 1-2.244 2.077H8.084a2.25 2.25 0 0 1-2.244-2.077L4.772 5.79m14.456 0a48.108 48.108 0 0 0-3.478-.397m-12 .562c.34-.059.68-.114 1.022-.165m0 0a48.11 48.11 0 0 1 3.478-.397m7.5 0v-.916c0-1.18-.91-2.134-2.09-2.201a51.964 51.964 0 0 0-3.32 0c-1.18.067-2.09 1.022-2.09 2.201v.916m7.5 0a48.667 48.667 0 0 0-7.5 0" /></svg>
+                    </button>
+                </div>
+                <div class="col-span-3 p-3">{{ item.product.name }}</div>
+                <div class="col-span-3 p-3">{{ item.nama_bahan_baku }}</div>
+                <div class="col-span-2 p-3">{{ item.quantity|floatformat:0|intcomma }}</div>
+                <div class="col-span-1 p-3">Rp {{ item.harga_satuan|floatformat:0|intcomma }}</div>
+                <div class="col-span-2 p-3 font-semibold text-right">Rp {{ item.total|floatformat:0|intcomma }}</div>
+            </div>
+            {% endfor %}
+          </div>
+          <div class="grid grid-cols-12 gap-4 items-center border-t pt-3 mt-3 font-bold">
+            <div class="col-span-10 p-3 text-right text-slate-600">Sub Jumlah Persediaan Awal</div>
+            <div id="bahan-baku-awal-total" class="col-span-2 p-3 text-lg text-right">Rp {{ total_bahan_baku_awal|floatformat:0|intcomma }}</div>
+          </div>
+          <div id="bahan-baku-awal-per-produk-totals" class="mt-2 divide-y border-t pt-2 {% if not totals_awal_per_produk %}hidden{% endif %}">
+              {% for prod_total in totals_awal_per_produk %} {# Loop dari backend #}
+              <div class="grid grid-cols-12 gap-4 items-center py-1">
+                  <div class="col-span-10 p-1 text-right text-sm text-slate-500 italic">Sub Jumlah Persediaan Awal {{ prod_total.product_name }}</div>
+                  <div class="col-span-2 p-1 text-sm text-right text-slate-500 italic">Rp {{ prod_total.total|floatformat:0|intcomma }}</div>
+              </div>
+              {% endfor %}
+          </div>
+      </div>
+
+      <div class="mb-6">
+          <h3 class="text-lg font-semibold mb-3 text-slate-700">Pembelian</h3>
+          <div class="grid grid-cols-12 gap-4 items-center border-b pb-2 font-semibold text-sm text-slate-500">
+             <div class="col-span-1">Aksi</div>
+            <div class="col-span-3 p-3">Nama Produk Jadi</div>
+            <div class="col-span-3 p-3">Nama Bahan Baku</div>
+            <div class="col-span-2 p-3">Kuantitas</div>
+            <div class="col-span-1 p-3">Harga Satuan</div>
+            <div class="col-span-2 p-3 text-right">Total</div>
+          </div>
+          <div id="bahan-baku-pembelian-rows" class="divide-y">
+            <p class="text-center text-slate-400 p-4 italic js-empty-state {% if bahan_baku_pembelian %}hidden{% endif %}">Belum ada data pembelian.</p>
+             {% for item in bahan_baku_pembelian %} {# Loop dari backend #}
+            <div class="data-row grid grid-cols-12 gap-4 items-center py-2">
+                 <div class="col-span-1 flex justify-center">
+                    <button data-item-id="{{ item.id }}" class="remove-row-btn text-slate-400 hover:text-red-500 p-2">
+                         <svg class="w-5 h-5 pointer-events-none" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="m14.74 9-.346 9m-4.788 0L9.26 9m9.968-3.21c.342.052.682.107 1.022.166m-1.022-.165L18.16 19.673a2.25 2.25 0 0 1-2.244 2.077H8.084a2.25 2.25 0 0 1-2.244-2.077L4.772 5.79m14.456 0a48.108 48.108 0 0 0-3.478-.397m-12 .562c.34-.059.68-.114 1.022-.165m0 0a48.11 48.11 0 0 1 3.478-.397m7.5 0v-.916c0-1.18-.91-2.134-2.09-2.201a51.964 51.964 0 0 0-3.32 0c-1.18.067-2.09 1.022-2.09 2.201v.916m7.5 0a48.667 48.667 0 0 0-7.5 0" /></svg>
+                    </button>
+                </div>
+                <div class="col-span-3 p-3">{{ item.product.name }}</div>
+                <div class="col-span-3 p-3">{{ item.nama_bahan_baku }}</div>
+                <div class="col-span-2 p-3">{{ item.quantity|floatformat:0|intcomma }}</div>
+                <div class="col-span-1 p-3">Rp {{ item.harga_satuan|floatformat:0|intcomma }}</div>
+                <div class="col-span-2 p-3 font-semibold text-right">Rp {{ item.total|floatformat:0|intcomma }}</div>
+            </div>
+            {% endfor %}
+          </div>
+          <div class="grid grid-cols-12 gap-4 items-center border-t pt-3 mt-3 font-bold">
+            <div class="col-span-10 p-3 text-right text-slate-600">Sub Jumlah Pembelian</div>
+            <div id="bahan-baku-pembelian-total" class="col-span-2 p-3 text-lg text-right">Rp {{ total_bahan_baku_pembelian|floatformat:0|intcomma }}</div>
+          </div>
+          <div id="bahan-baku-pembelian-per-produk-totals" class="mt-2 divide-y border-t pt-2 {% if not totals_pembelian_per_produk %}hidden{% endif %}">
+              {% for prod_total in totals_pembelian_per_produk %} {# Loop dari backend #}
+              <div class="grid grid-cols-12 gap-4 items-center py-1">
+                  <div class="col-span-10 p-1 text-right text-sm text-slate-500 italic">Sub Jumlah Pembelian {{ prod_total.product_name }}</div>
+                  <div class="col-span-2 p-1 text-sm text-right text-slate-500 italic">Rp {{ prod_total.total|floatformat:0|intcomma }}</div>
+              </div>
+              {% endfor %}
+          </div>
+      </div>
+
+       <div class="mb-6">
+          <h3 class="text-lg font-semibold mb-3 text-slate-700">Persediaan Akhir</h3>
+          <div class="grid grid-cols-12 gap-4 items-center border-b pb-2 font-semibold text-sm text-slate-500">
+             <div class="col-span-1">Aksi</div>
+            <div class="col-span-3 p-3">Nama Produk Jadi</div>
+            <div class="col-span-3 p-3">Nama Bahan Baku</div>
+            <div class="col-span-2 p-3">Kuantitas</div>
+            <div class="col-span-1 p-3">Harga Satuan</div>
+            <div class="col-span-2 p-3 text-right">Total</div>
+          </div>
+          <div id="bahan-baku-akhir-rows" class="divide-y">
+            <p class="text-center text-slate-400 p-4 italic js-empty-state {% if bahan_baku_akhir %}hidden{% endif %}">Belum ada data persediaan akhir.</p>
+             {% for item in bahan_baku_akhir %} {# Loop dari backend #}
+            <div class="data-row grid grid-cols-12 gap-4 items-center py-2">
+                 <div class="col-span-1 flex justify-center">
+                    <button data-item-id="{{ item.id }}" class="remove-row-btn text-slate-400 hover:text-red-500 p-2">
+                         <svg class="w-5 h-5 pointer-events-none" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="m14.74 9-.346 9m-4.788 0L9.26 9m9.968-3.21c.342.052.682.107 1.022.166m-1.022-.165L18.16 19.673a2.25 2.25 0 0 1-2.244 2.077H8.084a2.25 2.25 0 0 1-2.244-2.077L4.772 5.79m14.456 0a48.108 48.108 0 0 0-3.478-.397m-12 .562c.34-.059.68-.114 1.022-.165m0 0a48.11 48.11 0 0 1 3.478-.397m7.5 0v-.916c0-1.18-.91-2.134-2.09-2.201a51.964 51.964 0 0 0-3.32 0c-1.18.067-2.09 1.022-2.09 2.201v.916m7.5 0a48.667 48.667 0 0 0-7.5 0" /></svg>
+                    </button>
+                </div>
+                <div class="col-span-3 p-3">{{ item.product.name }}</div>
+                <div class="col-span-3 p-3">{{ item.nama_bahan_baku }}</div>
+                <div class="col-span-2 p-3">{{ item.quantity|floatformat:0|intcomma }}</div>
+                <div class="col-span-1 p-3">Rp {{ item.harga_satuan|floatformat:0|intcomma }}</div>
+                <div class="col-span-2 p-3 font-semibold text-right">Rp {{ item.total|floatformat:0|intcomma }}</div>
+            </div>
+            {% endfor %}
+          </div>
+          <div class="grid grid-cols-12 gap-4 items-center border-t pt-3 mt-3 font-bold">
+            <div class="col-span-10 p-3 text-right text-slate-600">Sub Jumlah Persediaan Akhir</div>
+            <div id="bahan-baku-akhir-total" class="col-span-2 p-3 text-lg text-right">Rp {{ total_bahan_baku_akhir|floatformat:0|intcomma }}</div>
+          </div>
+          <div id="bahan-baku-akhir-per-produk-totals" class="mt-2 divide-y border-t pt-2 {% if not totals_akhir_per_produk %}hidden{% endif %}">
+              {% for prod_total in totals_akhir_per_produk %} {# Loop dari backend #}
+              <div class="grid grid-cols-12 gap-4 items-center py-1">
+                  <div class="col-span-10 p-1 text-right text-sm text-slate-500 italic">Sub Jumlah Persediaan Akhir {{ prod_total.product_name }}</div>
+                  <div class="col-span-2 p-1 text-sm text-right text-slate-500 italic">Rp {{ prod_total.total|floatformat:0|intcomma }}</div>
+              </div>
+              {% endfor %}
+          </div>
+      </div>
+
+    </div>
+    <form method="POST" class="flex justify-end mt-8">
+      {% csrf_token %}
+      <button
+        type="submit"
+        name="next_step"
+        class="bg-black text-white py-3 px-8 rounded-lg font-semibold text-lg hover:bg-slate-800"
+      >
+        Lanjut ke Beban Usaha &rarr; 
+      </button>
+    </form>
+
+  </main>
+</div>
+
+<div id="modal-bahan-baku" class="fixed inset-0 bg-black/60 flex justify-center items-center z-50 transition-opacity opacity-0 pointer-events-none">
+  <form id="form-bahan-baku" method="POST" action="" class="bg-white p-8 rounded-2xl shadow-xl w-full max-w-2xl space-y-6 overflow-y-auto max-h-[90vh]"> 
+    {% csrf_token %}
+    <input type="hidden" name="action" value="add_bahan_baku_item"> 
+
+    <h2 class="text-2xl font-bold mb-4">Tambah Data Biaya Bahan Baku</h2>
+
+    <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+        <div>
+            <label for="modal-tipe-data" class="block mb-2 font-semibold">Tipe Data</label>
+            <select id="modal-tipe-data" name="tipe_data" class="w-full p-3 border border-slate-300 rounded-lg" required>
+                <option value="">Pilih Tipe</option>
+                <option value="AWAL">Persediaan Awal</option>
+                <option value="PEMBELIAN">Pembelian</option>
+                <option value="AKHIR">Persediaan Akhir</option>
+            </select>
+        </div>
+        <div>
+            <label for="modal-product-id" class="block mb-2 font-semibold">Nama Produk Jadi</label>
+            <select id="modal-product-id" name="product_id" class="w-full p-3 border border-slate-300 rounded-lg" required>
+                <option value="">Pilih Produk</option>
+                {% for product in products_pendapatan %} 
+                <option value="{{ product.id }}">{{ product.name }}</option>
+                {% endfor %}
+                 <option value="dummy1">Produk A (Contoh)</option> 
+                 <option value="dummy2">Produk B (Contoh)</option> 
+            </select>
+        </div>
+    </div>
+    
+    <div>
+        <label for="modal-nama-bahan" class="block mb-2 font-semibold">Nama Bahan Baku</label>
+        <input type="text" id="modal-nama-bahan" name="nama_bahan_baku" class="w-full p-3 border border-slate-300 rounded-lg" placeholder="Cth: Kain Katun" required>
+    </div>
+
+    <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+        <div>
+          <label for="modal-kuantitas" class="block mb-2 font-semibold">Kuantitas</label>
+          <input type="number" id="modal-kuantitas" name="kuantitas" class="w-full p-3 border border-slate-300 rounded-lg" placeholder="0" required>
+        </div>
+        <div>
+          <label for="modal-harga-satuan" class="block mb-2 font-semibold">Harga Satuan (Rp)</label>
+          <input type="number" id="modal-harga-satuan" name="harga_satuan" class="w-full p-3 border border-slate-300 rounded-lg" placeholder="0" required>
+        </div>
+    </div>
+
+    <div id="modal-pembelian-fields" class="hidden space-y-6 border-t pt-6 mt-6"> 
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <div>
+              <label for="modal-diskon" class="block mb-2 font-semibold">Diskon Pembelian </label>
+              <input type="number" id="modal-diskon" name="diskon" class="w-full p-3 border border-slate-300 rounded-lg" placeholder="0">
+            </div>
+            <div>
+              <label for="modal-retur" class="block mb-2 font-semibold">Retur Pembelian </label>
+              <input type="number" id="modal-retur" name="retur" class="w-full p-3 border border-slate-300 rounded-lg" placeholder="0">
+            </div>
+        </div>
+         <div>
+            <label for="modal-ongkir" class="block mb-2 font-semibold">Biaya Ongkos Kirim </label>
+            <input type="number" id="modal-ongkir" name="ongkir" class="w-full p-3 border border-slate-300 rounded-lg" placeholder="0">
+        </div>
+    </div>
+    
+    <div> 
+        <label for="modal-keterangan" class="block mb-2 font-semibold">Keterangan (Opsional)</label>
+        <input type="text" id="modal-keterangan" name="keterangan" class="w-full p-3 border border-slate-300 rounded-lg" placeholder="Cth: Pembelian tgl XX">
+    </div>
+
+    <div class="flex justify-end gap-4 pt-4">
+      <button type="button" id="modal-bahan-baku-close-btn" class="py-2 px-6 rounded-lg font-semibold border hover:bg-slate-100">
+        Batal
+      </button>
+      <button type="submit" class="bg-black text-white py-2 px-6 rounded-lg font-semibold hover:bg-slate-800">
+        Simpan
+      </button>
+    </div>
+  </form>
+</div>
+{% endblock %}
+
+
+{% block extra_js %}
+<script>
+// (JavaScript SAMA PERSIS dengan versi sebelumnya, tidak perlu diubah)
+document.addEventListener("DOMContentLoaded", function () {
+  const openModalBtn = document.getElementById("open-modal-bahan-baku-btn");
+  const theModal = document.getElementById("modal-bahan-baku");
+  const closeModalBtn = document.getElementById("modal-bahan-baku-close-btn");
+  const theForm = document.getElementById("form-bahan-baku");
+  const tipeDataDropdown = document.getElementById("modal-tipe-data");
+  const pembelianFieldsDiv = document.getElementById("modal-pembelian-fields"); 
+
+  function openModal() {
+    theModal.classList.remove("opacity-0", "pointer-events-none");
+    togglePembelianFields(); 
+  }
+
+  function closeModal() {
+    setTimeout(() => {
+        theModal.classList.add("opacity-0", "pointer-events-none");
+        if (theForm) {
+            theForm.reset(); 
+        }
+        if(pembelianFieldsDiv) { 
+            pembelianFieldsDiv.classList.add("hidden");
+        }
+    }, 200); 
+  }
+
+  function togglePembelianFields() {
+      if (tipeDataDropdown && pembelianFieldsDiv) { 
+          if (tipeDataDropdown.value === "PEMBELIAN") {
+              pembelianFieldsDiv.classList.remove("hidden"); 
+          } else {
+              pembelianFieldsDiv.classList.add("hidden"); 
+          }
+      }
+  }
+
+  if (openModalBtn && theModal && theForm) {
+    openModalBtn.addEventListener("click", openModal);
+    closeModalBtn.addEventListener("click", closeModal);
+    theModal.addEventListener("click", (e) => {
+      if (e.target === theModal) {
+        closeModal();
+      }
+    });
+
+    if (tipeDataDropdown) {
+        tipeDataDropdown.addEventListener("change", togglePembelianFields);
+    }
+  }
+});
+</script>
+{% endblock %}

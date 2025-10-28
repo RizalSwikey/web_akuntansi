@@ -4,145 +4,254 @@
 <head>
     <meta charset="UTF-8">
     <title>Laporan Laba Rugi - {{ report.company_name }}</title>
-    <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
     <style>
-        body { font-family: 'Inter', sans-serif; font-size: 14px; }
-        .section-title { font-weight: 700; font-size: 1.2rem; margin-top: 2rem; color: #1f2937; }
-        .amount { font-weight: 600; text-align: right; }
-        hr { border: none; border-top: 1px solid #e5e7eb; margin: 1.5rem 0; }
+        body {
+            font-family: 'Helvetica', 'Arial', sans-serif;
+            font-size: 11px;
+            line-height: 1.5;
+            color: #1f2937;
+            margin: 0;
+            padding: 0;
+        }
+        .container {
+            width: 800px;
+            margin: 0 auto;
+            padding: 40px;
+            /* ============================================= */
+            /* KODE BARU: Beri ruang di bawah untuk footer   */
+            /* ============================================= */
+            margin-bottom: 60px; 
+        }
+        .header {
+            text-align: center;
+            margin-bottom: 24px;
+        }
+        .company-name {
+            font-size: 20px;
+            font-weight: bold;
+            margin: 0;
+        }
+        .report-title {
+            font-size: 16px;
+            font-weight: bold;
+            margin: 0;
+        }
+        .report-period {
+            font-size: 12px;
+            color: #6b7280;
+            margin: 0;
+        }
+        .section-title {
+            font-weight: bold;
+            font-size: 14px;
+            margin-top: 20px;
+            margin-bottom: 8px;
+        }
+
+        /* ============================================= */
+        /* KODE BARU: Styling untuk footer 'position: fixed' */
+        /* ============================================= */
+        .footer {
+            position: fixed; /* Kunci utamanya: 'cetak' di posisi tetap */
+            bottom: 0;       /* Letakkan 0px dari bawah */
+            left: 0;
+            right: 0;
+            width: 100%;
+            text-align: center;
+            
+            font-size: 10px;
+            color: #9ca3af; /* text-gray-400 */
+            
+            /* Garis di atas footer */
+            border-top: 1px solid #e5e7eb; 
+            padding: 10px 0;
+            background-color: #ffffff; /* Beri background putih */
+        }
+        /* ============================================= */
+        /* AKHIR KODE BARU                             */
+        /* ============================================= */
+        
+        .data-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-bottom: 16px;
+        }
+        .data-table tr {
+            border-bottom: 1px solid #e5e7eb;
+        }
+        .data-table td {
+            padding: 8px 4px;
+        }
+        .data-table .label {
+            text-align: left;
+        }
+        .data-table .amount {
+            text-align: right;
+            font-weight: 600;
+        }
+        
+        .total-row {
+            border-top: 2px solid #374151;
+            border-bottom: 2px solid #374151;
+        }
+        .total-row .label,
+        .total-row .amount {
+            font-weight: bold;
+            font-size: 13px;
+        }
+        
+        .highlight-row td {
+            background-color: #f3f4f6;
+            padding: 12px 8px;
+            font-weight: bold;
+            font-size: 13px;
+        }
+        .indent {
+            padding-left: 24px !important;
+        }
+        .sub-header {
+            font-weight: 600;
+            color: #374151;
+            padding-top: 12px;
+        }
+
+        /* Hapus @page, karena tidak didukung */
+
     </style>
 </head>
-<body class="bg-white text-gray-900 p-10">
+<body>
 
-    <!-- HEADER: HPP -->
-    <div class="text-center mb-10">
-        <h2 class="text-2xl font-bold">{{ report.company_name|default:"Nama Perusahaan" }}</h2>
-        <p class="text-xl font-semibold">LAPORAN HARGA POKOK PENJUALAN</p>
-        <p class="text-md text-gray-500">{{ report.month|default:"Bulan" }} {{ report.year|default:"Tahun" }}</p>
+    <div class="footer">
+        © {{ report.year }} JurnalKita - Laporan dibuat secara otomatis
     </div>
+    <div class="container">
 
-    <!-- HPP SUMMARY -->
-    <div class="max-w-2xl mx-auto space-y-2">
-        <div class="flex justify-between border-b pb-1">
-            <span>Persediaan Awal</span>
-            <span class="amount">Rp {{ total_persediaan_awal|floatformat:0|intcomma }}</span>
-        </div>
-        <div class="flex justify-between border-b pb-1">
-            <span>Pembelian (Neto)</span>
-            <span class="amount">Rp {{ total_pembelian_neto|floatformat:0|intcomma }}</span>
-        </div>
-        <div class="flex justify-between border-b pb-1">
-            <span>Barang Siap untuk Dijual</span>
-            <span class="amount">Rp {{ barang_siap_dijual|floatformat:0|intcomma }}</span>
-        </div>
-        <div class="flex justify-between border-b pb-1">
-            <span>Persediaan Akhir</span>
-            <span class="amount">Rp {{ total_persediaan_akhir|floatformat:0|intcomma }}</span>
-        </div>
-        <div class="flex justify-between bg-gray-100 p-2 rounded-lg mt-3">
-            <span class="font-bold text-lg">Harga Pokok Penjualan (HPP)</span>
-            <span class="font-bold text-lg">Rp {{ total_hpp|floatformat:0|intcomma }}</span>
+        <div class="header">
+            <p class="company-name">{{ report.company_name|default:"Nama Perusahaan" }}</p>
+            <p class="report-title">LAPORAN HARGA POKOK PENJUALAN</p>
+            <p class="report-period">{{ report.month|default:"Bulan" }} {{ report.year|default:"Tahun" }}</p>
         </div>
 
-        <!-- HPP per product -->
-        <div class="mt-5">
-            <span class="text-gray-700 font-semibold">HPP Per Produk</span>
-            <div class="space-y-1 ml-4 mt-2">
-                {% for item in hpp_per_product %}
-                    <div class="flex justify-between border-b py-1">
-                        <span>{{ item.product_name }}</span>
-                        <span>Rp {{ item.hpp_per_unit|floatformat:0|intcomma }}</span>
-                    </div>
-                {% endfor %}
-            </div>
-        </div>
-    </div>
+        <table class="data-table">
+            <tr>
+                <td class="label">Persediaan Awal</td>
+                <td class="amount">Rp {{ total_persediaan_awal|floatformat:0|intcomma }}</td>
+            </tr>
+            <tr>
+                <td class="label">Pembelian (Neto)</td>
+                <td class="amount">Rp {{ total_pembelian_neto|floatformat:0|intcomma }}</td>
+            </tr>
+            <tr>
+                <td class="label">Barang Siap untuk Dijual</td>
+                <td class="amount">Rp {{ barang_siap_dijual|floatformat:0|intcomma }}</td>
+            </tr>
+            <tr>
+                <td class="label">Persediaan Akhir</td>
+                <td class="amount">Rp {{ total_persediaan_akhir|floatformat:0|intcomma }}</td>
+            </tr>
+            <tr class="highlight-row">
+                <td class="label">Harga Pokok Penjualan (HPP)</td>
+                <td class="amount">Rp {{ total_hpp|floatformat:0|intcomma }}</td>
+            </tr>
+        </table>
+        
+        <div class="section-title" style="margin-top: 16px;">HPP Per Produk</div>
+        <table class="data-table">
+            {% for item in hpp_per_product %}
+            <tr>
+                <td class="label indent">{{ item.product_name }}</td>
+                <td class="amount">Rp {{ item.hpp_per_unit|floatformat:0|intcomma }}</td>
+            </tr>
+            {% empty %}
+             <tr>
+                <td class="label indent" colspan="2" style="color: #6b7280;">- Tidak ada data HPP per produk -</td>
+            </tr>
+            {% endfor %}
+        </table>
 
-    <hr />
+        <hr style="page-break-before: always; border: none; margin: 0; padding: 0;">
 
-    <!-- HEADER: LABA RUGI -->
-    <div class="text-center mb-10 mt-10">
-        <h2 class="text-2xl font-bold">{{ report.company_name|default:"Nama Perusahaan" }}</h2>
-        <p class="text-xl font-semibold">LAPORAN LABA RUGI</p>
-        <p class="text-md text-gray-500">{{ report.month|default:"Bulan" }} {{ report.year|default:"Tahun" }}</p>
-    </div>
-
-    <!-- LABA RUGI BODY -->
-    <div class="max-w-2xl mx-auto space-y-4">
-        <!-- Pendapatan -->
-        <div>
-            <div class="font-bold text-lg mb-1">Pendapatan</div>
-            <div class="pl-4 space-y-1 border-b pb-1">
-                <div class="flex justify-between">
-                    <span>Pendapatan Usaha</span>
-                    <span class="amount">Rp {{ total_pendapatan_usaha|floatformat:0|intcomma }}</span>
-                </div>
-                <div class="flex justify-between">
-                    <span>Pendapatan Lain - Lain</span>
-                    <span class="amount">Rp {{ total_pendapatan_lain|floatformat:0|intcomma }}</span>
-                </div>
-            </div>
-            <div class="flex justify-between font-bold mt-1 pl-4">
-                <span>Jumlah Pendapatan</span>
-                <span class="amount">Rp {{ jumlah_pendapatan|floatformat:0|intcomma }}</span>
-            </div>
-        </div>
-
-        <!-- Beban -->
-        <div>
-            <div class="font-bold text-lg mt-4 mb-1">Beban</div>
-            <div class="pl-4 border-b pb-1 space-y-1">
-                <div class="flex justify-between">
-                    <span>Beban Usaha - HPP</span>
-                    <span class="amount">Rp {{ total_hpp|floatformat:0|intcomma }}</span>
-                </div>
-                {% for item in beban_usaha_items %}
-                <div class="flex justify-between">
-                    <span>{{ item.name }}</span>
-                    <span class="amount">Rp {{ item.total|floatformat:0|intcomma }}</span>
-                </div>
-                {% endfor %}
-                <div class="flex justify-between font-semibold border-t mt-2 pt-1">
-                    <span>Total Beban Usaha Lainnya</span>
-                    <span class="amount">Rp {{ total_beban_usaha|floatformat:0|intcomma }}</span>
-                </div>
-                {% for item in beban_lain_items %}
-                <div class="flex justify-between mt-2">
-                    <span>{{ item.name }}</span>
-                    <span class="amount">Rp {{ item.total|floatformat:0|intcomma }}</span>
-                </div>
-                {% endfor %}
-                <div class="flex justify-between font-semibold border-t mt-2 pt-1">
-                    <span>Total Beban Lain - Lain</span>
-                    <span class="amount">Rp {{ total_beban_lain|floatformat:0|intcomma }}</span>
-                </div>
-            </div>
-            <div class="flex justify-between font-bold pl-4 mt-1">
-                <span>Jumlah Beban</span>
-                <span class="amount">Rp {{ jumlah_beban|floatformat:0|intcomma }}</span>
-            </div>
+        <div class="header" style="padding-top: 40px;"> <p class="company-name">{{ report.company_name|default:"Nama Perusahaan" }}</p>
+            <p class="report-title">LAPORAN LABA RUGI</p>
+            <p class="report-period">{{ report.month|default:"Bulan" }} {{ report.year|default:"Tahun" }}</p>
         </div>
 
-        <!-- Laba Rugi -->
-        <div class="pt-6 space-y-2">
-            <div class="flex justify-between font-semibold text-gray-700">
-                <span>Laba (Rugi) Sebelum Pajak Penghasilan</span>
-                <span class="font-bold text-black">Rp {{ laba_sebelum_pajak|floatformat:0|intcomma }}</span>
-            </div>
-            <div class="flex justify-between font-semibold text-gray-700">
-                <span>Beban Pajak Penghasilan</span>
-                <span class="font-bold text-black">Rp {{ pajak_penghasilan|floatformat:0|intcomma }}</span>
-            </div>
-            <div class="flex justify-between bg-green-100 p-3 rounded-lg mt-2">
-                <span class="font-bold text-lg text-green-700">Laba (Rugi) Setelah Pajak Penghasilan</span>
-                <span class="font-bold text-lg text-green-700">Rp {{ laba_setelah_pajak|floatformat:0|intcomma }}</span>
-            </div>
-        </div>
-    </div>
+        <div class="section-title">Pendapatan</div>
+        <table class="data-table">
+            <tr>
+                <td class="label indent">Pendapatan Usaha</td>
+                <td class="amount">Rp {{ total_pendapatan_usaha|floatformat:0|intcomma }}</td>
+            </tr>
+            <tr>
+                <td class="label indent">Pendapatan Lain - Lain</td>
+                <td class="amount">Rp {{ total_pendapatan_lain|floatformat:0|intcomma }}</td>
+            </tr>
+            <tr class="total-row">
+                <td class="label">Jumlah Pendapatan</td>
+                <td class="amount">Rp {{ jumlah_pendapatan|floatformat:0|intcomma }}</td>
+            </tr>
+        </table>
 
-    <div class="text-center text-gray-400 text-sm mt-10">
-        <p>© {{ report.year }} JurnalKita - Laporan dibuat secara otomatis</p>
-    </div>
+        <div class="section-title">Beban</div>
+        <table class="data-table">
+            <tr>
+                <td class="label indent">Beban Usaha - HPP</td>
+                <td class="amount">Rp {{ total_hpp|floatformat:0|intcomma }}</td>
+            </tr>
+            
+            {% if beban_usaha_items %}
+            <tr>
+                <td class="label sub-header" colspan="2">Beban Usaha Lainnya:</td>
+            </tr>
+            {% for item in beban_usaha_items %}
+            <tr>
+                <td class="label indent" style="padding-left: 48px !important;">{{ item.name }}</td>
+                <td class="amount">Rp {{ item.total|floatformat:0|intcomma }}</td>
+            </tr>
+            {% endfor %}
+            <tr>
+                <td class="label indent" style="font-weight: 600;">Total Beban Usaha Lainnya</td>
+                <td class="amount">Rp {{ total_beban_usaha|floatformat:0|intcomma }}</td>
+            </tr>
+            {% endif %}
 
-</body>
+            {% if beban_lain_items %}
+            <tr>
+                <td classs="label sub-header" colspan="2">Beban Lain - Lain:</td>
+            </tr>
+            {% for item in beban_lain_items %}
+            <tr>
+                <td class="label indent" style="padding-left: 48px !important;">{{ item.name }}</td>
+                <td class="amount">Rp {{ item.total|floatformat:0|intcomma }}</td>
+            </tr>
+            {% endfor %}
+            <tr>
+                <td class="label indent" style="font-weight: 600;">Total Beban Lain - Lain</td>
+                <td class="amount">Rp {{ total_beban_lain|floatformat:0|intcomma }}</td>
+            </tr>
+            {% endif %}
+
+            <tr class="total-row">
+                <td class="label">Jumlah Beban</td>
+                <td class="amount">Rp {{ jumlah_beban|floatformat:0|intcomma }}</td>
+            </tr>
+        </table>
+
+        <div class="section-title">Hasil Akhir</div>
+        <table class="data-table">
+            <tr>
+                <td class="label">Laba (Rugi) Sebelum Pajak Penghasilan</td>
+                <td class="amount">Rp {{ laba_sebelum_pajak|floatformat:0|intcomma }}</td>
+            </tr>
+            <tr>
+                <td class="label">Beban Pajak Penghasilan</td>
+                <td class="amount">Rp {{ pajak_penghasilan|floatformat:0|intcomma }}</td>
+            </tr>
+            <tr class="highlight-row" style="background-color: #d1fae5; color: #065f46;">
+                <td class="label">Laba (Rugi) Setelah Pajak Penghasilan</td>
+                <td class="amount">Rp {{ laba_setelah_pajak|floatformat:0|intcomma }}</td>
+            </tr>
+        </table>
+        
+        </div> </body>
 </html>

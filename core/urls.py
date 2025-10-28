@@ -18,6 +18,8 @@ urlpatterns = [
     path('reports/', views.report_list, name='report_list'),
     path('reports/new/', views.create_report, name='create_report'),
 
+
+
     path('reports/<int:report_id>/profile/', views.profile_view, name='profile'),
     path('reports/<int:report_id>/pendapatan/', views.pendapatan_view, name='pendapatan'),
     path('reports/<int:report_id>/hpp/', views.hpp_view, name='hpp'),
@@ -27,3 +29,6 @@ urlpatterns = [
     path('reports/<int:report_id>/export/pdf/', views.export_pdf, name='export_pdf'),
     path('reports/<int:report_id>/export/excel/', views.export_excel, name='export_excel'),
 ]
+
+ 
+    

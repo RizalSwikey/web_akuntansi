@@ -3,13 +3,13 @@ from django.contrib.auth.decorators import login_required
 from django.contrib import messages
 from django.contrib.auth import authenticate, login, logout
 from django.db.models import Sum
+# Pastikan FinancialReport ada di sini
 from .models import FinancialReport, Product, RevenueItem, HppEntry, ExpenseItem
 from core.utils.hpp_calculator import calculate_hpp_for_product
 from core.utils.final_report import generate_final_report_data
 from core.utils.excel_exporter import generate_excel_file
 from core.utils.pdf_exporter import generate_pdf_file
 from django.http import HttpResponse
-
 
 
 # --- Helper function to get completion status ---
@@ -30,6 +30,7 @@ def get_completion_status(report):
         status['pendapatan'] = True
 
     # 3. HPP minimal satu entri
+    # (Catatan: Ini mungkin perlu disesuaikan untuk manufaktur nanti)
     if status['pendapatan'] and report.hpp_entries.exists():
         status['hpp'] = True
 
@@ -77,6 +78,7 @@ def report_list(request):
             return redirect("core:report_list")
 
     reports = FinancialReport.objects.filter(user=request.user).order_by('-created_at')
+    # Nama template diganti ke 'report_list.html' sesuai konvensi
     return render(request, 'core/pages/report_list.html', {'reports': reports})
 
 
@@ -101,7 +103,7 @@ def profile_view(request, report_id):
         report.ptkp_status = request.POST.get('ptkp_status')
         report.umkm_incentive = request.POST.get('umkm_incentive')
         report.omzet = request.POST.get('omzet', 0)
-        report.business_type = request.POST.get('business_type')
+        report.business_type = request.POST.get('business_type') # INI PENTING
         report.save()
         messages.success(request, 'Profil perusahaan berhasil disimpan!')
         
@@ -113,14 +115,11 @@ def profile_view(request, report_id):
 @login_required(login_url='core:login')
 def pendapatan_view(request, report_id):
     """
-    PAGE 2: PENDAPATAN
-    Gatekeeper: Must have a profile.
-    Uses Product and RevenueItem models.
+    PAGE 2: PENDAPATAN (Universal)
     """
     report = get_object_or_404(FinancialReport, id=report_id, user=request.user)
     completion_status = get_completion_status(report)
 
-    # Gatekeeper: Profile must be complete
     if not completion_status['profile']:
         messages.error(request, 'Harap lengkapi profil perusahaan terlebih dahulu.')
         return redirect('core:profile', report_id=report.id)
@@ -140,12 +139,10 @@ def pendapatan_view(request, report_id):
                     if not product_name or quantity <= 0 or selling_price <= 0:
                         messages.error(request, 'Nama produk, kuantitas, dan harga jual harus diisi dengan benar.')
                     else:
-                        # Get or create the Product associated with this report
                         product, created = Product.objects.get_or_create(
                             report=report,
                             name=product_name
                         )
-                        # Create the RevenueItem linked to the Product
                         RevenueItem.objects.create(
                             report=report,
                             revenue_type=data_type,
@@ -185,21 +182,19 @@ def pendapatan_view(request, report_id):
             except Exception as e:
                 messages.error(request, f'Gagal menghapus item: {e}')
 
-        # Check if "next" button was clicked
         if 'next_step' in request.POST:
-            # Re-check completion status AFTER potential add/delete
             completion_status = get_completion_status(report)
             if not completion_status['pendapatan']:
                  messages.warning(request, 'Harap tambahkan minimal satu pendapatan usaha sebelum melanjutkan.')
-                 return redirect('core:pendapatan', report_id=report.id) # Stay here if still incomplete
-            return redirect('core:hpp', report_id=report.id) # Go to next step if complete
+                 return redirect('core:pendapatan', report_id=report.id) 
+            # Arahkan ke HPP (view HPP akan menangani routing dagang/manufaktur)
+            return redirect('core:hpp', report_id=report.id) 
 
-        return redirect('core:pendapatan', report_id=report.id) # Redirect back after normal add/delete
+        return redirect('core:pendapatan', report_id=report.id) 
 
     # --- GET Request Logic ---
     revenue_usaha_items = report.revenue_items.filter(revenue_type='usaha').order_by('product__name')
     revenue_lain_items = report.revenue_items.filter(revenue_type='lain').order_by('name')
-
     total_usaha = revenue_usaha_items.aggregate(Sum('total'))['total__sum'] or 0
     total_lain = revenue_lain_items.aggregate(Sum('total'))['total__sum'] or 0
 
@@ -214,124 +209,143 @@ def pendapatan_view(request, report_id):
     return render(request, 'core/pages/pendapatan.html', context)
 
 
+# =============================================
+# MULAI PERUBAHAN
+# =============================================
 
 @login_required(login_url='core:login')
 def hpp_view(request, report_id):
     """
-    PAGE 3: Harga Pokok Penjualan (HPP)
-    Handles Persediaan Awal, Pembelian, Persediaan Akhir for each product.
+    PAGE 3: HPP (LOGIKA BARU)
+    View ini sekarang bertindak sebagai "Router".
+    Ia akan memeriksa tipe bisnis dan me-render template yang benar.
     """
     report = get_object_or_404(FinancialReport, id=report_id, user=request.user)
     completion_status = get_completion_status(report)
 
-    # --- Ensure Pendapatan Usaha Step is Complete ---
+    # --- Gatekeeper: Pastikan Pendapatan selesai ---
     if not completion_status['pendapatan']:
         messages.error(request, 'Harap tambahkan minimal satu pendapatan usaha terlebih dahulu.')
         return redirect('core:pendapatan', report_id=report.id)
 
-    # --- Load Products from Pendapatan Usaha ---
-    products = (
-        Product.objects
-        .filter(report=report, revenue_entries__revenue_type="usaha")
-        .prefetch_related("revenue_entries")
-        .distinct()
-    )
+    # ======================================================
+    # INI ADALAH LOGIKA PERCABANGAN (BARU)
+    # ======================================================
+    if report.business_type == 'manufaktur':
+        # --- LOGIKA UNTUK MANUFAKTUR ---
+        
+        # (Saat ini kosong, hanya untuk front-end. 
+        #  Tim backend Anda akan mengisi logika POST di sini nanti)
+        
+        context = {
+            'report': report,
+            'completion_status': completion_status,
+            # Nanti tambahkan data HPP Manufaktur di sini
+        }
+        # Render template BARU
+        return render(request, 'core/pages/hpp_manufaktur.html', context)
+    
+    else:
+        # ======================================================
+        # INI ADALAH LOGIKA DAGANG (KODE ANDA YANG SUDAH ADA)
+        # ======================================================
+        
+        # --- Load Products from Pendapatan Usaha ---
+        products = (
+            Product.objects
+            .filter(report=report, revenue_entries__revenue_type="usaha")
+            .prefetch_related("revenue_entries")
+            .distinct()
+        )
 
-
-    # --- Ensure Each Product Has All 3 HPP Categories ---
-    for product in products:
-        for category in ['AWAL', 'PEMBELIAN', 'AKHIR']:
-            HppEntry.objects.get_or_create(
-                report=report,
-                product=product,
-                category=category,
-                defaults={
-                    'keterangan': '',
-                }
-            )
-
-    # --- Handle POST Actions (Edit HPP) ---
-    if request.method == 'POST':
-        action = request.POST.get('action')
-        product_id = request.POST.get('product_id')
-
-        if action == 'edit_hpp_entry':
-            product = get_object_or_404(Product, id=product_id, report=report)
-            category = request.POST.get('category')
-
-            try:
-                HppEntry.objects.update_or_create(
+        # --- Ensure Each Product Has All 3 HPP Categories ---
+        for product in products:
+            for category in ['AWAL', 'PEMBELIAN', 'AKHIR']:
+                HppEntry.objects.get_or_create(
                     report=report,
                     product=product,
                     category=category,
-                    defaults={
-                        'quantity': int(request.POST.get('quantity', 0)),
-                        'harga_satuan': int(request.POST.get('harga_satuan', 0)),
-                        'diskon': int(request.POST.get('diskon', 0)) if category == 'PEMBELIAN' else 0,
-                        'retur_qty': int(request.POST.get('retur_qty', 0)) if category == 'PEMBELIAN' else 0,
-                        'ongkir': int(request.POST.get('ongkir', 0)) if category == 'PEMBELIAN' else 0,
-                        'keterangan': request.POST.get('keterangan', ''),
-                    }
+                    defaults={'keterangan': ''}
                 )
-                messages.success(request, f"Data HPP {category} untuk {product.name} berhasil disimpan.")
-            except Exception as e:
-                messages.error(request, f"Gagal menyimpan data HPP: {e}")
 
-        elif 'next_step' in request.POST:
-            if not completion_status['hpp']:
-                messages.warning(request, 'Isi minimal satu data HPP sebelum lanjut.')
-                return redirect('core:hpp', report_id=report.id)
-            return redirect('core:beban_usaha', report_id=report.id)
+        # --- Handle POST Actions (Edit HPP) ---
+        if request.method == 'POST':
+            action = request.POST.get('action')
+            product_id = request.POST.get('product_id')
 
-        return redirect('core:hpp', report_id=report.id)
+            if action == 'edit_hpp_entry':
+                product = get_object_or_404(Product, id=product_id, report=report)
+                category = request.POST.get('category')
+                try:
+                    HppEntry.objects.update_or_create(
+                        report=report,
+                        product=product,
+                        category=category,
+                        defaults={
+                            'quantity': int(request.POST.get('quantity', 0)),
+                            'harga_satuan': int(request.POST.get('harga_satuan', 0)),
+                            'diskon': int(request.POST.get('diskon', 0)) if category == 'PEMBELIAN' else 0,
+                            'retur_qty': int(request.POST.get('retur_qty', 0)) if category == 'PEMBELIAN' else 0,
+                            'ongkir': int(request.POST.get('ongkir', 0)) if category == 'PEMBELIAN' else 0,
+                            'keterangan': request.POST.get('keterangan', ''),
+                        }
+                    )
+                    messages.success(request, f"Data HPP {category} untuk {product.name} berhasil disimpan.")
+                except Exception as e:
+                    messages.error(request, f"Gagal menyimpan data HPP: {e}")
 
-    # --- Build HPP Data Dictionary ---
-    hpp_data_by_product = {}
-    for product in products:
-        entries = HppEntry.objects.filter(product=product, report=report)
-        hpp_data_by_product[product] = {
-            'AWAL': entries.filter(category='AWAL').first(),
-            'PEMBELIAN': entries.filter(category='PEMBELIAN'),
-            'AKHIR': entries.filter(category='AKHIR').first(),
+            elif 'next_step' in request.POST:
+                if not completion_status['hpp']:
+                    messages.warning(request, 'Isi minimal satu data HPP sebelum lanjut.')
+                    return redirect('core:hpp', report_id=report.id)
+                return redirect('core:beban_usaha', report_id=report.id)
+
+            return redirect('core:hpp', report_id=report.id)
+
+        # --- Build HPP Data Dictionary ---
+        hpp_data_by_product = {}
+        for product in products:
+            entries = HppEntry.objects.filter(product=product, report=report)
+            hpp_data_by_product[product] = {
+                'AWAL': entries.filter(category='AWAL').first(),
+                'PEMBELIAN': entries.filter(category='PEMBELIAN'),
+                'AKHIR': entries.filter(category='AKHIR').first(),
+            }
+
+        # --- Perform HPP Calculations ---
+        grand_total_awal = grand_total_pembelian = grand_total_akhir = grand_total_barang_tersedia = grand_hpp = 0
+        calculation_details = {}
+
+        for product, entries in hpp_data_by_product.items():
+            result = calculate_hpp_for_product(product, entries)
+            calculation_details[product.id] = result
+            grand_total_awal += result['total_awal']
+            grand_total_pembelian += result['total_pembelian_neto']
+            grand_total_barang_tersedia += result['barang_tersedia']
+            grand_total_akhir += result['total_akhir']
+            grand_hpp += result['hpp']
+
+        # --- Render Template Dagang ---
+        context = {
+            'report': report,
+            'products': products,
+            'hpp_data_by_product': hpp_data_by_product,
+            'calculation_details': calculation_details,
+            'grand_total_awal': grand_total_awal,
+            'grand_total_pembelian_neto': grand_total_pembelian,
+            'grand_total_barang_tersedia': grand_total_barang_tersedia,
+            'grand_total_akhir': grand_total_akhir,
+            'grand_hpp': grand_hpp,
+            'completion_status': completion_status,
         }
-
-    # --- Perform HPP Calculations (Refactored) ---
-    grand_total_awal = grand_total_pembelian = grand_total_akhir = grand_total_barang_tersedia = grand_hpp = 0
-    calculation_details = {}
-
-    for product, entries in hpp_data_by_product.items():
-        result = calculate_hpp_for_product(product, entries)
-        calculation_details[product.id] = result
-        print(calculation_details[product.id])
-        grand_total_awal += result['total_awal']
-        grand_total_pembelian += result['total_pembelian_neto']
-        print(grand_total_pembelian)
-        grand_total_barang_tersedia += result['barang_tersedia']
-        grand_total_akhir += result['total_akhir']
-        grand_hpp += result['hpp']
-
-    # --- Render Template ---
-    context = {
-        'report': report,
-        'products': products,
-        'hpp_data_by_product': hpp_data_by_product,
-        'calculation_details': calculation_details,
-        'grand_total_awal': grand_total_awal,
-        'grand_total_pembelian_neto': grand_total_pembelian,
-        'grand_total_barang_tersedia': grand_total_barang_tersedia,
-        'grand_total_akhir': grand_total_akhir,
-        'grand_hpp': grand_hpp,
-        'completion_status': completion_status,
-    }
-
-    return render(request, 'core/pages/hpp.html', context)
+        return render(request, 'core/pages/hpp.html', context)
 
 
 @login_required(login_url='core:login')
 def beban_usaha_view(request, report_id):
     """
-    PAGE 4: BEBAN USAHA (IMPROVED)
-    Gatekeeper: HPP step must be complete.
+    PAGE 4: BEBAN USAHA (LOGIKA BARU)
+    Juga bertindak sebagai router.
     """
     report = get_object_or_404(FinancialReport, id=report_id, user=request.user)
     completion_status = get_completion_status(report)
@@ -339,82 +353,129 @@ def beban_usaha_view(request, report_id):
     # Gatekeeper: HPP must be complete
     if not completion_status['hpp']:
         messages.error(request, 'Harap lengkapi data HPP terlebih dahulu.')
-        return redirect('core:hpp', report_id=report.id)
+        # Arahkan kembali ke HPP (yang akan me-routing otomatis)
+        return redirect('core:hpp', report_id=report.id) 
 
-    if request.method == 'POST':
-        action = request.POST.get('action')
+    # ======================================================
+    # LOGIKA PERCABANGAN (BARU)
+    # ======================================================
+    if report.business_type == 'manufaktur':
+        # --- LOGIKA UNTUK MANUFAKTUR ---
         
-        if action == 'add_beban':
-            try:
-                ExpenseItem.objects.create(
-                    report=report,
-                    expense_category=request.POST.get('kategori_beban'),
-                    expense_type=request.POST.get('jenis_beban'),
-                    name=request.POST.get('nama_beban'),
-                    total=int(request.POST.get('total_beban', 0))
-                )
-                messages.success(request, 'Beban berhasil ditambahkan.')
-            except Exception as e:
-                messages.error(request, f'Terjadi kesalahan: {e}')
+        # (Saat ini kosong, hanya untuk front-end)
         
-        # *** CONSOLIDATED DELETE ACTION ***
-        elif action == 'delete_beban_item':
-            try:
-                item_id = int(request.POST.get('item_id', -1))
-                item = ExpenseItem.objects.get(id=item_id, report=report)
-                item_name = item.name
-                item.delete()
-                messages.success(request, f'Beban "{item_name}" berhasil dihapus.')
-            except:
-                messages.error(request, 'Gagal menghapus item.')
+        context = {
+            'report': report,
+            'completion_status': completion_status,
+        }
+        # Render template BARU
+        return render(request, 'core/pages/beban_usaha_manufaktur.html', context)
+
+    else:
+        # ======================================================
+        # LOGIKA DAGANG (KODE ANDA YANG SUDAH ADA)
+        # ======================================================
+        if request.method == 'POST':
+            action = request.POST.get('action')
+            
+            if action == 'add_beban':
+                try:
+                    ExpenseItem.objects.create(
+                        report=report,
+                        expense_category=request.POST.get('kategori_beban'),
+                        expense_type=request.POST.get('jenis_beban'),
+                        name=request.POST.get('nama_beban'),
+                        total=int(request.POST.get('total_beban', 0))
+                    )
+                    messages.success(request, 'Beban berhasil ditambahkan.')
+                except Exception as e:
+                    messages.error(request, f'Terjadi kesalahan: {e}')
+            
+            elif action == 'delete_beban_item':
+                try:
+                    item_id = int(request.POST.get('item_id', -1))
+                    item = ExpenseItem.objects.get(id=item_id, report=report)
+                    item_name = item.name
+                    item.delete()
+                    messages.success(request, f'Beban "{item_name}" berhasil dihapus.')
+                except:
+                    messages.error(request, 'Gagal menghapus item.')
+            
+            if 'next_step' in request.POST:
+                return redirect('core:laporan', report_id=report.id)
+            return redirect('core:beban_usaha', report_id=report.id)
+
+        # --- GET Request Logic ---
+        beban_usaha_items = report.expense_items.filter(expense_category='usaha')
+        beban_lain_items = report.expense_items.filter(expense_category='lain')
+        total_beban_usaha = beban_usaha_items.aggregate(Sum('total'))['total__sum'] or 0
+        total_beban_lain = beban_lain_items.aggregate(Sum('total'))['total__sum'] or 0
+
+        context = {
+            'report': report,
+            'beban_usaha': beban_usaha_items,
+            'beban_lain': beban_lain_items,
+            'completion_status': completion_status,
+            'total_beban_usaha': total_beban_usaha,
+            'total_beban_lain': total_beban_lain,
+        }
         
-        if 'next_step' in request.POST:
-            return redirect('core:laporan', report_id=report.id)
-        return redirect('core:beban_usaha', report_id=report.id)
-
-    # --- GET Request Logic ---
-    beban_usaha_items = report.expense_items.filter(expense_category='usaha')
-    beban_lain_items = report.expense_items.filter(expense_category='lain')
-    
-    total_beban_usaha = beban_usaha_items.aggregate(Sum('total'))['total__sum'] or 0
-    total_beban_lain = beban_lain_items.aggregate(Sum('total'))['total__sum'] or 0
-
-
-    context = {
-        'report': report,
-        'beban_usaha': beban_usaha_items,
-        'beban_lain': beban_lain_items,
-        'completion_status': completion_status,
-        'total_beban_usaha': total_beban_usaha,
-        'total_beban_lain': total_beban_lain,
-    }
-    
-    return render(request, 'core/pages/beban_usaha.html', context)
+        return render(request, 'core/pages/beban_usaha.html', context)
 
 
 @login_required(login_url='core:login')
 def laporan_view(request, report_id):
+    """
+    PAGE 5: LAPORAN (LOGIKA BARU)
+    Juga bertindak sebagai router.
+    """
     report = get_object_or_404(FinancialReport, id=report_id, user=request.user)
-    
     completion_status = get_completion_status(report)
 
     if not completion_status['beban_usaha']:
         messages.error(request, 'Harap lengkapi data Beban Usaha terlebih dahulu.')
         return redirect('core:beban_usaha', report_id=report.id)
 
-    data = generate_final_report_data(report)
-    
-    return render(request, 'core/pages/laporan.html', {
-        **data,
-        'report': report,
-        'completion_status': completion_status,
-    })
+    # ======================================================
+    # LOGIKA PERCABANGAN (BARU)
+    # ======================================================
+    if report.business_type == 'manufaktur':
+        # --- LOGIKA UNTUK MANUFAKTUR ---
+        
+        # (Backend Anda akan membuat fungsi kalkulasi baru 
+        #  misalnya generate_final_report_data_manufaktur() nanti)
+        # data = generate_final_report_data_manufaktur(report) 
+        
+        context = {
+            # **data,
+            'report': report,
+            'completion_status': completion_status,
+        }
+        # Render template BARU
+        return render(request, 'core/pages/laporan_manufaktur.html', context)
+        
+    else:
+        # ======================================================
+        # LOGIKA DAGANG (KODE ANDA YANG SUDAH ADA)
+        # ======================================================
+        data = generate_final_report_data(report) # Ini fungsi Dagang
+        
+        return render(request, 'core/pages/laporan.html', {
+            **data,
+            'report': report,
+            'completion_status': completion_status,
+        })
 
+# =============================================
+# AKHIR PERUBAHAN
+# =============================================
 
 
 @login_required(login_url='core:login')
 def export_excel(request, report_id):
     report = get_object_or_404(FinancialReport, id=report_id, user=request.user)
+    
+    # Nanti ini juga perlu logika if/else
     content, filename = generate_excel_file(report)
     
     response = HttpResponse(
@@ -422,15 +483,15 @@ def export_excel(request, report_id):
         content_type="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
     )
     response["Content-Disposition"] = f"attachment; filename={filename}"
-
     return response
 
 
 @login_required(login_url='core:login')
 def export_pdf(request, report_id):
     report = get_object_or_404(FinancialReport, id=report_id, user=request.user)
-    data = generate_final_report_data(report)
 
+    # Nanti ini juga perlu logika if/else
+    data = generate_final_report_data(report)
     pdf_content, filename = generate_pdf_file(report, data, request=request)
 
     response = HttpResponse(pdf_content, content_type="application/pdf")
