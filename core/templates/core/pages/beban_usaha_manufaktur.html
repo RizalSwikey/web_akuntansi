@@ -1,0 +1,175 @@
+{% extends "base.html" %}
+{% load static %}
+{% load humanize%}
+{% block title %}Beban Usaha Manufaktur{% endblock %}
+
+{% block content %}
+<div class="flex h-screen">
+
+  {% include 'core/partials/sidebar.html' %}
+
+  <main id="main-content" class="flex-1 p-8 overflow-y-auto">
+    <div class="flex justify-between items-center mb-8">
+      <h1 class="text-3xl font-bold ">Beban Usaha (Manufaktur)</h1>
+    </div>
+
+    {% if messages %}
+      {% for message in messages %}
+      <div class="{% if message.tags == 'error' %}bg-red-100 border-red-400 text-red-700{% elif message.tags == 'warning' %}bg-yellow-100 border-yellow-400 text-yellow-700{% else %}bg-green-100 border-green-400 text-green-700{% endif %} border px-4 py-3 rounded-lg relative mb-6" role="alert">
+        <span class="block sm:inline">{{ message }}</span>
+      </div>
+      {% endfor %}
+    {% endif %}
+
+    <div class="bg-white p-8 rounded-2xl shadow-lg mb-8">
+
+      <div class="flex justify-between items-center mb-6">
+          <h2 class="text-xl font-bold">Beban Lain-lain</h2>
+          <button id="open-modal-beban-btn" class="bg-black text-white py-2 px-6 rounded-lg font-semibold hover:bg-slate-800">
+            Tambah Data +
+          </button>
+      </div>
+
+      <div class="mb-6">
+          <div class="grid grid-cols-12 gap-4 items-center border-b pb-2 font-semibold text-sm text-slate-500">
+            <div class="col-span-1">Aksi</div>
+            <div class="col-span-5 p-3">Nama Biaya</div>
+            <div class="col-span-2 p-3">Kuantitas</div>
+            <div class="col-span-2 p-3">Harga Satuan</div>
+            <div class="col-span-2 p-3 text-right">Total</div>
+          </div>
+          <div id="beban-rows" class="divide-y">
+            {% if not beban_items %} {# Variabel dari backend #}
+                <p class="text-center text-slate-400 p-4 italic js-empty-state">Belum ada data beban.</p>
+            {% endif %}
+            {% for item in beban_items %} {# Loop dari backend #}
+            <div class="data-row grid grid-cols-12 gap-4 items-center py-2">
+                 <div class="col-span-1 flex justify-center">
+                    <button data-item-id="{{ item.id }}" class="remove-row-btn text-slate-400 hover:text-red-500 p-2">
+                         <svg class="w-5 h-5 pointer-events-none" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="m14.74 9-.346 9m-4.788 0L9.26 9m9.968-3.21c.342.052.682.107 1.022.166m-1.022-.165L18.16 19.673a2.25 2.25 0 0 1-2.244 2.077H8.084a2.25 2.25 0 0 1-2.244-2.077L4.772 5.79m14.456 0a48.108 48.108 0 0 0-3.478-.397m-12 .562c.34-.059.68-.114 1.022-.165m0 0a48.11 48.11 0 0 1 3.478-.397m7.5 0v-.916c0-1.18-.91-2.134-2.09-2.201a51.964 51.964 0 0 0-3.32 0c-1.18.067-2.09 1.022-2.09 2.201v.916m7.5 0a48.667 48.667 0 0 0-7.5 0" /></svg>
+                    </button>
+                </div>
+                <div class="col-span-5 p-3">{{ item.nama_biaya }}</div>
+                <div class="col-span-2 p-3">{{ item.quantity|floatformat:0|intcomma }}</div>
+                <div class="col-span-2 p-3">Rp {{ item.harga_satuan|floatformat:0|intcomma }}</div>
+                <div class="col-span-2 p-3 font-semibold text-right">Rp {{ item.total|floatformat:0|intcomma }}</div>
+            </div>
+            {% endfor %}
+          </div>
+          <div class="grid grid-cols-12 gap-4 items-center border-t pt-3 mt-3 font-bold">
+            <div class="col-span-10 p-3 text-right text-slate-600">Total Beban Lain-lain</div>
+            <div id="beban-total" class="col-span-2 p-3 text-lg text-right">Rp {{ total_beban_lain|floatformat:0|intcomma }}</div>
+          </div>
+      </div>
+
+    </div>
+    <form method="POST" class="flex justify-end mt-8">
+      {% csrf_token %}
+      <button
+        type="submit"
+        name="next_step"
+        class="bg-black text-white py-3 px-8 rounded-lg font-semibold text-lg hover:bg-slate-800"
+      >
+        Lanjut ke Laporan &rarr;
+      </button>
+    </form>
+
+  </main>
+</div>
+
+<div id="modal-beban" class="fixed inset-0 bg-black/60 flex justify-center items-center z-50 transition-opacity opacity-0 pointer-events-none">
+  <form id="form-beban" method="POST" action="" class="bg-white p-8 rounded-2xl shadow-xl w-full max-w-xl space-y-6 overflow-y-auto max-h-[90vh]">
+    {% csrf_token %}
+    <input type="hidden" name="action" value="add_beban_item">
+
+    <h2 class="text-2xl font-bold mb-4">Tambah Data Beban</h2>
+
+    <div>
+        <label for="modal-beban-nama" class="block mb-2 font-semibold">Nama Biaya</label>
+        <select id="modal-beban-nama" name="nama_biaya" class="w-full p-3 border border-slate-300 rounded-lg" required>
+            <option value="">Pilih Jenis Biaya</option>
+            <option value="Biaya Gaji">Biaya Gaji</option>
+            <option value="Biaya Sewa">Biaya Sewa</option>
+            <option value="Biaya Transportasi">Biaya Transportasi</option>
+            <option value="Biaya Air dan Listrik">Biaya Air dan Listrik</option>
+            <option value="Biaya Pinjaman">Biaya Pinjaman</option>
+            <option value="Biaya Penyusutan">Biaya Penyusutan</option>
+            <option value="Biaya Lainnya">Biaya Lainnya</option>
+        </select>
+    </div>
+
+    <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+        <div>
+          <label for="modal-beban-kuantitas" class="block mb-2 font-semibold">Kuantitas</label>
+          <input type="number" id="modal-beban-kuantitas" name="beban_kuantitas" class="w-full p-3 border border-slate-300 rounded-lg" placeholder="0" required>
+        </div>
+        <div>
+          <label for="modal-beban-harga-satuan" class="block mb-2 font-semibold">Harga Satuan (Rp)</label>
+          <input type="number" id="modal-beban-harga-satuan" name="beban_harga_satuan" class="w-full p-3 border border-slate-300 rounded-lg" placeholder="0" required>
+        </div>
+    </div>
+
+    <div>
+        <label for="modal-beban-keterangan" class="block mb-2 font-semibold">Keterangan (Opsional)</label>
+        <input type="text" id="modal-beban-keterangan" name="beban_keterangan" class="w-full p-3 border border-slate-300 rounded-lg" placeholder="Cth: Gaji Karyawan Kantor">
+    </div>
+
+    <div class="flex justify-end gap-4 pt-4">
+      <button type="button" id="modal-beban-close-btn" class="py-2 px-6 rounded-lg font-semibold border hover:bg-slate-100">
+        Batal
+      </button>
+      <button type="submit" class="bg-black text-white py-2 px-6 rounded-lg font-semibold hover:bg-slate-800">
+        Simpan
+      </button>
+    </div>
+  </form>
+</div>
+{% endblock %}
+
+
+{% block extra_js %}
+<script>
+document.addEventListener("DOMContentLoaded", function () {
+
+  // --- Fungsi Helper untuk Setup Modal ---
+  function setupModal(modalId, openBtnId, closeBtnId, formId, options = {}) {
+      const openBtn = document.getElementById(openBtnId);
+      const modal = document.getElementById(modalId);
+      const closeBtn = document.getElementById(closeBtnId);
+      const form = document.getElementById(formId);
+
+      if (!openBtn || !modal || !closeBtn || !form) {
+          // console.warn(`Elemen modal tidak lengkap untuk ID: ${modalId}`);
+          return;
+      }
+
+      function openAction() {
+          modal.classList.remove("opacity-0", "pointer-events-none");
+          if (options.onOpen) options.onOpen();
+      }
+
+      function closeAction() {
+          setTimeout(() => {
+              modal.classList.add("opacity-0", "pointer-events-none");
+              form.reset();
+              if (options.onClose) options.onClose();
+          }, 200);
+      }
+
+      openBtn.addEventListener("click", openAction);
+      closeBtn.addEventListener("click", closeAction);
+      modal.addEventListener("click", (e) => {
+          if (e.target === modal) {
+              closeAction();
+          }
+      });
+
+      if (options.setup) options.setup(modal, form);
+  }
+
+  // --- Setup Modal Beban (Satu-satunya modal di halaman ini) ---
+  setupModal('modal-beban', 'open-modal-beban-btn', 'modal-beban-close-btn', 'form-beban');
+
+});
+</script>
+{% endblock %}
