@@ -3,13 +3,21 @@ from django.contrib.auth.decorators import login_required
 from django.contrib import messages
 from django.contrib.auth import authenticate, login, logout
 from django.db.models import Sum
-# Pastikan FinancialReport ada di sini
+from django.http import HttpResponse
 from .models import FinancialReport, Product, RevenueItem, HppEntry, ExpenseItem
+from .models import (
+    HppManufactureMaterial,
+    HppManufactureLabor,
+    HppManufactureOverhead,
+    HppManufactureWIP,
+    HppManufactureFinishedGoods,
+)
 from core.utils.hpp_calculator import calculate_hpp_for_product
 from core.utils.final_report import generate_final_report_data
 from core.utils.excel_exporter import generate_excel_file
 from core.utils.pdf_exporter import generate_pdf_file
-from django.http import HttpResponse
+from core.utils.hpp_manufacture_calculator import calculate_hpp_manufacture
+
 
 
 # --- Helper function to get completion status ---
@@ -212,133 +220,302 @@ def pendapatan_view(request, report_id):
 # =============================================
 # MULAI PERUBAHAN
 # =============================================
-
 @login_required(login_url='core:login')
 def hpp_view(request, report_id):
-    """
-    PAGE 3: HPP (LOGIKA BARU)
-    View ini sekarang bertindak sebagai "Router".
-    Ia akan memeriksa tipe bisnis dan me-render template yang benar.
-    """
     report = get_object_or_404(FinancialReport, id=report_id, user=request.user)
-    completion_status = get_completion_status(report)
 
-    # --- Gatekeeper: Pastikan Pendapatan selesai ---
+    # Check pendapatan first
+    completion_status = get_completion_status(report)
     if not completion_status['pendapatan']:
         messages.error(request, 'Harap tambahkan minimal satu pendapatan usaha terlebih dahulu.')
         return redirect('core:pendapatan', report_id=report.id)
 
-    # ======================================================
-    # INI ADALAH LOGIKA PERCABANGAN (BARU)
-    # ======================================================
+    # Route based on business type
     if report.business_type == 'manufaktur':
-        # --- LOGIKA UNTUK MANUFAKTUR ---
-        
-        # (Saat ini kosong, hanya untuk front-end. 
-        #  Tim backend Anda akan mengisi logika POST di sini nanti)
-        
-        context = {
-            'report': report,
-            'completion_status': completion_status,
-            # Nanti tambahkan data HPP Manufaktur di sini
-        }
-        # Render template BARU
-        return render(request, 'core/pages/hpp_manufaktur.html', context)
-    
+        return redirect('core:hpp_manufaktur', report_id=report_id)
     else:
-        # ======================================================
-        # INI ADALAH LOGIKA DAGANG (KODE ANDA YANG SUDAH ADA)
-        # ======================================================
-        
-        # --- Load Products from Pendapatan Usaha ---
-        products = (
-            Product.objects
-            .filter(report=report, revenue_entries__revenue_type="usaha")
-            .prefetch_related("revenue_entries")
-            .distinct()
-        )
+        return redirect('core:hpp_dagang', report_id=report_id)
 
-        # --- Ensure Each Product Has All 3 HPP Categories ---
-        for product in products:
-            for category in ['AWAL', 'PEMBELIAN', 'AKHIR']:
-                HppEntry.objects.get_or_create(
+
+
+@login_required(login_url='core:login')
+def hpp_dagang_view(request, report_id):
+    report = get_object_or_404(FinancialReport, id=report_id, user=request.user)
+    completion_status = get_completion_status(report)
+
+    products = (
+        Product.objects
+        .filter(report=report, revenue_entries__revenue_type="usaha")
+        .prefetch_related("revenue_entries")
+        .distinct()
+    )
+
+    # Ensure base entries exist
+    for product in products:
+        for category in ['AWAL', 'PEMBELIAN', 'AKHIR']:
+            HppEntry.objects.get_or_create(
+                report=report,
+                product=product,
+                category=category,
+                defaults={'keterangan': ''}
+            )
+
+    if request.method == 'POST':
+        action = request.POST.get('action')
+        product_id = request.POST.get('product_id')
+
+        if action == 'edit_hpp_entry':
+            product = get_object_or_404(Product, id=product_id, report=report)
+            category = request.POST.get('category')
+
+            try:
+                HppEntry.objects.update_or_create(
                     report=report,
                     product=product,
                     category=category,
-                    defaults={'keterangan': ''}
+                    defaults={
+                        'quantity': int(request.POST.get('quantity', 0)),
+                        'harga_satuan': int(request.POST.get('harga_satuan', 0)),
+                        'diskon': int(request.POST.get('diskon', 0)) if category == 'PEMBELIAN' else 0,
+                        'retur_qty': int(request.POST.get('retur_qty', 0)) if category == 'PEMBELIAN' else 0,
+                        'ongkir': int(request.POST.get('ongkir', 0)) if category == 'PEMBELIAN' else 0,
+                        'keterangan': request.POST.get('keterangan', ''),
+                    }
                 )
+                messages.success(request, f"Data HPP {category} untuk {product.name} berhasil disimpan.")
+            except Exception as e:
+                messages.error(request, f"Gagal menyimpan data HPP: {e}")
 
-        # --- Handle POST Actions (Edit HPP) ---
-        if request.method == 'POST':
-            action = request.POST.get('action')
-            product_id = request.POST.get('product_id')
+        elif 'next_step' in request.POST:
+            if not completion_status['hpp']:
+                messages.warning(request, 'Isi minimal satu data HPP sebelum lanjut.')
+                return redirect('core:hpp', report_id=report.id)
+            return redirect('core:beban_usaha', report_id=report.id)
 
-            if action == 'edit_hpp_entry':
-                product = get_object_or_404(Product, id=product_id, report=report)
-                category = request.POST.get('category')
-                try:
-                    HppEntry.objects.update_or_create(
-                        report=report,
-                        product=product,
-                        category=category,
-                        defaults={
-                            'quantity': int(request.POST.get('quantity', 0)),
-                            'harga_satuan': int(request.POST.get('harga_satuan', 0)),
-                            'diskon': int(request.POST.get('diskon', 0)) if category == 'PEMBELIAN' else 0,
-                            'retur_qty': int(request.POST.get('retur_qty', 0)) if category == 'PEMBELIAN' else 0,
-                            'ongkir': int(request.POST.get('ongkir', 0)) if category == 'PEMBELIAN' else 0,
-                            'keterangan': request.POST.get('keterangan', ''),
-                        }
-                    )
-                    messages.success(request, f"Data HPP {category} untuk {product.name} berhasil disimpan.")
-                except Exception as e:
-                    messages.error(request, f"Gagal menyimpan data HPP: {e}")
+        return redirect('core:hpp_dagang', report_id=report.id)
 
-            elif 'next_step' in request.POST:
-                if not completion_status['hpp']:
-                    messages.warning(request, 'Isi minimal satu data HPP sebelum lanjut.')
-                    return redirect('core:hpp', report_id=report.id)
-                return redirect('core:beban_usaha', report_id=report.id)
-
-            return redirect('core:hpp', report_id=report.id)
-
-        # --- Build HPP Data Dictionary ---
-        hpp_data_by_product = {}
-        for product in products:
-            entries = HppEntry.objects.filter(product=product, report=report)
-            hpp_data_by_product[product] = {
-                'AWAL': entries.filter(category='AWAL').first(),
-                'PEMBELIAN': entries.filter(category='PEMBELIAN'),
-                'AKHIR': entries.filter(category='AKHIR').first(),
-            }
-
-        # --- Perform HPP Calculations ---
-        grand_total_awal = grand_total_pembelian = grand_total_akhir = grand_total_barang_tersedia = grand_hpp = 0
-        calculation_details = {}
-
-        for product, entries in hpp_data_by_product.items():
-            result = calculate_hpp_for_product(product, entries)
-            calculation_details[product.id] = result
-            grand_total_awal += result['total_awal']
-            grand_total_pembelian += result['total_pembelian_neto']
-            grand_total_barang_tersedia += result['barang_tersedia']
-            grand_total_akhir += result['total_akhir']
-            grand_hpp += result['hpp']
-
-        # --- Render Template Dagang ---
-        context = {
-            'report': report,
-            'products': products,
-            'hpp_data_by_product': hpp_data_by_product,
-            'calculation_details': calculation_details,
-            'grand_total_awal': grand_total_awal,
-            'grand_total_pembelian_neto': grand_total_pembelian,
-            'grand_total_barang_tersedia': grand_total_barang_tersedia,
-            'grand_total_akhir': grand_total_akhir,
-            'grand_hpp': grand_hpp,
-            'completion_status': completion_status,
+    # Build HPP detail
+    hpp_data_by_product = {}
+    for product in products:
+        entries = HppEntry.objects.filter(product=product, report=report)
+        hpp_data_by_product[product] = {
+            'AWAL': entries.filter(category='AWAL').first(),
+            'PEMBELIAN': entries.filter(category='PEMBELIAN'),
+            'AKHIR': entries.filter(category='AKHIR').first(),
         }
-        return render(request, 'core/pages/hpp.html', context)
+
+    # Calculate totals
+    grand_total_awal = grand_total_pembelian = grand_total_akhir = grand_total_barang_tersedia = grand_hpp = 0
+    calculation_details = {}
+
+    for product, entries in hpp_data_by_product.items():
+        result = calculate_hpp_for_product(product, entries)
+        calculation_details[product.id] = result
+        grand_total_awal += result['total_awal']
+        grand_total_pembelian += result['total_pembelian_neto']
+        grand_total_barang_tersedia += result['barang_tersedia']
+        grand_total_akhir += result['total_akhir']
+        grand_hpp += result['hpp']
+
+    return render(request, 'core/pages/hpp.html', {
+        'report': report,
+        'products': products,
+        'hpp_data_by_product': hpp_data_by_product,
+        'calculation_details': calculation_details,
+        'grand_total_awal': grand_total_awal,
+        'grand_total_pembelian_neto': grand_total_pembelian,
+        'grand_total_barang_tersedia': grand_total_barang_tersedia,
+        'grand_total_akhir': grand_total_akhir,
+        'grand_hpp': grand_hpp,
+        'completion_status': completion_status,
+    })
+
+
+@login_required(login_url='core:login')
+def hpp_manufaktur_view(request, report_id):
+    report = get_object_or_404(FinancialReport, id=report_id, user=request.user)
+    completion_status = get_completion_status(report)
+    products = Product.objects.filter(report=report)
+
+    # ===========================
+    # HANDLE POST (SAVE DATA)
+    # ===========================
+    if request.method == "POST":
+        action = request.POST.get("action")
+
+        # BAHAN BAKU
+        if action == "add_bb":
+            product_id = request.POST.get("product_id")
+            product = get_object_or_404(Product, id=product_id, report=report)
+
+            # Read & normalize inputs (single place)
+            tipe = request.POST.get("type")  # BB_AWAL / BB_PEMBELIAN / BB_AKHIR
+            nama_bb = request.POST.get("nama_bahan_baku", "").strip()
+            keterangan = request.POST.get("keterangan", "").strip()
+
+            def to_int(val, default=0):
+                try:
+                    if val is None or val == "":
+                        return default
+                    return int(float(val))
+                except Exception:
+                    return default
+
+            qty = to_int(request.POST.get("quantity", 0))
+            harga = to_int(request.POST.get("harga_satuan", 0))
+            diskon = to_int(request.POST.get("diskon", 0))
+            retur_qty = to_int(request.POST.get("retur_qty", 0))
+            # If user provided retur_amount explicitly, use it, otherwise compute from retur_qty*harga
+            retur_amount_post = request.POST.get("retur_amount", "")
+            retur_amount = to_int(retur_amount_post) if retur_amount_post != "" else (retur_qty * harga)
+            ongkir = to_int(request.POST.get("ongkir", 0))
+
+            # Validation: retur_qty should not exceed qty (you can relax if needed)
+            if retur_qty > qty:
+                messages.error(request, "Retur (Qty) tidak boleh lebih besar dari Kuantitas.")
+                return redirect("core:hpp_manufaktur", report_id=report.id)
+
+            # Compute total according to type
+            if tipe in ["BB_AWAL", "BB_AKHIR"]:
+                total = qty * harga
+            else:  # BB_PEMBELIAN
+                total = (qty * harga) - diskon - retur_amount + ongkir
+
+            # Create record (use create so multiple lines are allowed)
+            HppManufactureMaterial.objects.create(
+                report=report,
+                product=product,
+                nama_bahan_baku=nama_bb,
+                type=tipe,
+                quantity=qty,
+                harga_satuan=harga,
+                diskon=diskon,
+                retur_qty=retur_qty,
+                retur_amount=retur_amount,
+                ongkir=ongkir,
+                total=total,
+                keterangan=keterangan,
+            )
+
+            messages.success(request, "Data bahan baku berhasil disimpan.")
+            return redirect("core:hpp_manufaktur", report_id=report.id)
+
+
+
+        # BDP / WIP
+        if action == "add_wip":
+            HppManufactureWIP.objects.create(
+                report=report,
+                product_id=request.POST.get("product_id"),
+                type=request.POST.get("type"),  # WIP_AWAL / WIP_AKHIR
+                quantity=request.POST.get("quantity", 0),
+                harga_satuan=request.POST.get("harga_satuan", 0),
+            )
+            messages.success(request, "Data BDP berhasil disimpan.")
+            return redirect("core:hpp_manufaktur", report_id=report.id)
+
+        # BTKL
+        if action == "add_btkl":
+            HppManufactureLabor.objects.create(
+                report=report,
+                product_id=request.POST.get("product_id"),
+                jenis_tenaga_kerja=request.POST.get("jenis_tenaga_kerja", ""),
+                quantity=request.POST.get("quantity", 0),
+                harga_satuan=request.POST.get("harga_satuan", 0),
+            )
+            messages.success(request, "Data BTKL berhasil disimpan.")
+            return redirect("core:hpp_manufaktur", report_id=report.id)
+
+        # BOP
+        if action == "add_bop":
+            HppManufactureOverhead.objects.create(
+                report=report,
+                nama_biaya=request.POST.get("nama_biaya", ""),
+                quantity=request.POST.get("quantity", 0),
+                harga_satuan=request.POST.get("harga_satuan", 0),
+            )
+            messages.success(request, "Data BOP berhasil disimpan.")
+            return redirect("core:hpp_manufaktur", report_id=report.id)
+
+        # BARANG JADI
+        if action == "add_fg":
+            tipe = request.POST.get("bj_tipe_data")  # AWAL_BJ / AKHIR_BJ
+            HppManufactureFinishedGoods.objects.create(
+                report=report,
+                product_id=request.POST.get("bj_product_id"),
+                type="FG_AWAL" if tipe == "AWAL_BJ" else "FG_AKHIR",
+                quantity=request.POST.get("bj_kuantitas", 0),
+                harga_satuan=request.POST.get("bj_harga_satuan", 0),
+                keterangan=request.POST.get("bj_keterangan", "")
+            )
+            messages.success(request, "Data Barang Jadi berhasil disimpan.")
+            return redirect("core:hpp_manufaktur", report_id=report.id)
+
+        # NEXT STEP
+        if "next_step" in request.POST:
+            return redirect("core:beban_usaha", report_id=report.id)
+
+    # ===========================
+    # LOAD DATA FOR TEMPLATE
+    # ===========================
+    bb_awal = HppManufactureMaterial.objects.filter(report=report, type="BB_AWAL")
+    bb_pembelian = HppManufactureMaterial.objects.filter(report=report, type="BB_PEMBELIAN")
+    bb_akhir = HppManufactureMaterial.objects.filter(report=report, type="BB_AKHIR")
+
+    bdp_awal = HppManufactureWIP.objects.filter(report=report, type="WIP_AWAL")
+    bdp_akhir = HppManufactureWIP.objects.filter(report=report, type="WIP_AKHIR")
+
+    btkl_items = HppManufactureLabor.objects.filter(report=report)
+    bop_items = HppManufactureOverhead.objects.filter(report=report)
+
+    bj_awal = HppManufactureFinishedGoods.objects.filter(report=report, type="FG_AWAL")
+    bj_akhir = HppManufactureFinishedGoods.objects.filter(report=report, type="FG_AKHIR")
+
+    # SUMS
+    total_bahan_baku_awal = bb_awal.aggregate(Sum('total'))['total__sum'] or 0
+    total_bahan_baku_pembelian = bb_pembelian.aggregate(Sum('total'))['total__sum'] or 0
+    total_bahan_baku_akhir = bb_akhir.aggregate(Sum('total'))['total__sum'] or 0
+
+    total_bdp_awal = bdp_awal.aggregate(Sum('total'))['total__sum'] or 0
+    total_bdp_akhir = bdp_akhir.aggregate(Sum('total'))['total__sum'] or 0
+
+    total_btkl = btkl_items.aggregate(Sum('total'))['total__sum'] or 0
+    total_bop = bop_items.aggregate(Sum('total'))['total__sum'] or 0
+
+    total_bj_awal = bj_awal.aggregate(Sum('total'))['total__sum'] or 0
+    total_bj_akhir = bj_akhir.aggregate(Sum('total'))['total__sum'] or 0
+
+    return render(request, "core/pages/hpp_manufaktur.html", {
+        "report": report,
+        "products": products,
+        "completion_status": completion_status,
+
+        # bahan baku
+        "bb_awal": bb_awal,
+        "bb_pembelian": bb_pembelian,
+        "bb_akhir": bb_akhir,
+        "total_bahan_baku_awal": total_bahan_baku_awal,
+        "total_bahan_baku_pembelian": total_bahan_baku_pembelian,
+        "total_bahan_baku_akhir": total_bahan_baku_akhir,
+
+        # WIP/BDP
+        "bdp_awal": bdp_awal,
+        "bdp_akhir": bdp_akhir,
+        "total_bdp_awal": total_bdp_awal,
+        "total_bdp_akhir": total_bdp_akhir,
+
+        # BTKL & BOP
+        "btkl_items": btkl_items,
+        "total_btkl": total_btkl,
+        "bop_items": bop_items,
+        "total_bop": total_bop,
+
+        # FG
+        "bj_awal": bj_awal,
+        "bj_akhir": bj_akhir,
+        "total_bj_awal": total_bj_awal,
+        "total_bj_akhir": total_bj_akhir,
+    })
 
 
 @login_required(login_url='core:login')

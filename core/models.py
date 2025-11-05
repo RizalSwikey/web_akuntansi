@@ -109,6 +109,93 @@ class HppEntry(models.Model):
 
     def __str__(self):
         return f"{self.product.name} - {self.get_category_display()}"
+# ---------------------------
+# HPP Manufaktur Models
+# ---------------------------
+class HppManufactureMaterial(models.Model):
+    TYPE_CHOICES = [
+        ('BB_AWAL', 'Persediaan Bahan Baku Awal'),
+        ('BB_AKHIR', 'Persediaan Bahan Baku Akhir'),
+        ('BB_PEMBELIAN', 'Pembelian Bahan Baku'),
+    ]
+    report = models.ForeignKey(FinancialReport, on_delete=models.CASCADE, related_name="hpp_manufaktur_materials")
+    product = models.ForeignKey(Product, on_delete=models.CASCADE, related_name="hpp_manufaktur_materials")
+    type = models.CharField(max_length=20, choices=TYPE_CHOICES)
+    nama_bahan_baku = models.CharField(max_length=255, blank=True, null=True)
+    keterangan = models.CharField(max_length=255, blank=True, null=True)
+    quantity = models.IntegerField(default=0)
+    harga_satuan = models.BigIntegerField(default=0)
+    diskon = models.IntegerField(default=0)
+    retur_qty = models.IntegerField(default=0)
+    retur_amount = models.IntegerField(default=0)  # auto later
+    ongkir = models.IntegerField(default=0)
+    total = models.BigIntegerField(default=0)
+
+    class Meta:
+        ordering = ['product__name', 'type']
+
+    def save(self, *args, **kwargs):
+        self.total = self.quantity * self.harga_satuan
+        super().save(*args, **kwargs)
+
+    def __str__(self):
+        return f"{self.product.name} - {self.get_type_display()}"
+
+
+class HppManufactureLabor(models.Model):  # BTKL
+    report = models.ForeignKey(FinancialReport, on_delete=models.CASCADE, related_name="hpp_manufaktur_labor")
+    product = models.ForeignKey(Product, on_delete=models.CASCADE, related_name="hpp_manufaktur_labor")
+
+    total = models.BigIntegerField(default=0)
+
+    def __str__(self):
+        return f"{self.product.name} - BTKL (Rp {self.total})"
+
+
+class HppManufactureOverhead(models.Model):  # BOP
+    report = models.ForeignKey(FinancialReport, on_delete=models.CASCADE, related_name="hpp_manufaktur_overhead")
+    product = models.ForeignKey(Product, on_delete=models.CASCADE, related_name="hpp_manufaktur_overhead")
+
+    total = models.BigIntegerField(default=0)
+
+    def __str__(self):
+        return f"{self.product.name} - BOP (Rp {self.total})"
+
+
+class HppManufactureWIP(models.Model):  # Barang Dalam Proses
+    TYPE_CHOICES = [
+        ('WIP_AWAL', 'WIP Awal'),
+        ('WIP_AKHIR', 'WIP Akhir'),
+    ]
+    report = models.ForeignKey(FinancialReport, on_delete=models.CASCADE, related_name="hpp_manufaktur_wip")
+    product = models.ForeignKey(Product, on_delete=models.CASCADE, related_name="hpp_manufaktur_wip")
+
+    type = models.CharField(max_length=20, choices=TYPE_CHOICES)
+    total = models.BigIntegerField(default=0)
+
+    class Meta:
+        ordering = ['product__name', 'type']
+
+    def __str__(self):
+        return f"{self.product.name} - {self.get_type_display()} (Rp {self.total})"
+
+
+class HppManufactureFinishedGoods(models.Model):  # Barang Jadi
+    TYPE_CHOICES = [
+        ('FG_AWAL', 'Persediaan Barang Jadi Awal'),
+        ('FG_AKHIR', 'Persediaan Barang Jadi Akhir'),
+    ]
+    report = models.ForeignKey(FinancialReport, on_delete=models.CASCADE, related_name="hpp_manufaktur_fg")
+    product = models.ForeignKey(Product, on_delete=models.CASCADE, related_name="hpp_manufaktur_fg")
+
+    type = models.CharField(max_length=20, choices=TYPE_CHOICES)
+    total = models.BigIntegerField(default=0)
+
+    class Meta:
+        ordering = ['product__name', 'type']
+
+    def __str__(self):
+        return f"{self.product.name} - {self.get_type_display()} (Rp {self.total})"
 
 # --- ExpenseItem (No change needed for now) ---
 class ExpenseItem(models.Model):

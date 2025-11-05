@@ -1,4 +1,3 @@
-
 ```
 accounting_apps
 ├─ .python-version
@@ -33,15 +32,20 @@ accounting_apps
 │  │  └─ core
 │  │     ├─ pages
 │  │     │  ├─ beban_usaha.html
+│  │     │  ├─ beban_usaha_manufaktur.html
 │  │     │  ├─ hpp.html
+│  │     │  ├─ hpp_manufaktur.html
 │  │     │  ├─ landing_page.html
 │  │     │  ├─ laporan.html
 │  │     │  ├─ login.html
 │  │     │  ├─ pendapatan.html
-│  │     │  └─ profile.html
-│  │     └─ partials
-│  │        ├─ login_message.html
-│  │        └─ sidebar.html
+│  │     │  ├─ profile.html
+│  │     │  └─ report_list.html
+│  │     ├─ partials
+│  │     │  ├─ login_message.html
+│  │     │  └─ sidebar.html
+│  │     └─ pdf
+│  │        └─ laporan_pdf.html
 │  ├─ templatetags
 │  │  ├─ core_tags.py
 │  │  └─ __init__.py
@@ -50,7 +54,10 @@ accounting_apps
 │  │  └─ __init__.py
 │  ├─ urls.py
 │  ├─ utils
+│  │  ├─ excel_exporter.py
+│  │  ├─ final_report.py
 │  │  ├─ hpp_calculator.py
+│  │  ├─ pdf_exporter.py
 │  │  └─ __init__.py
 │  ├─ views.py
 │  └─ __init__.py
@@ -76,8 +83,8 @@ accounting_apps
 │  │  │  ├─ base.css
 │  │  │  ├─ changelists.css
 │  │  │  ├─ dark_mode.css
-.......
-│  │        │  │  ├─ zh-CN.js
+│  │  │  ├─ dashboard.css
+.......................
 │  │        │  │  └─ zh-TW.js
 │  │        │  ├─ LICENSE.md
 │  │        │  ├─ select2.full.js

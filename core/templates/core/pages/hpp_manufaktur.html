@@ -41,10 +41,10 @@
             <div class="col-span-2 p-3 text-right">Total</div>
           </div>
           <div id="bahan-baku-awal-rows" class="divide-y">
-            {% if not bahan_baku_awal %}
+            {% if not bb_awal %}
                 <p class="text-center text-slate-400 p-4 italic js-empty-state">Belum ada data persediaan awal.</p>
             {% endif %}
-            {% for item in bahan_baku_awal %} {# Loop dari backend #}
+            {% for item in bb_awal %} {# Loop dari backend #}
             <div class="data-row grid grid-cols-12 gap-4 items-center py-2">
                  <div class="col-span-1 flex justify-center">
                     <button data-item-id="{{ item.id }}" class="remove-row-btn text-slate-400 hover:text-red-500 p-2">
@@ -84,10 +84,10 @@
             <div class="col-span-2 p-3 text-right">Total</div>
           </div>
           <div id="bahan-baku-pembelian-rows" class="divide-y">
-             {% if not bahan_baku_pembelian %}
+             {% if not bb_pembelian %}
                 <p class="text-center text-slate-400 p-4 italic js-empty-state">Belum ada data pembelian.</p>
              {% endif %}
-             {% for item in bahan_baku_pembelian %} {# Loop dari backend #}
+             {% for item in bb_pembelian %} {# Loop dari backend #}
             <div class="data-row grid grid-cols-12 gap-4 items-center py-2">
                  <div class="col-span-1 flex justify-center">
                     <button data-item-id="{{ item.id }}" class="remove-row-btn text-slate-400 hover:text-red-500 p-2">
@@ -127,10 +127,10 @@
             <div class="col-span-2 p-3 text-right">Total</div>
           </div>
           <div id="bahan-baku-akhir-rows" class="divide-y">
-            {% if not bahan_baku_akhir %}
+            {% if not bb_akhir %}
                 <p class="text-center text-slate-400 p-4 italic js-empty-state">Belum ada data persediaan akhir.</p>
             {% endif %}
-             {% for item in bahan_baku_akhir %} {# Loop dari backend #}
+             {% for item in bb_akhir %} {# Loop dari backend #}
             <div class="data-row grid grid-cols-12 gap-4 items-center py-2">
                  <div class="col-span-1 flex justify-center">
                     <button data-item-id="{{ item.id }}" class="remove-row-btn text-slate-400 hover:text-red-500 p-2">
@@ -464,24 +464,70 @@
 <div id="modal-bahan-baku" class="fixed inset-0 bg-black/60 flex justify-center items-center z-50 transition-opacity opacity-0 pointer-events-none">
   <form id="form-bahan-baku" method="POST" action="" class="bg-white p-8 rounded-2xl shadow-xl w-full max-w-2xl space-y-6 overflow-y-auto max-h-[90vh]">
     {% csrf_token %}
-    <input type="hidden" name="action" value="add_bahan_baku_item">
+    <input type="hidden" name="action" value="add_bb">
 
     <h2 class="text-2xl font-bold mb-4">Tambah Data Biaya Bahan Baku</h2>
+    <!-- Awal / Pembelian / Akhir -->
+    <label class="block text-sm font-medium text-gray-700">Jenis Data</label>
+    <select name="type" id="modal-tipe-data" class="w-full border rounded p-2" required>
+        <option value="BB_AWAL">Persediaan Awal</option>
+        <option value="BB_PEMBELIAN">Pembelian Bahan Baku</option>
+        <option value="BB_AKHIR">Persediaan Akhir</option>
+    </select>
 
-    <div class="flex justify-end gap-4 pt-4">
-      <button type="button" id="modal-bahan-baku-close-btn" class="py-2 px-6 rounded-lg font-semibold border hover:bg-slate-100">
-        Batal
-      </button>
-      <button type="submit" class="bg-black text-white py-2 px-6 rounded-lg font-semibold hover:bg-slate-800">
-        Simpan
-      </button>
+    <!-- Product -->
+    <label class="block text-sm font-medium text-gray-700">Produk Jadi</label>
+    <select name="product_id" class="w-full border rounded p-2" required>
+        {% for p in products %}
+            <option value="{{ p.id }}">{{ p.name }}</option>
+        {% endfor %}
+    </select>
+
+    <!-- Nama Bahan Baku -->
+    <label class="block text-sm font-medium text-gray-700">Nama Bahan Baku</label>
+    <input type="text" name="nama_bahan_baku" class="w-full border rounded p-2" placeholder="cth: Bahan baku kayu" required>
+
+    <!-- Kuantitas -->
+    <label class="block text-sm font-medium text-gray-700">Kuantitas</label>
+    <input type="number" name="quantity" class="w-full border rounded p-2" min="1" required>
+
+    <label class="block text-sm font-medium text-gray-700">Keterangan</label>
+    <input type="text" name="keterangan" class="w-full border rounded p-2" placeholder="cth: Pembelian bahan baku bulan ini">
+
+    <!-- Harga -->
+    <label class="block text-sm font-medium text-gray-700">Harga Satuan (Rp)</label>
+    <input type="number" name="harga_satuan" class="w-full border rounded p-2" min="0" required>
+
+    <div id="modal-pembelian-fields" class="hidden">
+
+      <label class="block text-sm font-medium text-gray-700">Diskon Pembelian (Rp)</label>
+      <input type="number" name="diskon" class="w-full border rounded p-2" min="0" value="0">
+
+      <label class="block text-sm font-medium text-gray-700">Retur Pembelian (Qty)</label>
+      <input type="number" name="retur_qty" class="w-full border rounded p-2" min="0" value="0">
+
+      <label class="block text-sm font-medium text-gray-700">Jumlah Retur (Rp)</label>
+      <input type="number" name="retur_amount" class="w-full border rounded p-2" placeholder="auto calculated" disabled>
+
+      <label class="block text-sm font-medium text-gray-700">Biaya Ongkir (Rp)</label>
+      <input type="number" name="ongkir" class="w-full border rounded p-2" min="0" value="0">
+
+    </div>
+
+    <div class="flex justify-end gap-2 pt-3">
+        <button type="button" id="modal-bahan-baku-close-btn" class="py-2 px-6 rounded-lg font-semibold border hover:bg-slate-100">
+            Batal
+        </button>
+        <button type="submit" class="bg-black text-white py-2 px-6 rounded-lg font-semibold hover:bg-slate-800">
+            Simpan
+        </button>
     </div>
   </form>
 </div>
 <div id="modal-bdp" class="fixed inset-0 bg-black/60 flex justify-center items-center z-50 transition-opacity opacity-0 pointer-events-none">
   <form id="form-bdp" method="POST" action="" class="bg-white p-8 rounded-2xl shadow-xl w-full max-w-lg space-y-6 overflow-y-auto max-h-[90vh]">
     {% csrf_token %}
-    <input type="hidden" name="action" value="add_bdp_item">
+    <input type="hidden" name="action" value="add_wip">
 
     <h2 class="text-2xl font-bold mb-4">Tambah Data Barang Dalam Proses</h2>
 
@@ -498,7 +544,7 @@
 <div id="modal-btkl" class="fixed inset-0 bg-black/60 flex justify-center items-center z-50 transition-opacity opacity-0 pointer-events-none">
   <form id="form-btkl" method="POST" action="" class="bg-white p-8 rounded-2xl shadow-xl w-full max-w-xl space-y-6 overflow-y-auto max-h-[90vh]">
     {% csrf_token %}
-    <input type="hidden" name="action" value="add_btkl_item">
+    <input type="hidden" name="action" value="add_btkl">
 
     <h2 class="text-2xl font-bold mb-4">Tambah Data Biaya Tenaga Kerja Langsung</h2>
 
@@ -515,7 +561,7 @@
 <div id="modal-bop" class="fixed inset-0 bg-black/60 flex justify-center items-center z-50 transition-opacity opacity-0 pointer-events-none">
   <form id="form-bop" method="POST" action="" class="bg-white p-8 rounded-2xl shadow-xl w-full max-w-xl space-y-6 overflow-y-auto max-h-[90vh]">
     {% csrf_token %}
-    <input type="hidden" name="action" value="add_bop_item">
+    <input type="hidden" name="action" value="add_bop">
 
     <h2 class="text-2xl font-bold mb-4">Tambah Data Biaya Overhead Pabrik</h2>
 
@@ -532,7 +578,7 @@
 <div id="modal-bj" class="fixed inset-0 bg-black/60 flex justify-center items-center z-50 transition-opacity opacity-0 pointer-events-none">
   <form id="form-bj" method="POST" action="" class="bg-white p-8 rounded-2xl shadow-xl w-full max-w-lg space-y-6 overflow-y-auto max-h-[90vh]">
     {% csrf_token %}
-    <input type="hidden" name="action" value="add_bj_item">
+    <input type="hidden" name="action" value="add_fg">
 
     <h2 class="text-2xl font-bold mb-4">Tambah Data Barang Jadi</h2>
 
@@ -639,7 +685,7 @@ document.addEventListener("DOMContentLoaded", function () {
           }
       },
       setup: function(modal, form) {
-          const tipeDataDropdown = document.getElementById("modal-tipe-data");
+          const tipeDataDropdown = document.querySelector('select[name="type"]');
           if (tipeDataDropdown) {
               tipeDataDropdown.addEventListener("change", togglePembelianFields);
           }
@@ -648,16 +694,21 @@ document.addEventListener("DOMContentLoaded", function () {
 
   // Fungsi spesifik untuk toggle field pembelian di Modal Bab 1
   function togglePembelianFields() {
-      const tipeDataDropdown = document.getElementById("modal-tipe-data");
-      const pembelianFieldsDiv = document.getElementById("modal-pembelian-fields");
-      if (tipeDataDropdown && pembelianFieldsDiv) {
-          if (tipeDataDropdown.value === "PEMBELIAN") {
-              pembelianFieldsDiv.classList.remove("hidden");
-          } else {
-              pembelianFieldsDiv.classList.add("hidden");
-          }
-      }
-  }
+    const tipeDataDropdown = document.querySelector('select[name="type"]');
+    const pembelianFieldsDiv = document.getElementById("modal-pembelian-fields");
+
+    if (tipeDataDropdown && pembelianFieldsDiv) {
+        if (tipeDataDropdown.value === "BB_PEMBELIAN") {
+            pembelianFieldsDiv.classList.remove("hidden");
+        } else {
+            pembelianFieldsDiv.classList.add("hidden");
+        }
+    }
+
+    // Trigger change once on open to set correct state
+    document.querySelector('select[name="type"]').dispatchEvent(new Event('change'));
+
+}
 
   // --- Setup Modal Bab 2 (BDP) ---
   setupModal('modal-bdp', 'open-modal-bdp-btn', 'modal-bdp-close-btn', 'form-bdp');
