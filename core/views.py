@@ -2,7 +2,7 @@ from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib.auth.decorators import login_required
 from django.contrib import messages
 from django.contrib.auth import authenticate, login, logout
-from django.db.models import Sum
+from django.db.models import Sum, F
 from django.http import HttpResponse
 from .models import FinancialReport, Product, RevenueItem, HppEntry, ExpenseItem
 from .models import (
@@ -422,7 +422,30 @@ def hpp_manufaktur_view(request, report_id):
             HppManufactureMaterial.objects.filter(id=request.POST.get("item_id"), report=report).delete()
             messages.success(request, "Data bahan baku berhasil dihapus.")
             return redirect("core:hpp_manufaktur", report_id=report.id)
+        
+        totals_awal_per_produk = (
+            HppManufactureMaterial.objects
+            .filter(report=report, type="BB_AWAL")
+            .values('product__name')
+            .annotate(total=Sum('total'))
+            .order_by('product__name')
+        )
 
+        totals_pembelian_per_produk = (
+            HppManufactureMaterial.objects
+            .filter(report=report, type="BB_PEMBELIAN")
+            .values('product__name')
+            .annotate(total=Sum('total'))
+            .order_by('product__name')
+        )
+
+        totals_akhir_per_produk = (
+            HppManufactureMaterial.objects
+            .filter(report=report, type="BB_AKHIR")
+            .values('product__name')
+            .annotate(total=Sum('total'))
+            .order_by('product__name')
+        )
 
         # BDP / WIP
         if action in ["add_wip", "edit_wip"]:
@@ -587,6 +610,17 @@ def hpp_manufaktur_view(request, report_id):
     bj_awal = HppManufactureFinishedGoods.objects.filter(report=report, type="FG_AWAL")
     bj_akhir = HppManufactureFinishedGoods.objects.filter(report=report, type="FG_AKHIR")
 
+    # ======== Grouped Totals Per Product ========
+    def grouped_totals(queryset):
+        """Helper for grouped subtotal per product"""
+        if not queryset.exists():
+            return []
+        return (
+            queryset.values("product", product_name=F("product__name"))
+                    .annotate(total=Sum("total"))
+                    .order_by("product__name")
+        )
+
     # SUMS
     total_bahan_baku_awal = bb_awal.aggregate(Sum('total'))['total__sum'] or 0
     total_bahan_baku_pembelian = bb_pembelian.aggregate(Sum('total'))['total__sum'] or 0
@@ -601,6 +635,77 @@ def hpp_manufaktur_view(request, report_id):
     total_bj_awal = bj_awal.aggregate(Sum('total'))['total__sum'] or 0
     total_bj_akhir = bj_akhir.aggregate(Sum('total'))['total__sum'] or 0
 
+    # --- subtotal per product (used in template, hidden until data exists)
+    totals_awal_per_produk = grouped_totals(bb_awal)
+    totals_pembelian_per_produk = grouped_totals(bb_pembelian)
+    totals_akhir_per_produk = grouped_totals(bb_akhir)
+
+    totals_bdp_awal_per_produk = grouped_totals(bdp_awal)
+    totals_bdp_akhir_per_produk = grouped_totals(bdp_akhir)
+    
+    totals_btkl_per_produk = grouped_totals(btkl_items)
+
+    totals_bop_per_produk = grouped_totals(bop_items)
+
+
+    # Barang yang diproduksi calculation
+    barang_diproduksi_list = []
+
+    # Convert QuerySets to dict for easy lookup
+    def map_totals(qs):
+        return {row["product"]: row["total"] for row in qs}
+
+    bb_awal_map = map_totals(totals_awal_per_produk)
+    bb_pembelian_map = map_totals(totals_pembelian_per_produk)
+    bb_akhir_map = map_totals(totals_akhir_per_produk)
+    bdp_awal_map = map_totals(totals_bdp_awal_per_produk)
+    bdp_akhir_map = map_totals(totals_bdp_akhir_per_produk)
+    btkl_map = map_totals(totals_btkl_per_produk)
+    bop_map = map_totals(totals_bop_per_produk)
+
+    # Quantity lookup for BDP awal/akhir
+    def map_qty(qs):
+        return {w.product.id: w.quantity for w in qs}
+
+    bdp_awal_qty = map_qty(bdp_awal)
+    bdp_akhir_qty = map_qty(bdp_akhir)
+
+    # Loop through all products that appear in any subtotal
+    product_ids = set(bb_awal_map.keys()) | set(bb_pembelian_map.keys()) | set(bb_akhir_map.keys())
+
+    for pid in product_ids:
+        product = Product.objects.filter(id=pid).first()
+        if not product:
+            continue
+
+        # Get quantities
+        qty_awal = bdp_awal_qty.get(pid, 0)
+        qty_akhir = bdp_akhir_qty.get(pid, 0)
+        qty_diproduksi = max(qty_akhir - qty_awal, 0)
+
+        # Compute total
+        total_produksi = (
+            (bb_awal_map.get(pid, 0) + bb_pembelian_map.get(pid, 0) - bb_akhir_map.get(pid, 0))
+            + (bdp_akhir_map.get(pid, 0) - bdp_awal_map.get(pid, 0))
+            + btkl_map.get(pid, 0)
+            + bop_map.get(pid, 0)
+        )
+
+        hpp_per_unit = total_produksi / qty_diproduksi if qty_diproduksi else 0
+
+        barang_diproduksi_list.append({
+            "product_name": product.name,
+            "qty_awal": qty_awal,
+            "qty_akhir": qty_akhir,
+            "qty_diproduksi": qty_diproduksi,
+            "total_produksi": total_produksi,
+            "hpp_per_unit": hpp_per_unit,
+        })
+
+    total_barang_diproduksi = sum(item["total_produksi"] for item in barang_diproduksi_list)
+    total_qty_produksi = sum(item["qty_diproduksi"] for item in barang_diproduksi_list)
+
+
     return render(request, "core/pages/hpp_manufaktur.html", {
         "report": report,
         "products": products,
@@ -613,18 +718,32 @@ def hpp_manufaktur_view(request, report_id):
         "total_bahan_baku_awal": total_bahan_baku_awal,
         "total_bahan_baku_pembelian": total_bahan_baku_pembelian,
         "total_bahan_baku_akhir": total_bahan_baku_akhir,
+        # grouped sub total per product
+        "totals_awal_per_produk": totals_awal_per_produk,
+        "totals_pembelian_per_produk": totals_pembelian_per_produk,
+        "totals_akhir_per_produk": totals_akhir_per_produk,
 
         # WIP/BDP
         "bdp_awal": bdp_awal,
         "bdp_akhir": bdp_akhir,
         "total_bdp_awal": total_bdp_awal,
         "total_bdp_akhir": total_bdp_akhir,
-
+        # grouped sub total per product
+        "totals_bdp_awal_per_produk": totals_bdp_awal_per_produk,
+        "totals_bdp_akhir_per_produk": totals_bdp_akhir_per_produk,
+        
         # BTKL & BOP
         "btkl_items": btkl_items,
         "total_btkl": total_btkl,
+        "totals_btkl_per_produk": totals_btkl_per_produk,
         "bop_items": bop_items,
         "total_bop": total_bop,
+        "totals_bop_per_produk": totals_bop_per_produk,
+
+        # barang yang diproduksi
+        "barang_diproduksi_list": barang_diproduksi_list,
+        "total_barang_diproduksi": total_barang_diproduksi,
+        "total_qty_produksi": total_qty_produksi,
 
         # FG
         "bj_awal": bj_awal,

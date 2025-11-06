@@ -65,7 +65,7 @@
             {% endfor %}
           </div>
           <div class="grid grid-cols-12 gap-4 items-center border-t pt-3 mt-3 font-bold">
-            <div class="col-span-10 p-3 text-right text-slate-600">(Sub Jumlah Persediaan Awal)</div>
+            <div class="col-span-10 p-3 text-right text-slate-600">Sub Jumlah Persediaan Awal</div>
             <div id="bahan-baku-awal-total" class="col-span-2 p-3 text-lg text-right">Rp {{ total_bahan_baku_awal|floatformat:0|intcomma }}</div>
           </div>
           <div id="bahan-baku-awal-per-produk-totals" class="mt-2 divide-y border-t pt-2 {% if not totals_awal_per_produk %}hidden{% endif %}">
@@ -113,7 +113,7 @@
             {% endfor %}
           </div>
           <div class="grid grid-cols-12 gap-4 items-center border-t pt-3 mt-3 font-bold">
-            <div class="col-span-10 p-3 text-right text-slate-600">(Sub Jumlah Pembelian)</div>
+            <div class="col-span-10 p-3 text-right text-slate-600">Sub Jumlah Pembelian</div>
             <div id="bahan-baku-pembelian-total" class="col-span-2 p-3 text-lg text-right">Rp {{ total_bahan_baku_pembelian|floatformat:0|intcomma }}</div>
           </div>
           <div id="bahan-baku-pembelian-per-produk-totals" class="mt-2 divide-y border-t pt-2 {% if not totals_pembelian_per_produk %}hidden{% endif %}">
@@ -161,7 +161,7 @@
             {% endfor %}
           </div>
           <div class="grid grid-cols-12 gap-4 items-center border-t pt-3 mt-3 font-bold">
-            <div class="col-span-10 p-3 text-right text-slate-600">(Sub Jumlah Persediaan Akhir)</div>
+            <div class="col-span-10 p-3 text-right text-slate-600">Sub Jumlah Persediaan Akhir</div>
             <div id="bahan-baku-akhir-total" class="col-span-2 p-3 text-lg text-right">Rp {{ total_bahan_baku_akhir|floatformat:0|intcomma }}</div>
           </div>
           <div id="bahan-baku-akhir-per-produk-totals" class="mt-2 divide-y border-t pt-2 {% if not totals_akhir_per_produk %}hidden{% endif %}">
@@ -217,8 +217,16 @@
             {% endfor %}
           </div>
           <div class="grid grid-cols-12 gap-4 items-center border-t pt-3 mt-3 font-bold">
-            <div class="col-span-10 p-3 text-right text-slate-600">(Sub Jumlah Persediaan Awal BDP)</div>
+            <div class="col-span-10 p-3 text-right text-slate-600">Sub Jumlah Persediaan Awal</div>
             <div id="bdp-awal-total" class="col-span-2 p-3 text-lg text-right">Rp {{ total_bdp_awal|floatformat:0|intcomma }}</div>
+          </div>
+          <div id="bdp-awal-per-produk-totals" class="mt-2 divide-y border-t pt-2 {% if not totals_bdp_awal_per_produk %}hidden{% endif %}">
+              {% for prod_total in totals_bdp_awal_per_produk %}
+              <div class="grid grid-cols-12 gap-4 items-center py-1">
+                  <div class="col-span-10 p-1 text-right text-sm text-slate-500 italic">Sub Jumlah Persediaan Awal {{ prod_total.product_name }}</div>
+                  <div class="col-span-2 p-1 text-sm text-right text-slate-500 italic">Rp {{ prod_total.total|floatformat:0|intcomma }}</div>
+              </div>
+              {% endfor %}
           </div>
       </div>
 
@@ -255,8 +263,16 @@
             {% endfor %}
           </div>
           <div class="grid grid-cols-12 gap-4 items-center border-t pt-3 mt-3 font-bold">
-            <div class="col-span-10 p-3 text-right text-slate-600">(Sub Jumlah Persediaan Akhir BDP)</div>
+            <div class="col-span-10 p-3 text-right text-slate-600">Sub Jumlah Persediaan Akhir BDP</div>
             <div id="bdp-akhir-total" class="col-span-2 p-3 text-lg text-right">Rp {{ total_bdp_akhir|floatformat:0|intcomma }}</div>
+          </div>
+          <div id="bdp-akhir-per-produk-totals" class="mt-2 divide-y border-t pt-2 {% if not totals_bdp_akhir_per_produk %}hidden{% endif %}">
+              {% for prod_total in totals_bdp_akhir_per_produk %}
+              <div class="grid grid-cols-12 gap-4 items-center py-1">
+                  <div class="col-span-10 p-1 text-right text-sm text-slate-500 italic">Sub Jumlah Persediaan Awal {{ prod_total.product_name }}</div>
+                  <div class="col-span-2 p-1 text-sm text-right text-slate-500 italic">Rp {{ prod_total.total|floatformat:0|intcomma }}</div>
+              </div>
+              {% endfor %}
           </div>
       </div>
 
@@ -308,6 +324,14 @@
             <div class="col-span-10 p-3 text-right text-slate-600">Total Biaya Tenaga Kerja Langsung (BTKL)</div>
             <div id="btkl-total" class="col-span-2 p-3 text-lg text-right">Rp {{ total_btkl|floatformat:0|intcomma }}</div>
           </div>
+          <div id="btkl-per-produk-totals" class="mt-2 divide-y border-t pt-2 {% if not totals_btkl_per_produk %}hidden{% endif %}">
+              {% for prod_total in totals_btkl_per_produk %}
+              <div class="grid grid-cols-12 gap-4 items-center py-1">
+                  <div class="col-span-10 p-1 text-right text-sm text-slate-500 italic">Sub Jumlah Persediaan Awal {{ prod_total.product_name }}</div>
+                  <div class="col-span-2 p-1 text-sm text-right text-slate-500 italic">Rp {{ prod_total.total|floatformat:0|intcomma }}</div>
+              </div>
+              {% endfor %}
+          </div>
       </div>
 
       <div class="mb-6">
@@ -351,6 +375,14 @@
             <div class="col-span-10 p-3 text-right text-slate-600">Total Biaya Overhead Pabrik (BOP)</div>
             <div id="bop-total" class="col-span-2 p-3 text-lg text-right">Rp {{ total_bop|floatformat:0|intcomma }}</div>
           </div>
+          <div id="bop-per-produk-totals" class="mt-2 divide-y border-t pt-2 {% if not totals_bop_per_produk %}hidden{% endif %}">
+              {% for prod_total in totals_bop_per_produk %}
+              <div class="grid grid-cols-12 gap-4 items-center py-1">
+                  <div class="col-span-10 p-1 text-right text-sm text-slate-500 italic">Sub Jumlah Persediaan Awal {{ prod_total.product_name }}</div>
+                  <div class="col-span-2 p-1 text-sm text-right text-slate-500 italic">Rp {{ prod_total.total|floatformat:0|intcomma }}</div>
+              </div>
+              {% endfor %}
+          </div>
       </div>
 
     </div>
@@ -364,22 +396,25 @@
             <div class="col-span-2 p-3 text-right">Total Harga Pokok Produksi</div>
           </div>
           <div id="produksi-rows" class="divide-y">
-            {% if not hasil_produksi %}
+            {% if not barang_diproduksi_list %}
                 <p class="text-center text-slate-400 p-4 italic js-empty-state">Belum ada data hasil produksi yang dihitung.</p>
                 <p class="text-center text-slate-400 p-4 text-sm">Pastikan data Bahan Baku, BDP, BTKL, dan BOP sudah lengkap.</p>
             {% endif %}
-            {% for hasil in hasil_produksi %}
+            {% for hasil in barang_diproduksi_list %}
             <div class="data-row grid grid-cols-12 gap-4 items-center py-3">
                 <div class="col-span-6 p-3 font-medium">{{ hasil.product_name }}</div>
-                <div class="col-span-2 p-3 text-center">{{ hasil.kuantitas_produksi|floatformat:0|intcomma }}</div>
+                <div class="col-span-2 p-3 text-center">{{ hasil.qty_diproduksi|floatformat:0|intcomma }}</div>
                 <div class="col-span-2 p-3 text-right">Rp {{ hasil.hpp_per_unit|floatformat:2|intcomma }}</div>
-                <div class="col-span-2 p-3 font-semibold text-right">Rp {{ hasil.total_hpp_produksi|floatformat:0|intcomma }}</div>
+                <div class="col-span-2 p-3 font-semibold text-right">Rp {{ hasil.total_produksi|floatformat:0|intcomma }}</div>
             </div>
             {% endfor %}
           </div>
-          <div class="grid grid-cols-12 gap-4 items-center border-t-2 border-slate-700 pt-4 mt-4 font-bold text-lg">
-            <div class="col-span-10 p-3 text-right text-slate-800">Total Harga Pokok Produksi</div>
-            <div id="produksi-total" class="col-span-2 p-3 text-right text-slate-800">Rp {{ total_hpp_produksi_keseluruhan|floatformat:0|intcomma }}</div>
+          <div class="grid grid-cols-12 gap-4 items-center font-bold border-t pt-3 mt-3">
+            <div class="col-span-3 text-right">Sub Jumlah</div>
+            <div class="col-span-2 text-right">{{ total_qty_produksi|floatformat:0|intcomma }}</div>
+            <div class="col-span-3"></div>
+            <div class="col-span-2"></div>
+            <div class="col-span-2 text-right">Rp {{ total_barang_diproduksi|floatformat:0|intcomma }}</div>
           </div>
       </div>
     </div>
@@ -428,7 +463,7 @@
             {% endfor %}
           </div>
           <div class="grid grid-cols-12 gap-4 items-center border-t pt-3 mt-3 font-bold">
-            <div class="col-span-10 p-3 text-right text-slate-600">(Sub Jumlah Persediaan Awal Barang Jadi)</div>
+            <div class="col-span-10 p-3 text-right text-slate-600">Sub Jumlah Persediaan Awal Barang Jadi</div>
             <div id="bj-awal-total" class="col-span-2 p-3 text-lg text-right">Rp {{ total_bj_awal|floatformat:0|intcomma }}</div>
           </div>
       </div>
@@ -470,7 +505,7 @@
             {% endfor %}
           </div>
           <div class="grid grid-cols-12 gap-4 items-center border-t pt-3 mt-3 font-bold">
-            <div class="col-span-10 p-3 text-right text-slate-600">(Sub Jumlah Persediaan Akhir Barang Jadi)</div>
+            <div class="col-span-10 p-3 text-right text-slate-600">Sub Jumlah Persediaan Akhir Barang Jadi</div>
             <div id="bj-akhir-total" class="col-span-2 p-3 text-lg text-right">Rp {{ total_bj_akhir|floatformat:0|intcomma }}</div>
           </div>
       </div>
@@ -664,7 +699,7 @@
 <div id="modal-bop" class="fixed inset-0 bg-black/60 flex justify-center items-center z-50 transition-opacity opacity-0 pointer-events-none p-4">
   <form id="form-bop" method="POST" action="" class="bg-white p-4 sm:p-8 rounded-2xl shadow-xl w-full max-w-xl space-y-6 overflow-y-auto max-h-[90vh]">
     {% csrf_token %}
-    <input type="hidden" name="action" value="add_bop_item">
+    <input type="hidden" name="action" value="add_bop">
     <h2 class="text-2xl font-bold mb-4">Tambah Data Biaya Overhead Pabrik</h2>
 
     <div>
@@ -851,11 +886,6 @@ document.addEventListener("DOMContentLoaded", function () {
   setupModal('modal-bop','open-modal-bop-btn','modal-bop-close-btn','form-bop');
   setupModal('modal-bj','open-modal-bj-btn','modal-bj-close-btn','form-bj');
 
-
-  // =============================================
-  // PERBAIKAN: Hapus semua blok JS 'EDIT BUTTON LOGIC'
-  // =============================================
-  
 });
 </script>
 {% endblock %}
