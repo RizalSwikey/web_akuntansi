@@ -53,3 +53,11 @@ def calculate_hpp_manufacture(product, data):
         "WIP_AWAL": int(wip_awal), "WIP_AKHIR": int(wip_akhir),
         "FG_AWAL": int(fg_awal), "FG_AKHIR": int(fg_akhir),
     }
+
+def to_int(val, default=0):
+                try:
+                    if val is None or val == "":
+                        return default
+                    return int(float(val))
+                except Exception:
+                    return default

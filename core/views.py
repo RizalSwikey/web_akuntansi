@@ -16,7 +16,7 @@ from core.utils.hpp_calculator import calculate_hpp_for_product
 from core.utils.final_report import generate_final_report_data
 from core.utils.excel_exporter import generate_excel_file
 from core.utils.pdf_exporter import generate_pdf_file
-from core.utils.hpp_manufacture_calculator import calculate_hpp_manufacture
+from core.utils.hpp_manufacture_calculator import to_int, calculate_hpp_manufacture
 
 
 
@@ -353,22 +353,14 @@ def hpp_manufaktur_view(request, report_id):
             nama_bb = request.POST.get("nama_bahan_baku", "").strip()
             keterangan = request.POST.get("keterangan", "").strip()
 
-            def to_int(val, default=0):
-                try:
-                    if val is None or val == "":
-                        return default
-                    return int(float(val))
-                except Exception:
-                    return default
-
-            qty = to_int(request.POST.get("quantity", 0))
-            harga = to_int(request.POST.get("harga_satuan", 0))
-            diskon = to_int(request.POST.get("diskon", 0))
-            retur_qty = to_int(request.POST.get("retur_qty", 0))
+            qty = to_int(request.POST.get("quantity"))
+            harga = to_int(request.POST.get("harga_satuan"))
+            diskon = to_int(request.POST.get("diskon"))
+            retur_qty = to_int(request.POST.get("retur_qty"))
             # If user provided retur_amount explicitly, use it, otherwise compute from retur_qty*harga
-            retur_amount_post = request.POST.get("retur_amount", "")
-            retur_amount = to_int(retur_amount_post) if retur_amount_post != "" else (retur_qty * harga)
-            ongkir = to_int(request.POST.get("ongkir", 0))
+            retur_amount_post = to_int(request.POST.get("retur_amount"))
+            retur_amount = to_int(retur_amount_post) if retur_amount_post != 0 else (retur_qty * harga)
+            ongkir = to_int(request.POST.get("ongkir"))
 
             # Validation: retur_qty should not exceed qty (you can relax if needed)
             if retur_qty > qty:
@@ -400,6 +392,36 @@ def hpp_manufaktur_view(request, report_id):
             messages.success(request, "Data bahan baku berhasil disimpan.")
             return redirect("core:hpp_manufaktur", report_id=report.id)
 
+        # EDIT BAHAN BAKU
+        if action == "edit_bb":
+            item = get_object_or_404(HppManufactureMaterial, id=request.POST.get("item_id"), report=report)
+
+            item.type = request.POST.get("type")
+            item.product_id = request.POST.get("product_id")
+            item.nama_bahan_baku = request.POST.get("nama_bahan_baku")
+            item.quantity = to_int(request.POST.get("quantity"))
+            item.harga_satuan = to_int(request.POST.get("harga_satuan"))
+            item.diskon = to_int(request.POST.get("diskon"))
+            item.retur_qty = to_int(request.POST.get("retur_qty"))
+            item.retur_amount = to_int(request.POST.get("retur_amount"))
+            item.ongkir = to_int(request.POST.get("ongkir"))
+            item.keterangan = request.POST.get("keterangan", "")
+
+            # recompute total
+            if item.type in ["BB_AWAL", "BB_AKHIR"]:
+                item.total = item.quantity * item.harga_satuan
+            else:
+                item.total = (item.quantity * item.harga_satuan) - item.diskon - item.retur_amount + item.ongkir
+
+            item.save()
+            messages.success(request, "Data bahan baku berhasil diperbarui.")
+            return redirect("core:hpp_manufaktur", report_id=report.id)
+
+        # DELETE BAHAN BAKU
+        if action == "delete_bb":
+            HppManufactureMaterial.objects.filter(id=request.POST.get("item_id"), report=report).delete()
+            messages.success(request, "Data bahan baku berhasil dihapus.")
+            return redirect("core:hpp_manufaktur", report_id=report.id)
 
 
         # BDP / WIP
