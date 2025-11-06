@@ -250,10 +250,23 @@
             {% endif %}
             {% for item in bdp_awal %} {# Loop dari backend #}
             <div class="data-row grid grid-cols-12 gap-4 items-center py-2">
-                 <div class="col-span-1 flex justify-center">
-                    <button data-item-id="{{ item.id }}" class="remove-row-btn text-slate-400 hover:text-red-500 p-2">
-                        <svg class="w-5 h-5 pointer-events-none" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="m14.74 9-.346 9m-4.788 0L9.26 9m9.968-3.21c.342.052.682.107 1.022.166m-1.022-.165L18.16 19.673a2.25 2.25 0 0 1-2.244 2.077H8.084a2.25 2.25 0 0 1-2.244-2.077L4.772 5.79m14.456 0a48.108 48.108 0 0 0-3.478-.397m-12 .562c.34-.059.68-.114 1.022-.165m0 0a48.11 48.11 0 0 1 3.478-.397m7.5 0v-.916c0-1.18-.91-2.134-2.09-2.201a51.964 51.964 0 0 0-3.32 0c-1.18.067-2.09 1.022-2.09 2.201v.916m7.5 0a48.667 48.667 0 0 0-7.5 0" /></svg>
-                    </button>
+                <div class="col-span-1 flex justify-center">
+                  <button class="edit-bdp-btn text-blue-500 hover:text-blue-700" 
+                    data-id="{{ item.id }}"
+                    data-type="{{ item.type }}"
+                    data-product="{{ item.product.id }}"
+                    data-qty="{{ item.quantity }}"
+                    data-harga="{{ item.harga_satuan }}"
+                    data-keterangan="{{ item.keterangan }}">
+                    ✏️
+                  </button>
+
+                  <form method="POST" action="" style="display:inline;">
+                    {% csrf_token %}
+                    <input type="hidden" name="action" value="delete_wip">
+                    <input type="hidden" name="item_id" value="{{ item.id }}">
+                    <button type="submit" class="text-red-500 hover:text-red-700">🗑️</button>
+                  </form>
                 </div>
                 <div class="col-span-5 p-3">{{ item.product.name }}</div>
                 <div class="col-span-2 p-3">{{ item.quantity|floatformat:0|intcomma }}</div>
@@ -284,9 +297,22 @@
              {% for item in bdp_akhir %} {# Loop dari backend #}
             <div class="data-row grid grid-cols-12 gap-4 items-center py-2">
                  <div class="col-span-1 flex justify-center">
-                    <button data-item-id="{{ item.id }}" class="remove-row-btn text-slate-400 hover:text-red-500 p-2">
-                         <svg class="w-5 h-5 pointer-events-none" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="m14.74 9-.346 9m-4.788 0L9.26 9m9.968-3.21c.342.052.682.107 1.022.166m-1.022-.165L18.16 19.673a2.25 2.25 0 0 1-2.244 2.077H8.084a2.25 2.25 0 0 1-2.244-2.077L4.772 5.79m14.456 0a48.108 48.108 0 0 0-3.478-.397m-12 .562c.34-.059.68-.114 1.022-.165m0 0a48.11 48.11 0 0 1 3.478-.397m7.5 0v-.916c0-1.18-.91-2.134-2.09-2.201a51.964 51.964 0 0 0-3.32 0c-1.18.067-2.09 1.022-2.09 2.201v.916m7.5 0a48.667 48.667 0 0 0-7.5 0" /></svg>
-                    </button>
+                    <button class="edit-bdp-btn text-blue-500 hover:text-blue-700" 
+                    data-id="{{ item.id }}"
+                    data-type="{{ item.type }}"
+                    data-product="{{ item.product.id }}"
+                    data-qty="{{ item.quantity }}"
+                    data-harga="{{ item.harga_satuan }}"
+                    data-keterangan="{{ item.keterangan }}">
+                    ✏️
+                  </button>
+
+                  <form method="POST" action="" style="display:inline;">
+                    {% csrf_token %}
+                    <input type="hidden" name="action" value="delete_wip">
+                    <input type="hidden" name="item_id" value="{{ item.id }}">
+                    <button type="submit" class="text-red-500 hover:text-red-700">🗑️</button>
+                  </form>
                 </div>
                 <div class="col-span-5 p-3">{{ item.product.name }}</div>
                 <div class="col-span-2 p-3">{{ item.quantity|floatformat:0|intcomma }}</div>
@@ -326,18 +352,30 @@
                 <p class="text-center text-slate-400 p-4 italic js-empty-state">Belum ada data BTKL.</p>
             {% endif %}
             {% for item in btkl_items %} {# Loop dari backend #}
-            <div class="data-row grid grid-cols-12 gap-4 items-center py-2">
-                 <div class="col-span-1 flex justify-center">
-                    <button data-item-id="{{ item.id }}" class="remove-row-btn text-slate-400 hover:text-red-500 p-2">
-                         <svg class="w-5 h-5 pointer-events-none" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="m14.74 9-.346 9m-4.788 0L9.26 9m9.968-3.21c.342.052.682.107 1.022.166m-1.022-.165L18.16 19.673a2.25 2.25 0 0 1-2.244 2.077H8.084a2.25 2.25 0 0 1-2.244-2.077L4.772 5.79m14.456 0a48.108 48.108 0 0 0-3.478-.397m-12 .562c.34-.059.68-.114 1.022-.165m0 0a48.11 48.11 0 0 1 3.478-.397m7.5 0v-.916c0-1.18-.91-2.134-2.09-2.201a51.964 51.964 0 0 0-3.32 0c-1.18.067-2.09 1.022-2.09 2.201v.916m7.5 0a48.667 48.667 0 0 0-7.5 0" /></svg>
-                    </button>
+              <div class="data-row grid grid-cols-12 gap-4 items-center py-2">
+                <div class="col-span-1 flex justify-center">
+                  <button class="edit-btkl-btn text-blue-500 hover:text-blue-700"
+                    data-id="{{ item.id }}"
+                    data-product="{{ item.product.id }}"
+                    data-jenis="{{ item.jenis_tenaga_kerja }}"
+                    data-qty="{{ item.quantity }}"
+                    data-harga="{{ item.harga_satuan }}"
+                    data-keterangan="{{ item.keterangan }}">
+                    ✏️
+                  </button>
+                  <form method="POST" action="">
+                    {% csrf_token %}
+                    <input type="hidden" name="action" value="delete_btkl">
+                    <input type="hidden" name="item_id" value="{{ item.id }}">
+                    <button type="submit" class="text-red-500 hover:text-red-700">🗑️</button>
+                  </form>
                 </div>
                 <div class="col-span-3 p-3">{{ item.product.name }}</div>
                 <div class="col-span-3 p-3">{{ item.jenis_tenaga_kerja }}</div> {# Asumsi field ini ada di model #}
                 <div class="col-span-2 p-3">{{ item.quantity|floatformat:0|intcomma }}</div>
                 <div class="col-span-1 p-3">Rp {{ item.harga_satuan|floatformat:0|intcomma }}</div>
                 <div class="col-span-2 p-3 font-semibold text-right">Rp {{ item.total|floatformat:0|intcomma }}</div>
-            </div>
+              </div>
             {% endfor %}
           </div>
           <div class="grid grid-cols-12 gap-4 items-center border-t pt-3 mt-3 font-bold">
@@ -366,10 +404,26 @@
             {% endif %}
              {% for item in bop_items %} {# Loop dari backend #}
             <div class="data-row grid grid-cols-12 gap-4 items-center py-2">
-                 <div class="col-span-1 flex justify-center">
-                    <button data-item-id="{{ item.id }}" class="remove-row-btn text-slate-400 hover:text-red-500 p-2">
-                         <svg class="w-5 h-5 pointer-events-none" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="m14.74 9-.346 9m-4.788 0L9.26 9m9.968-3.21c.342.052.682.107 1.022.166m-1.022-.165L18.16 19.673a2.25 2.25 0 0 1-2.244 2.077H8.084a2.25 2.25 0 0 1-2.244-2.077L4.772 5.79m14.456 0a48.108 48.108 0 0 0-3.478-.397m-12 .562c.34-.059.68-.114 1.022-.165m0 0a48.11 48.11 0 0 1 3.478-.397m7.5 0v-.916c0-1.18-.91-2.134-2.09-2.201a51.964 51.964 0 0 0-3.32 0c-1.18.067-2.09 1.022-2.09 2.201v.916m7.5 0a48.667 48.667 0 0 0-7.5 0" /></svg>
-                    </button>
+                <div class="col-span-1 flex justify-center">
+                  <button 
+                    type="button"
+                    class="edit-bop-btn text-slate-400 hover:text-blue-600"
+                    data-id="{{ item.id }}"
+                    data-nama="{{ item.nama_biaya }}"
+                    data-product="{{ item.product.id|default:'' }}"
+                    data-qty="{{ item.quantity }}"
+                    data-harga="{{ item.harga_satuan }}"
+                    data-keterangan="{{ item.keterangan|default:'' }}">
+                    ✏️
+                  </button>
+
+                  <!-- Delete Button -->
+                  <form method="POST" style="display:inline;">
+                    {% csrf_token %}
+                    <input type="hidden" name="action" value="delete_bop">
+                    <input type="hidden" name="item_id" value="{{ item.id }}">
+                    <button type="submit" class="text-red-500 hover:text-red-700">🗑️</button>
+                  </form>
                 </div>
                 <div class="col-span-5 p-3">{{ item.nama_biaya }}</div> {# Asumsi field ini ada di model #}
                 <div class="col-span-2 p-3">{{ item.quantity|floatformat:0|intcomma }}</div>
@@ -593,41 +647,78 @@
   </form>
 </div>
 
-
 <div id="modal-bdp" class="fixed inset-0 bg-black/60 flex justify-center items-center z-50 transition-opacity opacity-0 pointer-events-none">
   <form id="form-bdp" method="POST" action="" class="bg-white p-8 rounded-2xl shadow-xl w-full max-w-lg space-y-6 overflow-y-auto max-h-[90vh]">
     {% csrf_token %}
-    <input type="hidden" name="action" value="add_wip">
+    <input type="hidden" name="action" id="bdp-action" value="add_wip">
+    <input type="hidden" name="item_id" id="bdp-item-id">
 
     <h2 class="text-2xl font-bold mb-4">Tambah Data Barang Dalam Proses</h2>
 
+    <label class="block text-sm font-medium text-gray-700">Tipe Data</label>
+    <select name="type" class="w-full border rounded p-2" required>
+      <option value="WIP_AWAL">Barang Dalam Proses (Awal)</option>
+      <option value="WIP_AKHIR">Barang Dalam Proses (Akhir)</option>
+    </select>
+
+    <label class="block text-sm font-medium text-gray-700">Produk Jadi</label>
+    <select name="product_id" class="w-full border rounded p-2" required>
+      {% for p in products %}
+        <option value="{{ p.id }}">{{ p.name }}</option>
+      {% endfor %}
+    </select>
+
+    <label class="block text-sm font-medium text-gray-700">Kuantitas</label>
+    <input type="number" name="quantity" class="w-full border rounded p-2" min="1" required>
+
+    <label class="block text-sm font-medium text-gray-700">Harga Satuan (Rp)</label>
+    <input type="number" name="harga_satuan" class="w-full border rounded p-2" min="0" required>
+
+    <label class="block text-sm font-medium text-gray-700">Keterangan</label>
+    <input type="text" name="keterangan" class="w-full border rounded p-2">
+
     <div class="flex justify-end gap-4 pt-4">
-      <button type="button" id="modal-bdp-close-btn" class="py-2 px-6 rounded-lg font-semibold border hover:bg-slate-100">
-        Batal
-      </button>
-      <button type="submit" class="bg-black text-white py-2 px-6 rounded-lg font-semibold hover:bg-slate-800">
-        Simpan
-      </button>
+      <button type="button" id="modal-bdp-close-btn" class="py-2 px-6 rounded-lg font-semibold border hover:bg-slate-100">Batal</button>
+      <button type="submit" class="bg-black text-white py-2 px-6 rounded-lg font-semibold hover:bg-slate-800">Simpan</button>
     </div>
   </form>
 </div>
+
 <div id="modal-btkl" class="fixed inset-0 bg-black/60 flex justify-center items-center z-50 transition-opacity opacity-0 pointer-events-none">
   <form id="form-btkl" method="POST" action="" class="bg-white p-8 rounded-2xl shadow-xl w-full max-w-xl space-y-6 overflow-y-auto max-h-[90vh]">
     {% csrf_token %}
-    <input type="hidden" name="action" value="add_btkl">
+    <input type="hidden" name="action" id="btkl-action" value="add_btkl">
+    <input type="hidden" name="item_id" id="btkl-item-id">
 
     <h2 class="text-2xl font-bold mb-4">Tambah Data Biaya Tenaga Kerja Langsung</h2>
 
-     <div class="flex justify-end gap-4 pt-4">
-      <button type="button" id="modal-btkl-close-btn" class="py-2 px-6 rounded-lg font-semibold border hover:bg-slate-100">
-        Batal
-      </button>
-      <button type="submit" class="bg-black text-white py-2 px-6 rounded-lg font-semibold hover:bg-slate-800">
-        Simpan
-      </button>
+    <label class="block text-sm font-medium text-gray-700">Produk Jadi</label>
+    <select name="product_id" class="w-full border rounded p-2" required>
+      {% for p in products %}
+        <option value="{{ p.id }}">{{ p.name }}</option>
+      {% endfor %}
+    </select>
+
+    <label class="block text-sm font-medium text-gray-700">Jenis Tenaga Kerja</label>
+    <input type="text" name="jenis_tenaga_kerja" class="w-full border rounded p-2" placeholder="cth: Operator Produksi" required>
+
+    <label class="block text-sm font-medium text-gray-700">Jumlah Tenaga Kerja</label>
+    <input type="number" name="quantity" class="w-full border rounded p-2" min="1" required>
+
+    <label class="block text-sm font-medium text-gray-700">Upah per Orang (Rp)</label>
+    <input type="number" name="harga_satuan" class="w-full border rounded p-2" min="0" required>
+
+    <label class="block text-sm font-medium text-gray-700">Keterangan</label>
+    <input type="text" name="keterangan" class="w-full border rounded p-2" placeholder="Opsional">
+
+
+    <div class="flex justify-end gap-4 pt-4">
+      <button type="button" id="modal-btkl-close-btn" class="py-2 px-6 rounded-lg font-semibold border hover:bg-slate-100">Batal</button>
+      <button type="submit" class="bg-black text-white py-2 px-6 rounded-lg font-semibold hover:bg-slate-800">Simpan</button>
     </div>
   </form>
 </div>
+
 <div id="modal-bop" class="fixed inset-0 bg-black/60 flex justify-center items-center z-50 transition-opacity opacity-0 pointer-events-none">
   <form id="form-bop" method="POST" action="" class="bg-white p-8 rounded-2xl shadow-xl w-full max-w-xl space-y-6 overflow-y-auto max-h-[90vh]">
     {% csrf_token %}
@@ -635,16 +726,32 @@
 
     <h2 class="text-2xl font-bold mb-4">Tambah Data Biaya Overhead Pabrik</h2>
 
-     <div class="flex justify-end gap-4 pt-4">
-      <button type="button" id="modal-bop-close-btn" class="py-2 px-6 rounded-lg font-semibold border hover:bg-slate-100">
-        Batal
-      </button>
-      <button type="submit" class="bg-black text-white py-2 px-6 rounded-lg font-semibold hover:bg-slate-800">
-        Simpan
-      </button>
+    <label class="block text-sm font-medium text-gray-700">Produk (opsional)</label>
+    <select name="product_id" class="w-full border rounded p-2">
+      {% for p in products %}
+      <option value="{{ p.id }}">{{ p.name }}</option>
+      {% endfor %}
+    </select>
+
+    <label class="block text-sm font-medium text-gray-700">Nama Biaya</label>
+    <input type="text" name="nama_biaya" class="w-full border rounded p-2" placeholder="cth: Biaya listrik" required>
+
+    <label class="block text-sm font-medium text-gray-700">Kuantitas</label>
+    <input type="number" name="quantity" class="w-full border rounded p-2" min="0">
+
+    <label class="block text-sm font-medium text-gray-700">Harga Satuan (Rp)</label>
+    <input type="number" name="harga_satuan" class="w-full border rounded p-2" min="0">
+
+    <label class="block text-sm font-medium text-gray-700">Keterangan</label>
+    <input type="text" name="keterangan" class="w-full border rounded p-2">
+
+    <div class="flex justify-end gap-4 pt-4">
+      <button type="button" id="modal-bop-close-btn" class="py-2 px-6 rounded-lg font-semibold border hover:bg-slate-100">Batal</button>
+      <button type="submit" class="bg-black text-white py-2 px-6 rounded-lg font-semibold hover:bg-slate-800">Simpan</button>
     </div>
   </form>
 </div>
+
 <div id="modal-bj" class="fixed inset-0 bg-black/60 flex justify-center items-center z-50 transition-opacity opacity-0 pointer-events-none">
   <form id="form-bj" method="POST" action="" class="bg-white p-8 rounded-2xl shadow-xl w-full max-w-lg space-y-6 overflow-y-auto max-h-[90vh]">
     {% csrf_token %}
@@ -754,11 +861,6 @@ document.addEventListener("DOMContentLoaded", function () {
       }
   });
 
-  setupModal('modal-bdp','open-modal-bdp-btn','modal-bdp-close-btn','form-bdp');
-  setupModal('modal-btkl','open-modal-btkl-btn','modal-btkl-close-btn','form-btkl');
-  setupModal('modal-bop','open-modal-bop-btn','modal-bop-close-btn','form-bop');
-  setupModal('modal-bj','open-modal-bj-btn','modal-bj-close-btn','form-bj');
-
   // ✅ EDIT BUTTON LOGIC
   document.querySelectorAll(".edit-bb-btn").forEach(btn => {
       btn.addEventListener("click", () => {
@@ -782,6 +884,65 @@ document.addEventListener("DOMContentLoaded", function () {
       });
   });
 
+  // --- Setup Modal Bab 2 (BDP) ---
+  setupModal('modal-bdp', 'open-modal-bdp-btn', 'modal-bdp-close-btn', 'form-bdp');
+
+  // Edit BDP button click handler
+  document.querySelectorAll(".edit-bdp-btn").forEach(btn => {
+      btn.addEventListener("click", () => {
+          document.getElementById("bdp-action").value = "edit_wip";
+          document.getElementById("bdp-item-id").value = btn.dataset.id;
+
+          document.querySelector('#form-bdp select[name="type"]').value = btn.dataset.type;
+          document.querySelector('#form-bdp select[name="product_id"]').value = btn.dataset.product;
+          document.querySelector('#form-bdp input[name="quantity"]').value = btn.dataset.qty;
+          document.querySelector('#form-bdp input[name="harga_satuan"]').value = btn.dataset.harga;
+          document.querySelector('#form-bdp input[name="keterangan"]').value = btn.dataset.keterangan;
+
+          document.getElementById("modal-bdp").classList.remove("opacity-0", "pointer-events-none");
+      });
+  });
+
+  // --- Setup Modal BTKL ---
+  setupModal('modal-btkl', 'open-modal-btkl-btn', 'modal-btkl-close-btn', 'form-btkl');
+
+  // Edit BTKL button
+  document.querySelectorAll(".edit-btkl-btn").forEach(btn => {
+    btn.addEventListener("click", () => {
+      document.getElementById("btkl-action").value = "edit_btkl";
+      document.getElementById("btkl-item-id").value = btn.dataset.id;
+      document.querySelector('#form-btkl select[name="product_id"]').value = btn.dataset.product;
+      document.querySelector('#form-btkl input[name="jenis_tenaga_kerja"]').value = btn.dataset.jenis;
+      document.querySelector('#form-btkl input[name="quantity"]').value = btn.dataset.qty;
+      document.querySelector('#form-btkl input[name="harga_satuan"]').value = btn.dataset.harga;
+      document.querySelector('#form-btkl input[name="keterangan"]').value = btn.dataset.keterangan;
+      document.getElementById("modal-btkl").classList.remove("opacity-0", "pointer-events-none");
+    });
+  });
+
+  setupModal('modal-bop','open-modal-bop-btn','modal-bop-close-btn','form-bop');
+  // === EDIT BOP ===
+  document.querySelectorAll(".edit-bop-btn").forEach(btn => {
+      btn.addEventListener("click", () => {
+          // Change form to edit mode
+          const form = document.getElementById("form-bop");
+          document.querySelector('#form-bop [name="action"]').value = "edit_bop";
+          document.querySelector('#form-bop [name="item_id"]').value = btn.dataset.id;
+
+          // Fill form fields
+          document.querySelector('#form-bop [name="nama_biaya"]').value = btn.dataset.nama;
+          document.querySelector('#form-bop [name="product_id"]').value = btn.dataset.product;
+          document.querySelector('#form-bop [name="quantity"]').value = btn.dataset.qty;
+          document.querySelector('#form-bop [name="harga_satuan"]').value = btn.dataset.harga;
+          document.querySelector('#form-bop [name="keterangan"]').value = btn.dataset.keterangan;
+
+          // Open modal
+          document.getElementById("modal-bop").classList.remove("opacity-0", "pointer-events-none");
+      });
+  });
+
+
+  setupModal('modal-bj','open-modal-bj-btn','modal-bj-close-btn','form-bj');
 });
 </script>
 {% endblock %}

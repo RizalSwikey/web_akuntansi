@@ -425,39 +425,133 @@ def hpp_manufaktur_view(request, report_id):
 
 
         # BDP / WIP
-        if action == "add_wip":
-            HppManufactureWIP.objects.create(
-                report=report,
-                product_id=request.POST.get("product_id"),
-                type=request.POST.get("type"),  # WIP_AWAL / WIP_AKHIR
-                quantity=request.POST.get("quantity", 0),
-                harga_satuan=request.POST.get("harga_satuan", 0),
-            )
-            messages.success(request, "Data BDP berhasil disimpan.")
+        if action in ["add_wip", "edit_wip"]:
+            item_id = request.POST.get("item_id")
+            tipe = request.POST.get("type")
+            qty = to_int(request.POST.get("quantity"))
+            harga = to_int(request.POST.get("harga_satuan"))
+            keterangan = request.POST.get("keterangan", "")
+            product_id = request.POST.get("product_id")
+            total = qty * harga
+
+            if action == "add_wip":
+                HppManufactureWIP.objects.create(
+                    report=report,
+                    product_id=product_id,
+                    type=tipe,
+                    quantity=qty,
+                    harga_satuan=harga,
+                    total=total,
+                    keterangan=keterangan,
+                )
+                messages.success(request, "Data BDP berhasil ditambahkan.")
+            else:
+                item = get_object_or_404(HppManufactureWIP, id=item_id)
+                item.type = tipe
+                item.product_id = product_id
+                item.quantity = qty
+                item.harga_satuan = harga
+                item.total = total
+                item.keterangan = keterangan
+                item.save()
+                messages.success(request, "Data BDP berhasil diperbarui.")
+
+            return redirect("core:hpp_manufaktur", report_id=report.id)
+        
+        if action == "delete_wip":
+            item_id = request.POST.get("item_id")
+            get_object_or_404(HppManufactureWIP, id=item_id).delete()
+            messages.success(request, "Data BDP berhasil dihapus.")
             return redirect("core:hpp_manufaktur", report_id=report.id)
 
-        # BTKL
-        if action == "add_btkl":
-            HppManufactureLabor.objects.create(
-                report=report,
-                product_id=request.POST.get("product_id"),
-                jenis_tenaga_kerja=request.POST.get("jenis_tenaga_kerja", ""),
-                quantity=request.POST.get("quantity", 0),
-                harga_satuan=request.POST.get("harga_satuan", 0),
-            )
-            messages.success(request, "Data BTKL berhasil disimpan.")
+        
+        # BIAYA TENAGA KERJA LANGSUNG (BTKL)
+        if action in ["add_btkl", "edit_btkl"]:
+            item_id = request.POST.get("item_id")
+            product_id = request.POST.get("product_id")
+            jenis_tenaga_kerja = request.POST.get("jenis_tenaga_kerja", "")
+            qty = to_int(request.POST.get("quantity"))
+            harga = to_int(request.POST.get("harga_satuan"))
+            keterangan = request.POST.get("keterangan", "")
+            total = qty * harga
+
+            if action == "add_btkl":
+                HppManufactureLabor.objects.create(
+                    report=report,
+                    product_id=product_id,
+                    jenis_tenaga_kerja=jenis_tenaga_kerja,
+                    quantity=qty,
+                    harga_satuan=harga,
+                    total=total,
+                    keterangan=keterangan,
+                )
+                messages.success(request, "Data BTKL berhasil ditambahkan.")
+            else:
+                item = get_object_or_404(HppManufactureLabor, id=item_id)
+                item.product_id = product_id
+                item.jenis_tenaga_kerja = jenis_tenaga_kerja
+                item.quantity = qty
+                item.harga_satuan = harga
+                item.total = total
+                item.keterangan = keterangan
+                item.save()
+                messages.success(request, "Data BTKL berhasil diperbarui.")
+
             return redirect("core:hpp_manufaktur", report_id=report.id)
 
+        # DELETE
+        if action == "delete_btkl":
+            item_id = request.POST.get("item_id")
+            get_object_or_404(HppManufactureLabor, id=item_id).delete()
+            messages.success(request, "Data BTKL berhasil dihapus.")
+            return redirect("core:hpp_manufaktur", report_id=report.id)
+        
         # BOP
         if action == "add_bop":
+            nama_biaya = request.POST.get("nama_biaya", "")
+            product_id = request.POST.get("product_id") or None
+            quantity = int(request.POST.get("quantity", 0))
+            harga_satuan = int(request.POST.get("harga_satuan", 0))
+            keterangan = request.POST.get("keterangan", "")
+            total = quantity * harga_satuan
+
             HppManufactureOverhead.objects.create(
                 report=report,
-                nama_biaya=request.POST.get("nama_biaya", ""),
-                quantity=request.POST.get("quantity", 0),
-                harga_satuan=request.POST.get("harga_satuan", 0),
+                product_id=product_id,
+                nama_biaya=nama_biaya,
+                quantity=quantity,
+                harga_satuan=harga_satuan,
+                total=total,
+                keterangan=keterangan,
             )
+
             messages.success(request, "Data BOP berhasil disimpan.")
             return redirect("core:hpp_manufaktur", report_id=report.id)
+
+        # EDIT BOP
+        if action == "edit_bop":
+            item_id = request.POST.get("item_id")
+            try:
+                item = HppManufactureOverhead.objects.get(id=item_id, report=report)
+                item.nama_biaya = request.POST.get("nama_biaya", "")
+                item.product_id = request.POST.get("product_id") or None
+                item.quantity = int(request.POST.get("quantity", 0))
+                item.harga_satuan = int(request.POST.get("harga_satuan", 0))
+                item.keterangan = request.POST.get("keterangan", "")
+                item.total = item.quantity * item.harga_satuan
+                item.save()
+                messages.success(request, "Data BOP berhasil diperbarui.")
+            except HppManufactureOverhead.DoesNotExist:
+                messages.error(request, "Data BOP tidak ditemukan.")
+            return redirect("core:hpp_manufaktur", report_id=report.id)
+
+        # DELETE BOP
+        if action == "delete_bop":
+            item_id = request.POST.get("item_id")
+            HppManufactureOverhead.objects.filter(id=item_id, report=report).delete()
+            messages.success(request, "Data BOP berhasil dihapus.")
+            return redirect("core:hpp_manufaktur", report_id=report.id)
+
 
         # BARANG JADI
         if action == "add_fg":

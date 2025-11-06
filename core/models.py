@@ -140,27 +140,7 @@ class HppManufactureMaterial(models.Model):
 
     def __str__(self):
         return f"{self.product.name} - {self.get_type_display()}"
-
-
-class HppManufactureLabor(models.Model):  # BTKL
-    report = models.ForeignKey(FinancialReport, on_delete=models.CASCADE, related_name="hpp_manufaktur_labor")
-    product = models.ForeignKey(Product, on_delete=models.CASCADE, related_name="hpp_manufaktur_labor")
-
-    total = models.BigIntegerField(default=0)
-
-    def __str__(self):
-        return f"{self.product.name} - BTKL (Rp {self.total})"
-
-
-class HppManufactureOverhead(models.Model):  # BOP
-    report = models.ForeignKey(FinancialReport, on_delete=models.CASCADE, related_name="hpp_manufaktur_overhead")
-    product = models.ForeignKey(Product, on_delete=models.CASCADE, related_name="hpp_manufaktur_overhead")
-
-    total = models.BigIntegerField(default=0)
-
-    def __str__(self):
-        return f"{self.product.name} - BOP (Rp {self.total})"
-
+    
 
 class HppManufactureWIP(models.Model):  # Barang Dalam Proses
     TYPE_CHOICES = [
@@ -171,13 +151,43 @@ class HppManufactureWIP(models.Model):  # Barang Dalam Proses
     product = models.ForeignKey(Product, on_delete=models.CASCADE, related_name="hpp_manufaktur_wip")
 
     type = models.CharField(max_length=20, choices=TYPE_CHOICES)
-    total = models.BigIntegerField(default=0)
+    quantity = models.IntegerField(default=0)
+    keterangan = models.CharField(max_length=255, blank=True, null=True)
+    harga_satuan = models.IntegerField(default=0)
+    total = models.IntegerField(default=0)
 
     class Meta:
         ordering = ['product__name', 'type']
 
     def __str__(self):
         return f"{self.product.name} - {self.get_type_display()} (Rp {self.total})"
+
+
+class HppManufactureLabor(models.Model):  # BTKL
+    report = models.ForeignKey(FinancialReport, on_delete=models.CASCADE, related_name="hpp_manufaktur_labor")
+    product = models.ForeignKey(Product, on_delete=models.CASCADE, related_name="hpp_manufaktur_labor")
+
+    jenis_tenaga_kerja = models.CharField(max_length=255, blank=True, null=True)
+    quantity = models.PositiveIntegerField(default=0)
+    harga_satuan = models.PositiveIntegerField(default=0)
+    total = models.PositiveIntegerField(default=0)
+    keterangan = models.CharField(max_length=255, blank=True, null=True)
+
+    def __str__(self):
+        return f"{self.product.name} - BTKL (Rp {self.total})"
+
+
+class HppManufactureOverhead(models.Model):  # BOP
+    report = models.ForeignKey(FinancialReport, on_delete=models.CASCADE)
+    product = models.ForeignKey(Product, on_delete=models.CASCADE, blank=True, null=True)
+    nama_biaya = models.CharField(max_length=255, blank=True, null=True)
+    quantity = models.PositiveIntegerField(default=0)
+    harga_satuan = models.PositiveIntegerField(default=0)
+    total = models.PositiveIntegerField(default=0)
+    keterangan = models.CharField(max_length=255, blank=True, null=True)
+
+    def __str__(self):
+        return f"{self.product.name} - BOP (Rp {self.total})"
 
 
 class HppManufactureFinishedGoods(models.Model):  # Barang Jadi
