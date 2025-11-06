@@ -55,9 +55,9 @@ def calculate_hpp_manufacture(product, data):
     }
 
 def to_int(val, default=0):
-                try:
-                    if val is None or val == "":
-                        return default
-                    return int(float(val))
-                except Exception:
-                    return default
+    try:
+        if val is None or val == "":
+            return default
+        return int(float(val))
+    except Exception:
+        return default
