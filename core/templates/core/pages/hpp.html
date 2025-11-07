@@ -201,7 +201,8 @@
 </div>
 
 <div id="edit-modal" class="fixed inset-0 bg-black/60 flex justify-center items-center z-50 opacity-0 pointer-events-none transition-opacity p-4">
-  <form id="edit-form" method="POST" action="{% url 'core:hpp' report.id %}" class="bg-white p-8 rounded-2xl shadow-xl w-full max-w-3xl space-y-6">
+  
+  <form id="edit-form" method="POST" action="{% url 'core:hpp_dagang' report.id %}" class="bg-white p-8 rounded-2xl shadow-xl w-full max-w-3xl space-y-6">
     {% csrf_token %}
     <input type="hidden" name="action" value="edit_hpp_entry">
     <input type="hidden" id="entry-type" name="category">
@@ -294,15 +295,17 @@ document.addEventListener("DOMContentLoaded", function () {
     document.getElementById("entry-type").value = type;
     document.getElementById("entry-id").value = entryId || '';
     
-    // Set field umum
-    document.getElementById("modal-quantity").value = qty;
-    document.getElementById("modal-keterangan").value = ket || "";
+    // --- PERBAIKAN DI SINI ---
+    // Jika nilainya 0, set ke string kosong "" agar placeholder terlihat
+    document.getElementById("modal-quantity").value = qty == 0 ? "" : qty;
+    document.getElementById("modal-keterangan").value = ket || ""; // 'keterangan' sudah benar
 
-    // Set field spesifik
-    document.getElementById("modal-harga-satuan").value = harga || 0;
-    document.getElementById("modal-diskon").value = diskon || 0;
-    document.getElementById("modal-retur-qty").value = returQty || 0;
-    document.getElementById("modal-ongkir").value = ongkir || 0;
+    // Terapkan logika yang sama untuk field angka lainnya
+    document.getElementById("modal-harga-satuan").value = harga == 0 ? "" : harga;
+    document.getElementById("modal-diskon").value = diskon == 0 ? "" : diskon;
+    document.getElementById("modal-retur-qty").value = returQty == 0 ? "" : returQty;
+    document.getElementById("modal-ongkir").value = ongkir == 0 ? "" : ongkir;
+    // --- AKHIR PERBAIKAN ---
 
     // Tampilkan/sembunyikan field berdasarkan Tipe
     pembelianFields.classList.toggle("hidden", type !== "PEMBELIAN");
