@@ -418,6 +418,7 @@
           </div>
       </div>
     </div>
+
     <div class="bg-white p-8 rounded-2xl shadow-lg mb-8">
       <div class="flex justify-between items-center mb-6">
           <h2 class="text-xl font-bold">Barang Jadi</h2>
@@ -425,90 +426,140 @@
             Tambah Data +
           </button>
       </div>
+      <div class="mb-6">
+        <h3 class="text-lg font-semibold mb-3 text-slate-700">Persediaan Awal Barang Jadi</h3>
+        <div class="grid grid-cols-12 gap-4 items-center border-b pb-2 font-semibold text-sm text-slate-500">
+          <div class="col-span-1">Aksi</div>
+          <div class="col-span-4 p-3">Nama Produk Jadi</div>
+          <div class="col-span-2 p-3">Kuantitas</div>
+          <div class="col-span-2 p-3">Harga Satuan</div>
+          <div class="col-span-2 p-3 text-right">Total</div>
+        </div>
+        <div id="bj-awal-rows" class="divide-y">
+          {% if not bj_awal %}
+              <p class="text-center text-slate-400 p-4 italic js-empty-state">Belum ada data persediaan awal barang jadi.</p>
+          {% endif %}
+          {% for item in bj_awal %}
+          <div class="data-row grid grid-cols-12 gap-4 items-center py-2">
+                <div class="col-span-1 flex justify-center">
+                  <form method="POST" action="" onsubmit="return confirm('Yakin ingin menghapus item ini?');">
+                      {% csrf_token %}
+                      <input type="hidden" name="action" value="delete_fg">
+                      <input type="hidden" name="item_id" value="{{ item.id }}">
+                      <button type="submit" class="remove-row-btn text-slate-400 hover:text-red-500 p-2">
+                            <svg class="w-5 h-5 pointer-events-none" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="m14.74 9-.346 9m-4.788 0L9.26 9m9.968-3.21c.342.052.682.107 1.022.166m-1.022-.165L18.16 19.673a2.25 2.25 0 0 1-2.244 2.077H8.084a2.25 2.25 0 0 1-2.244-2.077L4.772 5.79m14.456 0a48.108 48.108 0 0 0-3.478-.397m-12 .562c.34-.059.68-.114 1.022-.165m0 0a48.11 48.11 0 0 1 3.478-.397m7.5 0v-.916c0-1.18-.91-2.134-2.09-2.201a51.964 51.964 0 0 0-3.32 0c-1.18.067-2.09 1.022-2.09 2.201v.916m7.5 0a48.667 48.667 0 0 0-7.5 0" /></svg>
+                      </button>
+                  </form>
+              </div>
+              <div class="col-span-4 p-3">{{ item.product.name }}</div>
+              <div class="col-span-2 p-3">{{ item.quantity|floatformat:0|intcomma }}</div>
+              <div class="col-span-2 p-3">Rp {{ item.harga_satuan|floatformat:0|intcomma }}</div>
+              <div class="col-span-2 p-3 font-semibold text-right">Rp {{ item.total|floatformat:0|intcomma }}</div>
+          </div>
+          {% endfor %}
+        </div>
+        <div class="grid grid-cols-12 gap-4 items-center border-t pt-3 mt-3 font-bold">
+          <div class="col-span-10 p-3 text-right text-slate-600">Sub Jumlah Persediaan Awal Barang Jadi</div>
+          <div id="bj-awal-total" class="col-span-2 p-3 text-lg text-right">Rp {{ total_bj_awal|floatformat:0|intcomma }}</div>
+        </div>
+        <div id="bj-awal-per-produk-totals" class="mt-2 divide-y border-t pt-2 {% if not totals_bj_awal_per_produk %}hidden{% endif %}">
+          {% for prod_total in totals_bj_awal_per_produk %}
+          <div class="grid grid-cols-12 gap-4 items-center py-1">
+              <div class="col-span-10 p-1 text-right text-sm text-slate-500 italic">Sub Jumlah Persediaan Awal {{ prod_total.product_name }}</div>
+              <div class="col-span-2 p-1 text-sm text-right text-slate-500 italic">Rp {{ prod_total.total|floatformat:0|intcomma }}</div>
+          </div>
+          {% endfor %}
+        </div>
+      </div>
 
       <div class="mb-6">
-          <h3 class="text-lg font-semibold mb-3 text-slate-700">Persediaan Awal Barang Jadi</h3>
-          <div class="grid grid-cols-12 gap-4 items-center border-b pb-2 font-semibold text-sm text-slate-500">
-            <div class="col-span-1">Aksi</div>
-            <div class="col-span-4 p-3">Nama Produk Jadi</div>
-            <div class="col-span-2 p-3">Kuantitas</div>
-            <div class="col-span-2 p-3">Harga Satuan</div>
-            <div class="col-span-2 p-3 text-right">Total</div>
-            <div class="col-span-1 p-3 text-center">Status</div>
-          </div>
-          <div id="bj-awal-rows" class="divide-y">
-            {% if not bj_awal %}
-                <p class="text-center text-slate-400 p-4 italic js-empty-state">Belum ada data persediaan awal barang jadi.</p>
-            {% endif %}
-            {% for item in bj_awal %}
-            <div class="data-row grid grid-cols-12 gap-4 items-center py-2">
-                 <div class="col-span-1 flex justify-center">
-                    <form method="POST" action="" onsubmit="return confirm('Yakin ingin menghapus item ini?');">
-                        {% csrf_token %}
-                        <input type="hidden" name="action" value="delete_fg">
-                        <input type="hidden" name="item_id" value="{{ item.id }}">
-                        <button type="submit" class="remove-row-btn text-slate-400 hover:text-red-500 p-2">
-                             <svg class="w-5 h-5 pointer-events-none" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="m14.74 9-.346 9m-4.788 0L9.26 9m9.968-3.21c.342.052.682.107 1.022.166m-1.022-.165L18.16 19.673a2.25 2.25 0 0 1-2.244 2.077H8.084a2.25 2.25 0 0 1-2.244-2.077L4.772 5.79m14.456 0a48.108 48.108 0 0 0-3.478-.397m-12 .562c.34-.059.68-.114 1.022-.165m0 0a48.11 48.11 0 0 1 3.478-.397m7.5 0v-.916c0-1.18-.91-2.134-2.09-2.201a51.964 51.964 0 0 0-3.32 0c-1.18.067-2.09 1.022-2.09 2.201v.916m7.5 0a48.667 48.667 0 0 0-7.5 0" /></svg>
-                        </button>
-                    </form>
-                </div>
-                <div class="col-span-4 p-3">{{ item.product.name }}</div>
-                <div class="col-span-2 p-3">{{ item.quantity|floatformat:0|intcomma }}</div>
-                <div class="col-span-2 p-3">Rp {{ item.harga_satuan|floatformat:0|intcomma }}</div>
-                <div class="col-span-2 p-3 font-semibold text-right">Rp {{ item.total|floatformat:0|intcomma }}</div>
-                <div class="col-span-1 p-3 text-center text-xs">
-                     {% if item.validation_error %}<span class="text-red-600 font-medium">ERROR</span>{% else %}<span class="text-green-600 font-medium">OK</span>{% endif %}
-                </div>
-            </div>
-            {% endfor %}
-          </div>
-          <div class="grid grid-cols-12 gap-4 items-center border-t pt-3 mt-3 font-bold">
-            <div class="col-span-10 p-3 text-right text-slate-600">Sub Jumlah Persediaan Awal Barang Jadi</div>
-            <div id="bj-awal-total" class="col-span-2 p-3 text-lg text-right">Rp {{ total_bj_awal|floatformat:0|intcomma }}</div>
-          </div>
+      <h3 class="text-lg font-semibold mb-3 text-slate-700">Persediaan Akhir Barang Jadi</h3>
+
+      <!-- Header -->
+      <div class="grid grid-cols-12 gap-4 items-center border-b pb-2 font-semibold text-sm text-slate-500">
+        <div class="col-span-1">Aksi</div>
+        <div class="col-span-4 p-3">Nama Produk Jadi</div>
+        <div class="col-span-2 p-3">Kuantitas</div>
+        <div class="col-span-2 p-3 text-right">Total</div>
+        <div class="col-span-1 p-3 text-center">Status</div>
       </div>
 
-       <div class="mb-6">
-          <h3 class="text-lg font-semibold mb-3 text-slate-700">Persediaan Akhir Barang Jadi</h3>
-          <div class="grid grid-cols-12 gap-4 items-center border-b pb-2 font-semibold text-sm text-slate-500">
-             <div class="col-span-1">Aksi</div>
-            <div class="col-span-4 p-3">Nama Produk Jadi</div>
-            <div class="col-span-2 p-3">Kuantitas</div>
-            <div class="col-span-2 p-3">Harga Satuan</div>
-            <div class="col-span-2 p-3 text-right">Total</div>
-            <div class="col-span-1 p-3 text-center">Status</div>
-          </div>
-          <div id="bj-akhir-rows" class="divide-y">
-            {% if not bj_akhir %}
-                <p class="text-center text-slate-400 p-4 italic js-empty-state">Belum ada data persediaan akhir barang jadi.</p>
-            {% endif %}
-             {% for item in bj_akhir %}
-            <div class="data-row grid grid-cols-12 gap-4 items-center py-2">
-                 <div class="col-span-1 flex justify-center">
-                    <form method="POST" action="" onsubmit="return confirm('Yakin ingin menghapus item ini?');">
-                        {% csrf_token %}
-                        <input type="hidden" name="action" value="delete_fg">
-                        <input type="hidden" name="item_id" value="{{ item.id }}">
-                        <button type="submit" class="remove-row-btn text-slate-400 hover:text-red-500 p-2">
-                             <svg class="w-5 h-5 pointer-events-none" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="m14.74 9-.346 9m-4.788 0L9.26 9m9.968-3.21c.342.052.682.107 1.022.166m-1.022-.165L18.16 19.673a2.25 2.25 0 0 1-2.244 2.077H8.084a2.25 2.25 0 0 1-2.244-2.077L4.772 5.79m14.456 0a48.108 48.108 0 0 0-3.478-.397m-12 .562c.34-.059.68-.114 1.022-.165m0 0a48.11 48.11 0 0 1 3.478-.397m7.5 0v-.916c0-1.18-.91-2.134-2.09-2.201a51.964 51.964 0 0 0-3.32 0c-1.18.067-2.09 1.022-2.09 2.201v.916m7.5 0a48.667 48.667 0 0 0-7.5 0" /></svg>
-                        </button>
-                    </form>
-                </div>
-                <div class="col-span-4 p-3">{{ item.product.name }}</div>
-                <div class="col-span-2 p-3">{{ item.quantity|floatformat:0|intcomma }}</div>
-                <div class="col-span-2 p-3">Rp {{ item.harga_satuan|floatformat:0|intcomma }}</div>
-                <div class="col-span-2 p-3 font-semibold text-right">Rp {{ item.total|floatformat:0|intcomma }}</div>
-                 <div class="col-span-1 p-3 text-center text-xs">
-                     {% if item.validation_error %}<span class="text-red-600 font-medium">ERROR</span>{% else %}<span class="text-green-600 font-medium">OK</span>{% endif %}
-                </div>
+      <!-- Rows -->
+      <div id="bj-akhir-rows" class="divide-y">
+        {% if not bj_akhir %}
+          <p class="text-center text-slate-400 p-4 italic js-empty-state">
+            Belum ada data persediaan akhir barang jadi.
+          </p>
+        {% endif %}
+
+        {% for item in bj_akhir %}
+          <div class="data-row grid grid-cols-12 gap-4 items-center py-2">
+            <!-- Delete -->
+            <div class="col-span-1 flex justify-center">
+              <form method="POST" action="" onsubmit="return confirm('Yakin ingin menghapus item ini?');">
+                {% csrf_token %}
+                <input type="hidden" name="action" value="delete_fg">
+                <input type="hidden" name="item_id" value="{{ item.id }}">
+                <button type="submit" class="remove-row-btn text-slate-400 hover:text-red-500 p-2">
+                  <svg class="w-5 h-5" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"
+                      stroke-width="1.5" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round"
+                          d="m14.74 9-.346 9m-4.788 0L9.26 9m9.968-3.21a48.108 48.108 0 0 0-3.478-.397m-12 .562
+                            c.34-.059.68-.114 1.022-.165m0 0a48.11 48.11 0 0 1 3.478-.397m7.5 0v-.916
+                            c0-1.18-.91-2.134-2.09-2.201a51.964 51.964 0 0 0-3.32 0
+                            c-1.18.067-2.09 1.022-2.09 2.201v.916m7.5 0a48.667 48.667 0 0 0-7.5 0" />
+                  </svg>
+                </button>
+              </form>
             </div>
-            {% endfor %}
+
+            <!-- Data -->
+            <div class="col-span-4 p-3">{{ item.product.name }}</div>
+            <div class="col-span-2 p-3 text-center">{{ item.quantity|default:"-"|floatformat:0|intcomma }}</div>
+            <div class="col-span-2 p-3 font-semibold text-right">
+              Rp {{ item.total_akhir|floatformat:0|intcomma }}
+            </div>
+
+            <!-- Status -->
+            <div class="col-span-3 p-3 text-center text-xs">
+              {% if item.status == "OK" %}
+                <span class="text-green-600 font-medium">OK</span>
+              {% elif "Periksa" in item.status %}
+                <span class="text-red-600 font-medium">{{ item.status }}</span>
+              {% else %}
+                <span class="text-slate-400">-</span>
+              {% endif %}
+            </div>
           </div>
-          <div class="grid grid-cols-12 gap-4 items-center border-t pt-3 mt-3 font-bold">
-            <div class="col-span-10 p-3 text-right text-slate-600">Sub Jumlah Persediaan Akhir Barang Jadi</div>
-            <div id="bj-akhir-total" class="col-span-2 p-3 text-lg text-right">Rp {{ total_bj_akhir|floatformat:0|intcomma }}</div>
-          </div>
+        {% endfor %}
       </div>
+
+
+      <!-- Subtotal -->
+      <div class="grid grid-cols-12 gap-4 items-center border-t pt-3 mt-3 font-bold">
+        <div class="col-span-10 p-3 text-right text-slate-600">
+          Sub Jumlah Persediaan Akhir Barang Jadi
+        </div>
+        <div id="bj-akhir-total" class="col-span-2 p-3 text-lg text-right">
+          Rp {{ total_bj_akhir_calc|floatformat:0|intcomma }}
+        </div>
+      </div>
+
+      <!-- Optional: Per-produk subtotals -->
+      <div id="bj-akhir-per-produk-totals"
+          class="mt-2 divide-y border-t pt-2 {% if not totals_bj_akhir_per_produk %}hidden{% endif %}">
+        {% for prod_total in totals_bj_akhir_per_produk %}
+          <div class="grid grid-cols-12 gap-4 items-center py-1">
+            <div class="col-span-10 p-1 text-right text-sm text-slate-500 italic">
+              Sub Jumlah Persediaan Akhir {{ prod_total.product_name }}
+            </div>
+            <div class="col-span-2 p-1 text-sm text-right text-slate-500 italic">
+              Rp {{ prod_total.total|floatformat:0|intcomma }}
+            </div>
+          </div>
+        {% endfor %}
+      </div>
+    </div>
 
     </div>
     <form method="POST" class="flex justify-end mt-8">
@@ -696,6 +747,7 @@
     </div>
   </form>
 </div>
+
 <div id="modal-bop" class="fixed inset-0 bg-black/60 flex justify-center items-center z-50 transition-opacity opacity-0 pointer-events-none p-4">
   <form id="form-bop" method="POST" action="" class="bg-white p-4 sm:p-8 rounded-2xl shadow-xl w-full max-w-xl space-y-6 overflow-y-auto max-h-[90vh]">
     {% csrf_token %}
@@ -744,6 +796,7 @@
     </div>
   </form>
 </div>
+
 <div id="modal-bj" class="fixed inset-0 bg-black/60 flex justify-center items-center z-50 transition-opacity opacity-0 pointer-events-none p-4">
   <form id="form-bj" method="POST" action="" class="bg-white p-4 sm:p-8 rounded-2xl shadow-xl w-full max-w-lg space-y-6 overflow-y-auto max-h-[90vh]">
     {% csrf_token %}
@@ -754,7 +807,7 @@
     <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
         <div>
             <label for="modal-bj-tipe-data" class="block mb-2 font-semibold">Tipe Data</label>
-            <select id="modal-bj-tipe-data" name="bj_tipe_data" class="w-full p-3 border border-slate-300 rounded-lg" required>
+            <select id="modal-bj-tipe-data" name="tipe_data" class="w-full p-3 border border-slate-300 rounded-lg" required>
                 <option value="">Pilih Tipe</option>
                 <option value="AWAL_BJ">Persediaan Awal Barang Jadi</option>
                 <option value="AKHIR_BJ">Persediaan Akhir Barang Jadi</option>
@@ -762,13 +815,11 @@
         </div>
         <div>
             <label for="modal-bj-product-id" class="block mb-2 font-semibold">Nama Produk Jadi</label>
-            <select id="modal-bj-product-id" name="bj_product_id" class="w-full p-3 border border-slate-300 rounded-lg" required>
+            <select id="modal-bj-product-id" name="product_id" class="w-full p-3 border border-slate-300 rounded-lg" required>
                 <option value="">Pilih Produk</option>
-                {% for product in products_pendapatan %}
+                {% for product in products %}
                 <option value="{{ product.id }}">{{ product.name }}</option>
                 {% endfor %}
-                 <option value="dummy1">Produk A (Contoh)</option>
-                 <option value="dummy2">Produk B (Contoh)</option>
             </select>
         </div>
     </div>
@@ -776,17 +827,17 @@
     <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
         <div>
           <label for="modal-bj-kuantitas" class="block mb-2 font-semibold">Kuantitas</label>
-          <input type="number" id="modal-bj-kuantitas" name="bj_kuantitas" class="w-full p-3 border border-slate-300 rounded-lg" placeholder="0" required>
+          <input type="number" id="modal-bj-kuantitas" name="kuantitas" class="w-full p-3 border border-slate-300 rounded-lg" placeholder="0" required>
         </div>
         <div>
           <label for="modal-bj-harga-satuan" class="block mb-2 font-semibold">Harga Satuan (Rp)</label>
-          <input type="number" id="modal-bj-harga-satuan" name="bj_harga_satuan" class="w-full p-3 border border-slate-300 rounded-lg" placeholder="0" required>
+          <input type="number" id="modal-bj-harga-satuan" name="harga_satuan" class="w-full p-3 border border-slate-300 rounded-lg" placeholder="0" required>
         </div>
     </div>
 
     <div>
         <label for="modal-bj-keterangan" class="block mb-2 font-semibold">Keterangan (Opsional)</label>
-        <input type="text" id="modal-bj-keterangan" name="bj_keterangan" class="w-full p-3 border border-slate-300 rounded-lg" placeholder="Cth: Stok gudang awal bulan">
+        <input type="text" id="modal-bj-keterangan" name="keterangan" class="w-full p-3 border border-slate-300 rounded-lg" placeholder="Cth: Stok gudang awal bulan">
     </div>
 
     <div class="flex justify-end gap-4 pt-4">

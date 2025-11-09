@@ -337,18 +337,20 @@ def hpp_manufaktur_view(request, report_id):
     completion_status = get_completion_status(report)
     products = Product.objects.filter(report=report)
 
+    # Prepare barang diproduksi list early (to fix UnboundLocalError)
+    barang_diproduksi_list = []
+
     # ===========================
     # HANDLE POST (SAVE DATA)
     # ===========================
     if request.method == "POST":
         action = request.POST.get("action")
 
-        # BAHAN BAKU
+        # --- BAHAN BAKU ---
         if action == "add_bb":
             product_id = request.POST.get("product_id")
             product = get_object_or_404(Product, id=product_id, report=report)
 
-            # Read & normalize inputs (single place)
             tipe = request.POST.get("type")  # BB_AWAL / BB_PEMBELIAN / BB_AKHIR
             nama_bb = request.POST.get("nama_bahan_baku", "").strip()
             keterangan = request.POST.get("keterangan", "").strip()
@@ -357,23 +359,19 @@ def hpp_manufaktur_view(request, report_id):
             harga = to_int(request.POST.get("harga_satuan"))
             diskon = to_int(request.POST.get("diskon"))
             retur_qty = to_int(request.POST.get("retur_qty"))
-            # If user provided retur_amount explicitly, use it, otherwise compute from retur_qty*harga
             retur_amount_post = to_int(request.POST.get("retur_amount"))
             retur_amount = to_int(retur_amount_post) if retur_amount_post != 0 else (retur_qty * harga)
             ongkir = to_int(request.POST.get("ongkir"))
 
-            # Validation: retur_qty should not exceed qty (you can relax if needed)
             if retur_qty > qty:
                 messages.error(request, "Retur (Qty) tidak boleh lebih besar dari Kuantitas.")
                 return redirect("core:hpp_manufaktur", report_id=report.id)
 
-            # Compute total according to type
             if tipe in ["BB_AWAL", "BB_AKHIR"]:
                 total = qty * harga
-            else:  # BB_PEMBELIAN
+            else:
                 total = (qty * harga) - diskon - retur_amount + ongkir
 
-            # Create record (use create so multiple lines are allowed)
             HppManufactureMaterial.objects.create(
                 report=report,
                 product=product,
@@ -392,7 +390,6 @@ def hpp_manufaktur_view(request, report_id):
             messages.success(request, "Data bahan baku berhasil disimpan.")
             return redirect("core:hpp_manufaktur", report_id=report.id)
 
-        # EDIT BAHAN BAKU
         if action == "edit_bb":
             item = get_object_or_404(HppManufactureMaterial, id=request.POST.get("item_id"), report=report)
 
@@ -407,7 +404,6 @@ def hpp_manufaktur_view(request, report_id):
             item.ongkir = to_int(request.POST.get("ongkir"))
             item.keterangan = request.POST.get("keterangan", "")
 
-            # recompute total
             if item.type in ["BB_AWAL", "BB_AKHIR"]:
                 item.total = item.quantity * item.harga_satuan
             else:
@@ -417,37 +413,12 @@ def hpp_manufaktur_view(request, report_id):
             messages.success(request, "Data bahan baku berhasil diperbarui.")
             return redirect("core:hpp_manufaktur", report_id=report.id)
 
-        # DELETE BAHAN BAKU
         if action == "delete_bb":
             HppManufactureMaterial.objects.filter(id=request.POST.get("item_id"), report=report).delete()
             messages.success(request, "Data bahan baku berhasil dihapus.")
             return redirect("core:hpp_manufaktur", report_id=report.id)
-        
-        totals_awal_per_produk = (
-            HppManufactureMaterial.objects
-            .filter(report=report, type="BB_AWAL")
-            .values('product__name')
-            .annotate(total=Sum('total'))
-            .order_by('product__name')
-        )
 
-        totals_pembelian_per_produk = (
-            HppManufactureMaterial.objects
-            .filter(report=report, type="BB_PEMBELIAN")
-            .values('product__name')
-            .annotate(total=Sum('total'))
-            .order_by('product__name')
-        )
-
-        totals_akhir_per_produk = (
-            HppManufactureMaterial.objects
-            .filter(report=report, type="BB_AKHIR")
-            .values('product__name')
-            .annotate(total=Sum('total'))
-            .order_by('product__name')
-        )
-
-        # BDP / WIP
+        # --- BDP / WIP ---
         if action in ["add_wip", "edit_wip"]:
             item_id = request.POST.get("item_id")
             tipe = request.POST.get("type")
@@ -480,15 +451,14 @@ def hpp_manufaktur_view(request, report_id):
                 messages.success(request, "Data BDP berhasil diperbarui.")
 
             return redirect("core:hpp_manufaktur", report_id=report.id)
-        
+
         if action == "delete_wip":
             item_id = request.POST.get("item_id")
             get_object_or_404(HppManufactureWIP, id=item_id).delete()
             messages.success(request, "Data BDP berhasil dihapus.")
             return redirect("core:hpp_manufaktur", report_id=report.id)
 
-        
-        # BIAYA TENAGA KERJA LANGSUNG (BTKL)
+        # --- BTKL ---
         if action in ["add_btkl", "edit_btkl"]:
             item_id = request.POST.get("item_id")
             product_id = request.POST.get("product_id")
@@ -519,17 +489,15 @@ def hpp_manufaktur_view(request, report_id):
                 item.keterangan = keterangan
                 item.save()
                 messages.success(request, "Data BTKL berhasil diperbarui.")
-
             return redirect("core:hpp_manufaktur", report_id=report.id)
 
-        # DELETE
         if action == "delete_btkl":
             item_id = request.POST.get("item_id")
             get_object_or_404(HppManufactureLabor, id=item_id).delete()
             messages.success(request, "Data BTKL berhasil dihapus.")
             return redirect("core:hpp_manufaktur", report_id=report.id)
-        
-        # BOP
+
+        # --- BOP ---
         if action == "add_bop":
             nama_biaya = request.POST.get("nama_biaya", "")
             product_id = request.POST.get("product_id") or None
@@ -547,111 +515,134 @@ def hpp_manufaktur_view(request, report_id):
                 total=total,
                 keterangan=keterangan,
             )
-
             messages.success(request, "Data BOP berhasil disimpan.")
             return redirect("core:hpp_manufaktur", report_id=report.id)
 
-        # EDIT BOP
         if action == "edit_bop":
             item_id = request.POST.get("item_id")
-            try:
-                item = HppManufactureOverhead.objects.get(id=item_id, report=report)
-                item.nama_biaya = request.POST.get("nama_biaya", "")
-                item.product_id = request.POST.get("product_id") or None
-                item.quantity = int(request.POST.get("quantity", 0))
-                item.harga_satuan = int(request.POST.get("harga_satuan", 0))
-                item.keterangan = request.POST.get("keterangan", "")
-                item.total = item.quantity * item.harga_satuan
-                item.save()
-                messages.success(request, "Data BOP berhasil diperbarui.")
-            except HppManufactureOverhead.DoesNotExist:
-                messages.error(request, "Data BOP tidak ditemukan.")
+            item = get_object_or_404(HppManufactureOverhead, id=item_id, report=report)
+            item.nama_biaya = request.POST.get("nama_biaya", "")
+            item.product_id = request.POST.get("product_id") or None
+            item.quantity = int(request.POST.get("quantity", 0))
+            item.harga_satuan = int(request.POST.get("harga_satuan", 0))
+            item.keterangan = request.POST.get("keterangan", "")
+            item.total = item.quantity * item.harga_satuan
+            item.save()
+            messages.success(request, "Data BOP berhasil diperbarui.")
             return redirect("core:hpp_manufaktur", report_id=report.id)
 
-        # DELETE BOP
         if action == "delete_bop":
             item_id = request.POST.get("item_id")
             HppManufactureOverhead.objects.filter(id=item_id, report=report).delete()
             messages.success(request, "Data BOP berhasil dihapus.")
             return redirect("core:hpp_manufaktur", report_id=report.id)
 
+        # --- BARANG JADI (FG_AWAL & FG_AKHIR) ---
+        if action in ["add_fg", "edit_fg"]:
+            item_id = request.POST.get("item_id")
+            tipe_data = request.POST.get("tipe_data")
+            product_id = request.POST.get("product_id")
+            qty = to_int(request.POST.get("kuantitas"))
+            harga_satuan = to_int(request.POST.get("harga_satuan"))
+            keterangan = request.POST.get("keterangan", "")
 
-        # BARANG JADI
-        if action == "add_fg":
-            tipe = request.POST.get("bj_tipe_data")  # AWAL_BJ / AKHIR_BJ
-            HppManufactureFinishedGoods.objects.create(
-                report=report,
-                product_id=request.POST.get("bj_product_id"),
-                type="FG_AWAL" if tipe == "AWAL_BJ" else "FG_AKHIR",
-                quantity=request.POST.get("bj_kuantitas", 0),
-                harga_satuan=request.POST.get("bj_harga_satuan", 0),
-                keterangan=request.POST.get("bj_keterangan", "")
-            )
-            messages.success(request, "Data Barang Jadi berhasil disimpan.")
+            total = qty * harga_satuan
+            status = "OK"
+
+            if tipe_data == "AKHIR_BJ":
+                # Calculate automatically
+                bj_awal_map = {x.product.id: x for x in HppManufactureFinishedGoods.objects.filter(report=report, type="FG_AWAL")}
+                produksi_map = {x["product_name"]: x for x in barang_diproduksi_list}
+
+                awal = bj_awal_map.get(int(product_id))
+                qty_awal = awal.quantity if awal else 0
+                harga_awal = awal.harga_satuan if awal else 0
+
+                product_obj = Product.objects.filter(id=product_id).first()
+                product_name = product_obj.name if product_obj else None
+
+                produksi = produksi_map.get(product_name, {})
+                qty_produksi = produksi.get("qty_diproduksi", 0)
+                harga_produksi = produksi.get("hpp_per_unit", 0)
+
+                if qty == 0:
+                    status = "-"
+                    total = 0
+                elif qty > (qty_awal + qty_produksi):
+                    status = "Periksa Kembali Jumlah Persediaan Barang Jadi Akhir"
+                    total = 0
+                else:
+                    total = (qty_awal * harga_awal) + ((qty - qty_awal) * harga_produksi)
+                    status = "OK"
+
+            tipe = "FG_AWAL" if tipe_data == "AWAL_BJ" else "FG_AKHIR"
+
+            if action == "add_fg":
+                HppManufactureFinishedGoods.objects.create(
+                    report=report,
+                    product_id=product_id,
+                    type=tipe,
+                    quantity=qty,
+                    harga_satuan=harga_satuan,
+                    total=total,
+                    keterangan=keterangan,
+                )
+                messages.success(request, f"Data Barang Jadi ({'Akhir' if tipe == 'FG_AKHIR' else 'Awal'}) berhasil disimpan.")
+            else:
+                item = get_object_or_404(HppManufactureFinishedGoods, id=item_id)
+                item.type = tipe
+                item.product_id = product_id
+                item.quantity = qty
+                item.harga_satuan = harga_satuan
+                item.total = total
+                item.keterangan = keterangan
+                item.save()
+                messages.success(request, "Data Barang Jadi berhasil diperbarui.")
             return redirect("core:hpp_manufaktur", report_id=report.id)
 
-        # NEXT STEP
+        if action == "delete_fg":
+            item_id = request.POST.get("item_id")
+            get_object_or_404(HppManufactureFinishedGoods, id=item_id).delete()
+            messages.success(request, "Data Persediaan Barang Jadi berhasil dihapus.")
+            return redirect("core:hpp_manufaktur", report_id=report.id)
+
         if "next_step" in request.POST:
             return redirect("core:beban_usaha", report_id=report.id)
 
-    # ===========================
-    # LOAD DATA FOR TEMPLATE
-    # ===========================
+    # --- Load All Data for Template ---
     bb_awal = HppManufactureMaterial.objects.filter(report=report, type="BB_AWAL")
     bb_pembelian = HppManufactureMaterial.objects.filter(report=report, type="BB_PEMBELIAN")
     bb_akhir = HppManufactureMaterial.objects.filter(report=report, type="BB_AKHIR")
-
     bdp_awal = HppManufactureWIP.objects.filter(report=report, type="WIP_AWAL")
     bdp_akhir = HppManufactureWIP.objects.filter(report=report, type="WIP_AKHIR")
-
     btkl_items = HppManufactureLabor.objects.filter(report=report)
     bop_items = HppManufactureOverhead.objects.filter(report=report)
-
     bj_awal = HppManufactureFinishedGoods.objects.filter(report=report, type="FG_AWAL")
     bj_akhir = HppManufactureFinishedGoods.objects.filter(report=report, type="FG_AKHIR")
 
-    # ======== Grouped Totals Per Product ========
+     # Helper to group totals per product
     def grouped_totals(queryset):
-        """Helper for grouped subtotal per product"""
         if not queryset.exists():
             return []
         return (
             queryset.values("product", product_name=F("product__name"))
-                    .annotate(total=Sum("total"))
-                    .order_by("product__name")
+            .annotate(total=Sum("total"))
+            .order_by("product__name")
         )
 
-    # SUMS
-    total_bahan_baku_awal = bb_awal.aggregate(Sum('total'))['total__sum'] or 0
-    total_bahan_baku_pembelian = bb_pembelian.aggregate(Sum('total'))['total__sum'] or 0
-    total_bahan_baku_akhir = bb_akhir.aggregate(Sum('total'))['total__sum'] or 0
-
-    total_bdp_awal = bdp_awal.aggregate(Sum('total'))['total__sum'] or 0
-    total_bdp_akhir = bdp_akhir.aggregate(Sum('total'))['total__sum'] or 0
-
-    total_btkl = btkl_items.aggregate(Sum('total'))['total__sum'] or 0
-    total_bop = bop_items.aggregate(Sum('total'))['total__sum'] or 0
-
-    total_bj_awal = bj_awal.aggregate(Sum('total'))['total__sum'] or 0
-    total_bj_akhir = bj_akhir.aggregate(Sum('total'))['total__sum'] or 0
-
-    # --- subtotal per product (used in template, hidden until data exists)
     totals_awal_per_produk = grouped_totals(bb_awal)
     totals_pembelian_per_produk = grouped_totals(bb_pembelian)
     totals_akhir_per_produk = grouped_totals(bb_akhir)
-
     totals_bdp_awal_per_produk = grouped_totals(bdp_awal)
     totals_bdp_akhir_per_produk = grouped_totals(bdp_akhir)
-    
     totals_btkl_per_produk = grouped_totals(btkl_items)
-
     totals_bop_per_produk = grouped_totals(bop_items)
+    totals_bj_awal_per_produk = grouped_totals(bj_awal)
+    totals_bj_akhir_per_produk = grouped_totals(bj_akhir)
 
-
-    # Barang yang diproduksi calculation
-    barang_diproduksi_list = []
-
-    # Convert QuerySets to dict for easy lookup
+    # ======================================================
+    # STEP 2 — BARANG DIPRODUKSI CALCULATION (used later)
+    # ======================================================
     def map_totals(qs):
         return {row["product"]: row["total"] for row in qs}
 
@@ -663,14 +654,13 @@ def hpp_manufaktur_view(request, report_id):
     btkl_map = map_totals(totals_btkl_per_produk)
     bop_map = map_totals(totals_bop_per_produk)
 
-    # Quantity lookup for BDP awal/akhir
     def map_qty(qs):
         return {w.product.id: w.quantity for w in qs}
 
     bdp_awal_qty = map_qty(bdp_awal)
     bdp_akhir_qty = map_qty(bdp_akhir)
 
-    # Loop through all products that appear in any subtotal
+    barang_diproduksi_list = []
     product_ids = set(bb_awal_map.keys()) | set(bb_pembelian_map.keys()) | set(bb_akhir_map.keys())
 
     for pid in product_ids:
@@ -678,12 +668,10 @@ def hpp_manufaktur_view(request, report_id):
         if not product:
             continue
 
-        # Get quantities
         qty_awal = bdp_awal_qty.get(pid, 0)
         qty_akhir = bdp_akhir_qty.get(pid, 0)
         qty_diproduksi = max(qty_akhir - qty_awal, 0)
 
-        # Compute total
         total_produksi = (
             (bb_awal_map.get(pid, 0) + bb_pembelian_map.get(pid, 0) - bb_akhir_map.get(pid, 0))
             + (bdp_akhir_map.get(pid, 0) - bdp_awal_map.get(pid, 0))
@@ -702,55 +690,705 @@ def hpp_manufaktur_view(request, report_id):
             "hpp_per_unit": hpp_per_unit,
         })
 
-    total_barang_diproduksi = sum(item["total_produksi"] for item in barang_diproduksi_list)
-    total_qty_produksi = sum(item["qty_diproduksi"] for item in barang_diproduksi_list)
+    # ======================================================
+    # STEP 3 — HANDLE POST ACTIONS (Now barang_diproduksi_list is READY)
+    # ======================================================
+    if request.method == "POST":
+        action = request.POST.get("action")
+
+        # ------------------------
+        # BARANG JADI
+        # ------------------------
+        if action in ["add_fg", "edit_fg"]:
+            item_id = request.POST.get("item_id")
+            tipe_data = request.POST.get("tipe_data")
+            product_id = request.POST.get("product_id")
+            qty = to_int(request.POST.get("kuantitas"))
+            harga_satuan = to_int(request.POST.get("harga_satuan"))
+            keterangan = request.POST.get("keterangan", "")
+
+            total = qty * harga_satuan
+            status = "OK"
+
+            if tipe_data == "AKHIR_BJ":
+                bj_awal_map = {x.product.id: x for x in bj_awal}
+                produksi_map = {x["product_name"]: x for x in barang_diproduksi_list}
+
+                awal = bj_awal_map.get(int(product_id))
+                qty_awal = awal.quantity if awal else 0
+                harga_awal = awal.harga_satuan if awal else 0
+
+                product_obj = Product.objects.filter(id=product_id).first()
+                product_name = product_obj.name if product_obj else None
+                produksi = produksi_map.get(product_name, {})
+                qty_produksi = produksi.get("qty_diproduksi", 0)
+                harga_produksi = produksi.get("hpp_per_unit", 0)
+
+                if qty == 0:
+                    status = "-"
+                    total = 0
+                elif qty > (qty_awal + qty_produksi):
+                    status = "Periksa Kembali Jumlah Persediaan Barang Jadi Akhir"
+                    total = 0
+                else:
+                    total = (qty_awal * harga_awal) + ((qty - qty_awal) * harga_produksi)
+                    status = "OK"
+
+            tipe = "FG_AWAL" if tipe_data == "AWAL_BJ" else "FG_AKHIR"
+
+            if action == "add_fg":
+                HppManufactureFinishedGoods.objects.create(
+                    report=report,
+                    product_id=product_id,
+                    type=tipe,
+                    quantity=qty,
+                    harga_satuan=harga_satuan,
+                    total=total,
+                    keterangan=keterangan,
+                    status=status,  # ✅ important fix
+                )
+                messages.success(
+                    request,
+                    f"Data Persediaan Barang Jadi ({'Akhir' if tipe == 'FG_AKHIR' else 'Awal'}) berhasil disimpan."
+                )
+            else:
+                item = get_object_or_404(HppManufactureFinishedGoods, id=item_id)
+                item.type = tipe
+                item.product_id = product_id
+                item.quantity = qty
+                item.harga_satuan = harga_satuan
+                item.total = total
+                item.keterangan = keterangan
+                item.status = status  # ✅ update too
+                item.save()
+                messages.success(request, "Data Barang Jadi berhasil diperbarui.")
+
+            return redirect("core:hpp_manufaktur", report_id=report.id)
+
+        if action == "delete_fg":
+            item_id = request.POST.get("item_id")
+            get_object_or_404(HppManufactureFinishedGoods, id=item_id).delete()
+            messages.success(request, "Data Barang Jadi berhasil dihapus.")
+            return redirect("core:hpp_manufaktur", report_id=report.id)
+
+        # handle next step
+        if "next_step" in request.POST:
+            return redirect("core:beban_usaha", report_id=report.id)
+
+    # ======================================================
+    # STEP 4 — FINAL CALC FOR TEMPLATE DISPLAY (bj_akhir_calc)
+    # ======================================================
+    bj_awal_map = {x.product.id: x for x in bj_awal}
+    produksi_map = {x["product_name"]: x for x in barang_diproduksi_list}
+
+    for akhir in bj_akhir:
+        product_name = akhir.product.name if akhir.product else None
+        if not product_name:
+            akhir.status = "-"
+            akhir.total_akhir = 0
+            continue
+
+        qty_akhir = akhir.quantity or 0
+
+        awal = bj_awal_map.get(akhir.product.id)
+        qty_awal = awal.quantity if awal else 0
+        harga_awal = awal.harga_satuan if awal else 0
+
+        produksi = produksi_map.get(product_name, {})
+        qty_produksi = produksi.get("qty_diproduksi", 0)
+        harga_produksi = produksi.get("hpp_per_unit", 0)
+
+        # Apply logic
+        if qty_akhir == 0:
+            akhir.status = "-"
+            akhir.total_akhir = 0
+        elif qty_akhir > (qty_awal + qty_produksi):
+            akhir.status = "Periksa Kembali Jumlah Persediaan Barang Jadi Akhir"
+            akhir.total_akhir = 0
+        else:
+            akhir.total_akhir = (qty_awal * harga_awal) + ((qty_akhir - qty_awal) * harga_produksi)
+            akhir.status = "OK"
+
+    # subtotal
+    total_bj_akhir_calc = sum(getattr(x, "total_akhir", 0) for x in bj_akhir)
 
 
+    # ======================================================
+    # STEP 5 — RENDER TEMPLATE
+    # ======================================================
     return render(request, "core/pages/hpp_manufaktur.html", {
         "report": report,
         "products": products,
         "completion_status": completion_status,
 
-        # bahan baku
         "bb_awal": bb_awal,
         "bb_pembelian": bb_pembelian,
         "bb_akhir": bb_akhir,
-        "total_bahan_baku_awal": total_bahan_baku_awal,
-        "total_bahan_baku_pembelian": total_bahan_baku_pembelian,
-        "total_bahan_baku_akhir": total_bahan_baku_akhir,
-        # grouped sub total per product
+        "bdp_awal": bdp_awal,
+        "bdp_akhir": bdp_akhir,
+        "btkl_items": btkl_items,
+        "bop_items": bop_items,
+        "bj_awal": bj_awal,
+        "bj_akhir": bj_akhir,
+
+        # Totals
         "totals_awal_per_produk": totals_awal_per_produk,
         "totals_pembelian_per_produk": totals_pembelian_per_produk,
         "totals_akhir_per_produk": totals_akhir_per_produk,
-
-        # WIP/BDP
-        "bdp_awal": bdp_awal,
-        "bdp_akhir": bdp_akhir,
-        "total_bdp_awal": total_bdp_awal,
-        "total_bdp_akhir": total_bdp_akhir,
-        # grouped sub total per product
         "totals_bdp_awal_per_produk": totals_bdp_awal_per_produk,
         "totals_bdp_akhir_per_produk": totals_bdp_akhir_per_produk,
-        
-        # BTKL & BOP
-        "btkl_items": btkl_items,
-        "total_btkl": total_btkl,
         "totals_btkl_per_produk": totals_btkl_per_produk,
-        "bop_items": bop_items,
-        "total_bop": total_bop,
         "totals_bop_per_produk": totals_bop_per_produk,
+        "totals_bj_awal_per_produk": totals_bj_awal_per_produk,
+        "totals_bj_akhir_per_produk": totals_bj_akhir_per_produk,
 
-        # barang yang diproduksi
         "barang_diproduksi_list": barang_diproduksi_list,
-        "total_barang_diproduksi": total_barang_diproduksi,
-        "total_qty_produksi": total_qty_produksi,
-
-        # FG
-        "bj_awal": bj_awal,
-        "bj_akhir": bj_akhir,
-        "total_bj_awal": total_bj_awal,
-        "total_bj_akhir": total_bj_akhir,
+        "total_bj_akhir_calc": total_bj_akhir_calc,
     })
+
+
+# @login_required(login_url='core:login')
+# def hpp_manufaktur_view(request, report_id):
+#     report = get_object_or_404(FinancialReport, id=report_id, user=request.user)
+#     completion_status = get_completion_status(report)
+#     products = Product.objects.filter(report=report)
+#     barang_diproduksi_list = []
+
+#     # ===========================
+#     # HANDLE POST (SAVE DATA)
+#     # ===========================
+#     if request.method == "POST":
+#         action = request.POST.get("action")
+
+#         # BAHAN BAKU
+#         if action == "add_bb":
+#             product_id = request.POST.get("product_id")
+#             product = get_object_or_404(Product, id=product_id, report=report)
+
+#             # Read & normalize inputs (single place)
+#             tipe = request.POST.get("type")  # BB_AWAL / BB_PEMBELIAN / BB_AKHIR
+#             nama_bb = request.POST.get("nama_bahan_baku", "").strip()
+#             keterangan = request.POST.get("keterangan", "").strip()
+
+#             qty = to_int(request.POST.get("quantity"))
+#             harga = to_int(request.POST.get("harga_satuan"))
+#             diskon = to_int(request.POST.get("diskon"))
+#             retur_qty = to_int(request.POST.get("retur_qty"))
+#             # If user provided retur_amount explicitly, use it, otherwise compute from retur_qty*harga
+#             retur_amount_post = to_int(request.POST.get("retur_amount"))
+#             retur_amount = to_int(retur_amount_post) if retur_amount_post != 0 else (retur_qty * harga)
+#             ongkir = to_int(request.POST.get("ongkir"))
+
+#             # Validation: retur_qty should not exceed qty (you can relax if needed)
+#             if retur_qty > qty:
+#                 messages.error(request, "Retur (Qty) tidak boleh lebih besar dari Kuantitas.")
+#                 return redirect("core:hpp_manufaktur", report_id=report.id)
+
+#             # Compute total according to type
+#             if tipe in ["BB_AWAL", "BB_AKHIR"]:
+#                 total = qty * harga
+#             else:  # BB_PEMBELIAN
+#                 total = (qty * harga) - diskon - retur_amount + ongkir
+
+#             # Create record (use create so multiple lines are allowed)
+#             HppManufactureMaterial.objects.create(
+#                 report=report,
+#                 product=product,
+#                 nama_bahan_baku=nama_bb,
+#                 type=tipe,
+#                 quantity=qty,
+#                 harga_satuan=harga,
+#                 diskon=diskon,
+#                 retur_qty=retur_qty,
+#                 retur_amount=retur_amount,
+#                 ongkir=ongkir,
+#                 total=total,
+#                 keterangan=keterangan,
+#             )
+
+#             messages.success(request, "Data bahan baku berhasil disimpan.")
+#             return redirect("core:hpp_manufaktur", report_id=report.id)
+
+#         # EDIT BAHAN BAKU
+#         if action == "edit_bb":
+#             item = get_object_or_404(HppManufactureMaterial, id=request.POST.get("item_id"), report=report)
+
+#             item.type = request.POST.get("type")
+#             item.product_id = request.POST.get("product_id")
+#             item.nama_bahan_baku = request.POST.get("nama_bahan_baku")
+#             item.quantity = to_int(request.POST.get("quantity"))
+#             item.harga_satuan = to_int(request.POST.get("harga_satuan"))
+#             item.diskon = to_int(request.POST.get("diskon"))
+#             item.retur_qty = to_int(request.POST.get("retur_qty"))
+#             item.retur_amount = to_int(request.POST.get("retur_amount"))
+#             item.ongkir = to_int(request.POST.get("ongkir"))
+#             item.keterangan = request.POST.get("keterangan", "")
+
+#             # recompute total
+#             if item.type in ["BB_AWAL", "BB_AKHIR"]:
+#                 item.total = item.quantity * item.harga_satuan
+#             else:
+#                 item.total = (item.quantity * item.harga_satuan) - item.diskon - item.retur_amount + item.ongkir
+
+#             item.save()
+#             messages.success(request, "Data bahan baku berhasil diperbarui.")
+#             return redirect("core:hpp_manufaktur", report_id=report.id)
+
+#         # DELETE BAHAN BAKU
+#         if action == "delete_bb":
+#             HppManufactureMaterial.objects.filter(id=request.POST.get("item_id"), report=report).delete()
+#             messages.success(request, "Data bahan baku berhasil dihapus.")
+#             return redirect("core:hpp_manufaktur", report_id=report.id)
+        
+#         totals_awal_per_produk = (
+#             HppManufactureMaterial.objects
+#             .filter(report=report, type="BB_AWAL")
+#             .values('product__name')
+#             .annotate(total=Sum('total'))
+#             .order_by('product__name')
+#         )
+
+#         totals_pembelian_per_produk = (
+#             HppManufactureMaterial.objects
+#             .filter(report=report, type="BB_PEMBELIAN")
+#             .values('product__name')
+#             .annotate(total=Sum('total'))
+#             .order_by('product__name')
+#         )
+
+#         totals_akhir_per_produk = (
+#             HppManufactureMaterial.objects
+#             .filter(report=report, type="BB_AKHIR")
+#             .values('product__name')
+#             .annotate(total=Sum('total'))
+#             .order_by('product__name')
+#         )
+
+#         # BDP / WIP
+#         if action in ["add_wip", "edit_wip"]:
+#             item_id = request.POST.get("item_id")
+#             tipe = request.POST.get("type")
+#             qty = to_int(request.POST.get("quantity"))
+#             harga = to_int(request.POST.get("harga_satuan"))
+#             keterangan = request.POST.get("keterangan", "")
+#             product_id = request.POST.get("product_id")
+#             total = qty * harga
+
+#             if action == "add_wip":
+#                 HppManufactureWIP.objects.create(
+#                     report=report,
+#                     product_id=product_id,
+#                     type=tipe,
+#                     quantity=qty,
+#                     harga_satuan=harga,
+#                     total=total,
+#                     keterangan=keterangan,
+#                 )
+#                 messages.success(request, "Data BDP berhasil ditambahkan.")
+#             else:
+#                 item = get_object_or_404(HppManufactureWIP, id=item_id)
+#                 item.type = tipe
+#                 item.product_id = product_id
+#                 item.quantity = qty
+#                 item.harga_satuan = harga
+#                 item.total = total
+#                 item.keterangan = keterangan
+#                 item.save()
+#                 messages.success(request, "Data BDP berhasil diperbarui.")
+
+#             return redirect("core:hpp_manufaktur", report_id=report.id)
+        
+#         if action == "delete_wip":
+#             item_id = request.POST.get("item_id")
+#             get_object_or_404(HppManufactureWIP, id=item_id).delete()
+#             messages.success(request, "Data BDP berhasil dihapus.")
+#             return redirect("core:hpp_manufaktur", report_id=report.id)
+
+        
+#         # BIAYA TENAGA KERJA LANGSUNG (BTKL)
+#         if action in ["add_btkl", "edit_btkl"]:
+#             item_id = request.POST.get("item_id")
+#             product_id = request.POST.get("product_id")
+#             jenis_tenaga_kerja = request.POST.get("jenis_tenaga_kerja", "")
+#             qty = to_int(request.POST.get("quantity"))
+#             harga = to_int(request.POST.get("harga_satuan"))
+#             keterangan = request.POST.get("keterangan", "")
+#             total = qty * harga
+
+#             if action == "add_btkl":
+#                 HppManufactureLabor.objects.create(
+#                     report=report,
+#                     product_id=product_id,
+#                     jenis_tenaga_kerja=jenis_tenaga_kerja,
+#                     quantity=qty,
+#                     harga_satuan=harga,
+#                     total=total,
+#                     keterangan=keterangan,
+#                 )
+#                 messages.success(request, "Data BTKL berhasil ditambahkan.")
+#             else:
+#                 item = get_object_or_404(HppManufactureLabor, id=item_id)
+#                 item.product_id = product_id
+#                 item.jenis_tenaga_kerja = jenis_tenaga_kerja
+#                 item.quantity = qty
+#                 item.harga_satuan = harga
+#                 item.total = total
+#                 item.keterangan = keterangan
+#                 item.save()
+#                 messages.success(request, "Data BTKL berhasil diperbarui.")
+
+#             return redirect("core:hpp_manufaktur", report_id=report.id)
+
+#         # DELETE
+#         if action == "delete_btkl":
+#             item_id = request.POST.get("item_id")
+#             get_object_or_404(HppManufactureLabor, id=item_id).delete()
+#             messages.success(request, "Data BTKL berhasil dihapus.")
+#             return redirect("core:hpp_manufaktur", report_id=report.id)
+        
+#         # BOP
+#         if action == "add_bop":
+#             nama_biaya = request.POST.get("nama_biaya", "")
+#             product_id = request.POST.get("product_id") or None
+#             quantity = int(request.POST.get("quantity", 0))
+#             harga_satuan = int(request.POST.get("harga_satuan", 0))
+#             keterangan = request.POST.get("keterangan", "")
+#             total = quantity * harga_satuan
+
+#             HppManufactureOverhead.objects.create(
+#                 report=report,
+#                 product_id=product_id,
+#                 nama_biaya=nama_biaya,
+#                 quantity=quantity,
+#                 harga_satuan=harga_satuan,
+#                 total=total,
+#                 keterangan=keterangan,
+#             )
+
+#             messages.success(request, "Data BOP berhasil disimpan.")
+#             return redirect("core:hpp_manufaktur", report_id=report.id)
+
+#         # EDIT BOP
+#         if action == "edit_bop":
+#             item_id = request.POST.get("item_id")
+#             try:
+#                 item = HppManufactureOverhead.objects.get(id=item_id, report=report)
+#                 item.nama_biaya = request.POST.get("nama_biaya", "")
+#                 item.product_id = request.POST.get("product_id") or None
+#                 item.quantity = int(request.POST.get("quantity", 0))
+#                 item.harga_satuan = int(request.POST.get("harga_satuan", 0))
+#                 item.keterangan = request.POST.get("keterangan", "")
+#                 item.total = item.quantity * item.harga_satuan
+#                 item.save()
+#                 messages.success(request, "Data BOP berhasil diperbarui.")
+#             except HppManufactureOverhead.DoesNotExist:
+#                 messages.error(request, "Data BOP tidak ditemukan.")
+#             return redirect("core:hpp_manufaktur", report_id=report.id)
+
+#         # DELETE BOP
+#         if action == "delete_bop":
+#             item_id = request.POST.get("item_id")
+#             HppManufactureOverhead.objects.filter(id=item_id, report=report).delete()
+#             messages.success(request, "Data BOP berhasil dihapus.")
+#             return redirect("core:hpp_manufaktur", report_id=report.id)
+
+
+#         # BARANG JADI (Awal & Akhir)
+#         if action in ["add_fg", "edit_fg"]:
+#             item_id = request.POST.get("item_id")
+#             tipe_data = request.POST.get("tipe_data")
+#             product_id = request.POST.get("product_id")
+#             qty = to_int(request.POST.get("kuantitas"))
+#             harga_satuan = to_int(request.POST.get("harga_satuan"))
+#             keterangan = request.POST.get("keterangan", "")
+
+#             # Default total & status
+#             total = qty * harga_satuan
+#             status = "OK"
+
+#             # --- Persediaan Akhir Auto Calculation ---
+#             if tipe_data == "AKHIR_BJ":
+
+
+#                 bj_awal_map = {
+#                     x.product.id: x for x in HppManufactureFinishedGoods.objects.filter(report=report, type="FG_AWAL")
+#                 }
+#                 produksi_map = {x["product_name"]: x for x in barang_diproduksi_list}
+
+#                 awal = bj_awal_map.get(int(product_id))
+#                 qty_awal = awal.quantity if awal else 0
+#                 harga_awal = awal.harga_satuan if awal else 0
+
+#                 # Safely resolve product name
+#                 product_obj = Product.objects.filter(id=product_id).first()
+#                 product_name = product_obj.name if product_obj else None
+
+#                 produksi = produksi_map.get(product_name, {})
+#                 qty_produksi = produksi.get("qty_diproduksi", 0)
+#                 harga_produksi = produksi.get("hpp_per_unit", 0)
+
+#                 # Apply Excel-style rule
+#                 if qty == 0:
+#                     status = "-"
+#                     total = 0
+#                 elif qty > (qty_awal + qty_produksi):
+#                     status = "Periksa Kembali Jumlah Persediaan Barang Jadi Akhir"
+#                     total = 0
+#                 else:
+#                     total = (qty_awal * harga_awal) + ((qty - qty_awal) * harga_produksi)
+#                     status = "OK"
+
+#             # --- Save / Update ---
+#             tipe = "FG_AWAL" if tipe_data == "AWAL_BJ" else "FG_AKHIR"
+
+#             if action == "add_fg":
+#                 HppManufactureFinishedGoods.objects.create(
+#                     report=report,
+#                     product_id=product_id,
+#                     type=tipe,
+#                     quantity=qty,
+#                     harga_satuan=harga_satuan,
+#                     total=total,
+#                     keterangan=keterangan,
+#                 )
+#                 messages.success(
+#                     request, f"Data Persediaan Barang Jadi ({'Akhir' if tipe == 'FG_AKHIR' else 'Awal'}) berhasil disimpan."
+#                 )
+#             else:
+#                 item = get_object_or_404(HppManufactureFinishedGoods, id=item_id)
+#                 item.type = tipe
+#                 item.product_id = product_id   # ✅ FIX: previously `item.product = product_id` (wrong)
+#                 item.quantity = qty
+#                 item.harga_satuan = harga_satuan
+#                 item.total = total
+#                 item.keterangan = keterangan
+#                 item.save()
+#                 messages.success(request, "Data Barang Jadi berhasil diperbarui.")
+
+#             return redirect("core:hpp_manufaktur", report_id=report.id)
+
+
+#         if action == "delete_fg":
+#             item_id = request.POST.get("item_id")
+#             get_object_or_404(HppManufactureFinishedGoods, id=item_id).delete()
+#             messages.success(request, "Data Persediaan Awal Barang Jadi berhasil dihapus.")
+#             return redirect("core:hpp_manufaktur", report_id=report.id)
+
+
+#         # NEXT STEP
+#         if "next_step" in request.POST:
+#             return redirect("core:beban_usaha", report_id=report.id)
+
+#     # ===========================
+#     # LOAD DATA FOR TEMPLATE
+#     # ===========================
+#     bb_awal = HppManufactureMaterial.objects.filter(report=report, type="BB_AWAL")
+#     bb_pembelian = HppManufactureMaterial.objects.filter(report=report, type="BB_PEMBELIAN")
+#     bb_akhir = HppManufactureMaterial.objects.filter(report=report, type="BB_AKHIR")
+
+#     bdp_awal = HppManufactureWIP.objects.filter(report=report, type="WIP_AWAL")
+#     bdp_akhir = HppManufactureWIP.objects.filter(report=report, type="WIP_AKHIR")
+
+#     btkl_items = HppManufactureLabor.objects.filter(report=report)
+#     bop_items = HppManufactureOverhead.objects.filter(report=report)
+
+#     bj_awal = HppManufactureFinishedGoods.objects.filter(report=report, type="FG_AWAL")
+#     bj_akhir = HppManufactureFinishedGoods.objects.filter(report=report, type="FG_AKHIR")
+#     print('bj awal:',bj_awal)
+#     print('bj_akhir:',bj_akhir)
+#     # ======== Grouped Totals Per Product ========
+#     def grouped_totals(queryset):
+#         """Helper for grouped subtotal per product"""
+#         if not queryset.exists():
+#             return []
+#         return (
+#             queryset.values("product", product_name=F("product__name"))
+#                     .annotate(total=Sum("total"))
+#                     .order_by("product__name")
+#         )
+
+#     # SUMS
+#     total_bahan_baku_awal = bb_awal.aggregate(Sum('total'))['total__sum'] or 0
+#     total_bahan_baku_pembelian = bb_pembelian.aggregate(Sum('total'))['total__sum'] or 0
+#     total_bahan_baku_akhir = bb_akhir.aggregate(Sum('total'))['total__sum'] or 0
+
+#     total_bdp_awal = bdp_awal.aggregate(Sum('total'))['total__sum'] or 0
+#     total_bdp_akhir = bdp_akhir.aggregate(Sum('total'))['total__sum'] or 0
+
+#     total_btkl = btkl_items.aggregate(Sum('total'))['total__sum'] or 0
+#     total_bop = bop_items.aggregate(Sum('total'))['total__sum'] or 0
+
+#     total_bj_awal = bj_awal.aggregate(Sum('total'))['total__sum'] or 0
+#     total_bj_akhir = bj_akhir.aggregate(Sum('total'))['total__sum'] or 0
+
+#     # --- subtotal per product (used in template, hidden until data exists)
+#     totals_awal_per_produk = grouped_totals(bb_awal)
+#     totals_pembelian_per_produk = grouped_totals(bb_pembelian)
+#     totals_akhir_per_produk = grouped_totals(bb_akhir)
+
+#     totals_bdp_awal_per_produk = grouped_totals(bdp_awal)
+#     totals_bdp_akhir_per_produk = grouped_totals(bdp_akhir)
+    
+#     totals_btkl_per_produk = grouped_totals(btkl_items)
+
+#     totals_bop_per_produk = grouped_totals(bop_items)
+
+#     totals_bj_awal_per_produk = grouped_totals(bj_awal)
+#     totals_bj_akhir_per_produk = grouped_totals(bj_akhir)
+
+#     # Barang yang diproduksi calculation   
+#     # Convert QuerySets to dict for easy lookup
+#     def map_totals(qs):
+#         return {row["product"]: row["total"] for row in qs}
+
+#     bb_awal_map = map_totals(totals_awal_per_produk)
+#     bb_pembelian_map = map_totals(totals_pembelian_per_produk)
+#     bb_akhir_map = map_totals(totals_akhir_per_produk)
+#     bdp_awal_map = map_totals(totals_bdp_awal_per_produk)
+#     bdp_akhir_map = map_totals(totals_bdp_akhir_per_produk)
+#     btkl_map = map_totals(totals_btkl_per_produk)
+#     bop_map = map_totals(totals_bop_per_produk)
+
+#     # Quantity lookup for BDP awal/akhir
+#     def map_qty(qs):
+#         return {w.product.id: w.quantity for w in qs}
+
+#     bdp_awal_qty = map_qty(bdp_awal)
+#     bdp_akhir_qty = map_qty(bdp_akhir)
+
+#     # Loop through all products that appear in any subtotal
+#     product_ids = set(bb_awal_map.keys()) | set(bb_pembelian_map.keys()) | set(bb_akhir_map.keys())
+
+#     for pid in product_ids:
+#         product = Product.objects.filter(id=pid).first()
+#         if not product:
+#             continue
+
+#         # Get quantities
+#         qty_awal = bdp_awal_qty.get(pid, 0)
+#         qty_akhir = bdp_akhir_qty.get(pid, 0)
+#         qty_diproduksi = max(qty_akhir - qty_awal, 0)
+
+#         # Compute total
+#         total_produksi = (
+#             (bb_awal_map.get(pid, 0) + bb_pembelian_map.get(pid, 0) - bb_akhir_map.get(pid, 0))
+#             + (bdp_akhir_map.get(pid, 0) - bdp_awal_map.get(pid, 0))
+#             + btkl_map.get(pid, 0)
+#             + bop_map.get(pid, 0)
+#         )
+
+#         hpp_per_unit = total_produksi / qty_diproduksi if qty_diproduksi else 0
+
+#         barang_diproduksi_list.append({
+#             "product_name": product.name,
+#             "qty_awal": qty_awal,
+#             "qty_akhir": qty_akhir,
+#             "qty_diproduksi": qty_diproduksi,
+#             "total_produksi": total_produksi,
+#             "hpp_per_unit": hpp_per_unit,
+#         })
+
+#     total_barang_diproduksi = sum(item["total_produksi"] for item in barang_diproduksi_list)
+#     total_qty_produksi = sum(item["qty_diproduksi"] for item in barang_diproduksi_list)
+
+#     # ===========================
+#     # BARANG JADI – PERSEDIAAN AKHIR (Auto Status & Total)
+#     # ===========================
+#     bj_akhir_calc_list = []
+
+#     # Create lookup maps
+#     bj_awal_map = {x.product.id: x for x in bj_awal}
+#     produksi_map = {x["product_name"]: x for x in barang_diproduksi_list}
+
+#     for akhir in bj_akhir:
+#         product_name = akhir.product.name if akhir.product else None
+#         if not product_name:
+#             continue
+
+#         qty_akhir = akhir.quantity or 0
+#         harga_input = akhir.harga_satuan or 0
+
+#         # Lookups
+#         awal = bj_awal_map.get(akhir.product.id)
+#         qty_awal = awal.quantity if awal else 0
+#         harga_awal = awal.harga_satuan if awal else 0
+
+#         produksi = produksi_map.get(product_name, {})
+#         qty_produksi = produksi.get("qty_diproduksi", 0)
+#         harga_produksi = produksi.get("hpp_per_unit", 0)
+
+#         # Apply Excel-style logic
+#         if qty_akhir == 0:
+#             status = "-"
+#             total = 0
+#         elif qty_akhir > (qty_awal + qty_produksi):
+#             status = "Periksa Kembali Jumlah Persediaan Barang Jadi Akhir"
+#             total = 0
+#         else:
+#             total = (qty_awal * harga_awal) + ((qty_akhir - qty_awal) * harga_produksi)
+#             status = "OK"
+
+#         bj_akhir_calc_list.append({
+#             "product_name": product_name,
+#             "qty_akhir": qty_akhir,
+#             "harga_satuan": harga_input,
+#             "total_akhir": total,
+#             "status": status,
+#         })
+
+#     # Subtotal
+#     total_bj_akhir_calc = sum(item["total_akhir"] for item in bj_akhir_calc_list)
+
+#     return render(request, "core/pages/hpp_manufaktur.html", {
+#         "report": report,
+#         "products": products,
+#         "completion_status": completion_status,
+
+#         # bahan baku
+#         "bb_awal": bb_awal,
+#         "bb_pembelian": bb_pembelian,
+#         "bb_akhir": bb_akhir,
+#         "total_bahan_baku_awal": total_bahan_baku_awal,
+#         "total_bahan_baku_pembelian": total_bahan_baku_pembelian,
+#         "total_bahan_baku_akhir": total_bahan_baku_akhir,
+#         # grouped sub total per product
+#         "totals_awal_per_produk": totals_awal_per_produk,
+#         "totals_pembelian_per_produk": totals_pembelian_per_produk,
+#         "totals_akhir_per_produk": totals_akhir_per_produk,
+
+#         # WIP/BDP
+#         "bdp_awal": bdp_awal,
+#         "bdp_akhir": bdp_akhir,
+#         "total_bdp_awal": total_bdp_awal,
+#         "total_bdp_akhir": total_bdp_akhir,
+#         # grouped sub total per product
+#         "totals_bdp_awal_per_produk": totals_bdp_awal_per_produk,
+#         "totals_bdp_akhir_per_produk": totals_bdp_akhir_per_produk,
+        
+#         # BTKL & BOP
+#         "btkl_items": btkl_items,
+#         "total_btkl": total_btkl,
+#         "totals_btkl_per_produk": totals_btkl_per_produk,
+#         "bop_items": bop_items,
+#         "total_bop": total_bop,
+#         "totals_bop_per_produk": totals_bop_per_produk,
+
+#         # barang yang diproduksi
+#         "barang_diproduksi_list": barang_diproduksi_list,
+#         "total_barang_diproduksi": total_barang_diproduksi,
+#         "total_qty_produksi": total_qty_produksi,
+
+#         # FG
+#         "bj_awal": bj_awal,
+#         "bj_akhir": bj_akhir,
+#         "total_bj_awal": total_bj_awal,
+#         "total_bj_akhir": total_bj_akhir,
+#         "totals_bj_awal_per_produk": totals_bj_awal_per_produk,
+#         "totals_bj_akhir_per_produk": totals_bj_akhir_per_produk,
+
+#         "bj_akhir_calc": bj_akhir_calc_list,
+#         "total_bj_akhir_calc": total_bj_akhir_calc,
+#     })
 
 
 @login_required(login_url='core:login')

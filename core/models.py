@@ -198,7 +198,10 @@ class HppManufactureFinishedGoods(models.Model):  # Barang Jadi
     product = models.ForeignKey(Product, on_delete=models.CASCADE, related_name="hpp_manufaktur_fg")
 
     type = models.CharField(max_length=20, choices=TYPE_CHOICES)
-    total = models.BigIntegerField(default=0)
+    quantity = models.IntegerField(default=0)
+    harga_satuan = models.IntegerField(default=0)
+    total = models.IntegerField(default=0)
+    keterangan = models.CharField(max_length=255, blank=True, null=True)
 
     class Meta:
         ordering = ['product__name', 'type']
