@@ -19,31 +19,37 @@ from core.utils.excel_exporter import generate_excel_file
 from core.utils.pdf_exporter import generate_pdf_file
 
 
-# --- Helper function to get completion status ---
 def get_completion_status(report):
     status = {
-        'profile': False,
-        'pendapatan': False,
-        'hpp': False,
-        'beban_usaha': False,
+        "profile": False,
+        "pendapatan": False,
+        "hpp": False,
+        "beban_usaha": False,
     }
 
-    # 1. Profile valid
     if report and report.company_name and report.business_type:
-        status['profile'] = True
+        status["profile"] = True
 
-    # 2. Pendapatan minimal satu entri usaha
-    if status['profile'] and report.revenue_items.filter(revenue_type='usaha').exists():
-        status['pendapatan'] = True
+    if status["profile"] and report.revenue_items.filter(revenue_type="usaha").exists():
+        status["pendapatan"] = True
 
-    # 3. HPP minimal satu entri
-    # (Catatan: Ini mungkin perlu disesuaikan untuk manufaktur nanti)
-    if status['pendapatan'] and report.hpp_entries.exists():
-        status['hpp'] = True
+    if status["pendapatan"]:
+        if report.business_type == "manufaktur":
+            if (
+                report.hpp_manufaktur_materials.exists()
+                or report.hpp_manufaktur_wip.exists()
+                or report.hpp_manufaktur_labor.exists()
+                or report.hpp_manufaktur_overhead.exists()
+                or report.hpp_manufaktur_fg.exists()
+                or report.hpp_manufaktur_production.exists()
+            ):
+                status["hpp"] = True
+        else:
+            if report.hpp_entries.exists():
+                status["hpp"] = True
 
-    # 4. Beban Usaha minimal satu entri
-    if status['hpp'] and report.expense_items.filter(expense_category='usaha').exists():
-        status['beban_usaha'] = True
+    if status["hpp"] and report.expense_items.filter(expense_category="usaha").exists():
+        status["beban_usaha"] = True
 
     return status
 
