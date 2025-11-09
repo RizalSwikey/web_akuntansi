@@ -1,3 +1,4 @@
+
 ```
 accounting_apps
 ├─ .python-version
@@ -12,6 +13,17 @@ accounting_apps
 │  │  ├─ 0003_remove_revenueitem_description_and_more.py
 │  │  ├─ 0004_expenseitem_expense_category_and_more.py
 │  │  ├─ 0005_financialreport_ptkp_status.py
+│  │  ├─ 0006_hppmanufacturefinishedgoods_hppmanufacturelabor_and_more.py
+│  │  ├─ 0007_hppmanufacturematerial_diskon_and_more.py
+│  │  ├─ 0008_hppmanufacturematerial_nama_bahan_baku.py
+│  │  ├─ 0009_hppmanufacturematerial_keterangan.py
+│  │  ├─ 0010_hppmanufacturewip_harga_satuan_and_more.py
+│  │  ├─ 0011_hppmanufacturelabor_harga_satuan_and_more.py
+│  │  ├─ 0012_hppmanufactureoverhead_harga_satuan_and_more.py
+│  │  ├─ 0013_hppmanufacturefinishedgoods_harga_satuan_and_more.py
+│  │  ├─ 0014_hppmanufactureproduction.py
+│  │  ├─ 0015_alter_hppmanufactureproduction_unique_together.py
+│  │  ├─ 0016_expenseitem_product_expenseitem_scope.py
 │  │  └─ __init__.py
 │  ├─ models.py
 │  ├─ static
@@ -37,6 +49,7 @@ accounting_apps
 │  │     │  ├─ hpp_manufaktur.html
 │  │     │  ├─ landing_page.html
 │  │     │  ├─ laporan.html
+│  │     │  ├─ laporan_manufaktur.html
 │  │     │  ├─ login.html
 │  │     │  ├─ pendapatan.html
 │  │     │  ├─ profile.html
@@ -45,6 +58,7 @@ accounting_apps
 │  │     │  ├─ login_message.html
 │  │     │  └─ sidebar.html
 │  │     └─ pdf
+│  │        ├─ laporan_manufaktur_pdf.html
 │  │        └─ laporan_pdf.html
 │  ├─ templatetags
 │  │  ├─ core_tags.py
@@ -82,12 +96,7 @@ accounting_apps
 │  │  │  ├─ autocomplete.css
 │  │  │  ├─ base.css
 │  │  │  ├─ changelists.css
-│  │  │  ├─ dark_mode.css
-│  │  │  ├─ dashboard.css
-.......................
-│  │        │  │  └─ zh-TW.js
-│  │        │  ├─ LICENSE.md
-│  │        │  ├─ select2.full.js
+........................
 │  │        │  └─ select2.full.min.js
 │  │        └─ xregexp
 │  │           ├─ LICENSE.txt

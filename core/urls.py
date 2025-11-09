@@ -20,13 +20,12 @@ urlpatterns = [
     path('reports/<int:report_id>/hpp/manufaktur/', views.hpp_manufaktur_view, name='hpp_manufaktur'),
 
     path('reports/<int:report_id>/beban-usaha/', views.beban_usaha_view, name='beban_usaha'),
+    path('reports/<int:report_id>/beban-usaha/dagang/', views.beban_usaha_dagang_view, name='beban_usaha_dagang'),
+    path('reports/<int:report_id>/beban-usaha/manufaktur/', views.beban_usaha_manufaktur_view, name='beban_usaha_manufaktur'),
+    
     path('reports/<int:report_id>/laporan/', views.laporan_view, name='laporan'),
-
     
 
     path('reports/<int:report_id>/export/pdf/', views.export_pdf, name='export_pdf'),
     path('reports/<int:report_id>/export/excel/', views.export_excel, name='export_excel'),
 ]
-
- 
-    
