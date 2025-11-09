@@ -61,7 +61,6 @@ def get_completion_status(report):
     return status
 
 
-# --- User Auth Views (No Change) ---
 def landing_page_view(request):
     if request.user.is_authenticated:
         return redirect('core:report_list')
@@ -98,7 +97,6 @@ def report_list(request):
             return redirect("core:report_list")
 
     reports = FinancialReport.objects.filter(user=request.user).order_by('-created_at')
-    # Nama template diganti ke 'report_list.html' sesuai konvensi
     return render(request, 'core/pages/report_list.html', {'reports': reports})
 
 
@@ -108,7 +106,6 @@ def create_report(request):
     messages.success(request, "Laporan baru berhasil dibuat. Silakan isi profil perusahaan.")
     return redirect('core:profile', report_id=report.id)
 
-# --- App Views (Refactored for Stricter Wizard Flow) ---
 
 @login_required(login_url='core:login')
 def profile_view(request, report_id):
@@ -207,12 +204,10 @@ def pendapatan_view(request, report_id):
             if not completion_status['pendapatan']:
                  messages.warning(request, 'Harap tambahkan minimal satu pendapatan usaha sebelum melanjutkan.')
                  return redirect('core:pendapatan', report_id=report.id) 
-            # Arahkan ke HPP (view HPP akan menangani routing dagang/manufaktur)
             return redirect('core:hpp', report_id=report.id) 
 
         return redirect('core:pendapatan', report_id=report.id) 
 
-    # --- GET Request Logic ---
     revenue_usaha_items = report.revenue_items.filter(revenue_type='usaha').order_by('product__name')
     revenue_lain_items = report.revenue_items.filter(revenue_type='lain').order_by('name')
     total_usaha = revenue_usaha_items.aggregate(Sum('total'))['total__sum'] or 0
@@ -229,9 +224,6 @@ def pendapatan_view(request, report_id):
     return render(request, 'core/pages/pendapatan.html', context)
 
 
-# =============================================
-# MULAI PERUBAHAN
-# =============================================
 @login_required(login_url='core:login')
 def hpp_view(request, report_id):
     report = get_object_or_404(FinancialReport, id=report_id, user=request.user)
@@ -264,7 +256,6 @@ def hpp_dagang_view(request, report_id):
         .distinct()
     )
 
-    # Ensure base entries exist
     for product in products:
         for category in ['AWAL', 'PEMBELIAN', 'AKHIR']:
             HppEntry.objects.get_or_create(
@@ -308,7 +299,6 @@ def hpp_dagang_view(request, report_id):
 
         return redirect('core:hpp_dagang', report_id=report.id)
 
-    # Build HPP detail
     hpp_data_by_product = {}
     for product in products:
         entries = HppEntry.objects.filter(product=product, report=report)
@@ -318,7 +308,6 @@ def hpp_dagang_view(request, report_id):
             'AKHIR': entries.filter(category='AKHIR').first(),
         }
 
-    # Calculate totals
     grand_total_awal = grand_total_pembelian = grand_total_akhir = grand_total_barang_tersedia = grand_hpp = 0
     calculation_details = {}
 
@@ -353,9 +342,6 @@ def hpp_manufaktur_view(request, report_id):
 
     barang_diproduksi_list = []
 
-    # ===========================
-    # HANDLE POST (SAVE DATA)
-    # ===========================
     if request.method == "POST":
         action = request.POST.get("action")
 
@@ -563,7 +549,6 @@ def hpp_manufaktur_view(request, report_id):
             status = "OK"
 
             if tipe_data == "AKHIR_BJ":
-                # Calculate automatically
                 bj_awal_map = {x.product.id: x for x in HppManufactureFinishedGoods.objects.filter(report=report, type="FG_AWAL")}
                 produksi_map = {x["product_name"]: x for x in barang_diproduksi_list}
 
@@ -622,7 +607,6 @@ def hpp_manufaktur_view(request, report_id):
         if "next_step" in request.POST:
             return redirect("core:beban_usaha", report_id=report.id)
     
-    # --- Load All Data for Template ---
     bb_awal = HppManufactureMaterial.objects.filter(report=report, type="BB_AWAL")
     bb_pembelian = HppManufactureMaterial.objects.filter(report=report, type="BB_PEMBELIAN")
     bb_akhir = HppManufactureMaterial.objects.filter(report=report, type="BB_AKHIR")
@@ -633,7 +617,6 @@ def hpp_manufaktur_view(request, report_id):
     bj_awal = HppManufactureFinishedGoods.objects.filter(report=report, type="FG_AWAL")
     bj_akhir = HppManufactureFinishedGoods.objects.filter(report=report, type="FG_AKHIR")
 
-     # Helper to group totals per product
     def grouped_totals(queryset):
         if not queryset.exists():
             return []
@@ -653,9 +636,7 @@ def hpp_manufaktur_view(request, report_id):
     totals_bj_awal_per_produk = grouped_totals(bj_awal)
     totals_bj_akhir_per_produk = grouped_totals(bj_akhir)
 
-    # ======================================================
-    # STEP 2 — BARANG DIPRODUKSI CALCULATION (used later)
-    # ======================================================
+    # BARANG DIPRODUKSI
     def map_totals(qs):
         return {row["product"]: row["total"] for row in qs}
 
@@ -708,15 +689,10 @@ def hpp_manufaktur_view(request, report_id):
     total_barang_diproduksi = sum(to_number(row.get("total_produksi", 0)) for row in barang_diproduksi_list)
     total_barang_diproduksi = int(total_barang_diproduksi)
 
-    # ======================================================
-    # STEP 3 — HANDLE POST ACTIONS (Now barang_diproduksi_list is READY)
-    # ======================================================
+
     if request.method == "POST":
         action = request.POST.get("action")
 
-        # ------------------------
-        # BARANG JADI
-        # ------------------------
         if action in ["add_fg", "edit_fg"]:
             item_id = request.POST.get("item_id")
             tipe_data = request.POST.get("tipe_data")
@@ -789,7 +765,6 @@ def hpp_manufaktur_view(request, report_id):
             messages.success(request, "Data Barang Jadi berhasil dihapus.")
             return redirect("core:hpp_manufaktur", report_id=report.id)
 
-        # handle next step
         if "next_step" in request.POST:
             return redirect("core:beban_usaha", report_id=report.id)
 
@@ -831,7 +806,6 @@ def hpp_manufaktur_view(request, report_id):
         qty_produksi = produksi.get("qty_diproduksi", 0)
         harga_produksi = produksi.get("hpp_per_unit", 0)
 
-        # Apply logic
         if qty_akhir == 0:
             akhir.status = "-"
             akhir.total_akhir = 0
@@ -842,13 +816,9 @@ def hpp_manufaktur_view(request, report_id):
             akhir.total_akhir = (qty_awal * harga_awal) + ((qty_akhir - qty_awal) * harga_produksi)
             akhir.status = "OK"
 
-    # subtotal
     total_bj_akhir_calc = sum(getattr(x, "total_akhir", 0) for x in bj_akhir)
 
 
-    # ======================================================
-    # STEP 5 — RENDER TEMPLATE
-    # ======================================================
     return render(request, "core/pages/hpp_manufaktur.html", {
         "report": report,
         "products": products,
@@ -909,9 +879,7 @@ def beban_usaha_view(request, report_id):
         return redirect('core:beban_usaha_manufaktur', report_id=report.id)
     else:
         return redirect('core:beban_usaha_dagang', report_id=report.id)
-        
 
-# Add this new function to views.py
 
 @login_required(login_url='core:login')
 def beban_usaha_dagang_view(request, report_id):
@@ -953,7 +921,7 @@ def beban_usaha_dagang_view(request, report_id):
         
         if 'next_step' in request.POST:
             return redirect('core:laporan', report_id=report.id)
-        return redirect('core:beban_usaha_dagang', report_id=report.id) # Note: redirect to self
+        return redirect('core:beban_usaha_dagang', report_id=report.id)
 
     beban_usaha_items = report.expense_items.filter(expense_category='usaha')
     beban_lain_items = report.expense_items.filter(expense_category='lain')
@@ -992,8 +960,8 @@ def beban_usaha_manufaktur_view(request, report_id):
 
         if action == 'add_beban_item' or action == 'add_beban':
             try:
-                jenis = request.POST.get('jenis_beban')   # from select
-                keterangan = request.POST.get('keterangan')  # optional text
+                jenis = request.POST.get('jenis_beban')
+                keterangan = request.POST.get('keterangan')
                 total = int(request.POST.get('total_beban', 0))
 
                 ExpenseItem.objects.create(
@@ -1006,7 +974,7 @@ def beban_usaha_manufaktur_view(request, report_id):
                 messages.success(request, 'Beban manufaktur berhasil ditambahkan.')
             except Exception as e:
                 messages.error(request, f'Terjadi kesalahan saat menambahkan beban: {e}')
-            return redirect('core:beban_usaha_manufaktur', report_id=report.id) # Note: redirect to self
+            return redirect('core:beban_usaha_manufaktur', report_id=report.id) 
 
         if action == 'delete_beban_item':
             try:
@@ -1018,9 +986,8 @@ def beban_usaha_manufaktur_view(request, report_id):
                 messages.error(request, 'Item beban tidak ditemukan.')
             except Exception as e:
                 messages.error(request, f'Gagal menghapus item: {e}')
-            return redirect('core:beban_usaha_manufaktur', report_id=report.id) # Note: redirect to self
+            return redirect('core:beban_usaha_manufaktur', report_id=report.id)
 
-    # GET: show manufaktur beban page
     beban_items = report.expense_items.filter(expense_category='usaha').order_by('-id')
     total_beban_usaha = beban_items.aggregate(Sum('total'))['total__sum'] or 0
 
@@ -1032,7 +999,6 @@ def beban_usaha_manufaktur_view(request, report_id):
     }
     return render(request, 'core/pages/beban_usaha_manufaktur.html', context)
 
-# Replace your old laporan_view with this one in views.py
 
 @login_required(login_url='core:login')
 def laporan_view(request, report_id):

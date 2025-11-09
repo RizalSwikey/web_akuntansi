@@ -7,7 +7,6 @@ from core.utils.hpp_calculator import calculate_hpp_for_product
 
 class HppCalculatorTest(TestCase):
     def setUp(self):
-        # --- Create user and report ---
         self.user = User.objects.create_user(username="tester", password="test123")
         self.report = FinancialReport.objects.create(
             user=self.user,
@@ -16,7 +15,6 @@ class HppCalculatorTest(TestCase):
             year=2025
         )
 
-        # --- Create products linked to that report ---
         self.product_a = Product.objects.create(report=self.report, name="a")
         self.product_b = Product.objects.create(report=self.report, name="b")
 
@@ -113,7 +111,6 @@ class HppCalculatorTest(TestCase):
         self.assertEqual(result["hpp"], 0)
 
 
-# --- Detailed Diagnostic Test (prints every step for debugging) ---
 class HppCalculatorDetailedTest(TestCase):
     """Diagnostic test comparing every Excel step"""
 
@@ -144,7 +141,7 @@ class HppCalculatorDetailedTest(TestCase):
             quantity=700, harga_satuan=8500, diskon=400000, retur_qty=50, ongkir=400000
         )
 
-        # AKHIR (as per Excel)
+        # AKHIR
         HppEntry.objects.create(report=self.report, product=self.product_a, category="AKHIR", quantity=400)
         HppEntry.objects.create(report=self.report, product=self.product_b, category="AKHIR", quantity=1000)
 

@@ -1,4 +1,3 @@
-// File: js/profile.js
 document.addEventListener("DOMContentLoaded", function () {
   const businessStatusSelect = document.getElementById("business_status");
   const ptkpField = document.getElementById("ptkp-field-wrapper");
@@ -11,9 +10,8 @@ document.addEventListener("DOMContentLoaded", function () {
         ptkpField.classList.add("hidden");
       }
     }
-    togglePTKPField(); // Cek saat halaman dimuat
+    togglePTKPField();
     businessStatusSelect.addEventListener("change", togglePTKPField);
   }
 
-  // (Logika validasi tombol 'Next' bisa ditambahkan di sini nanti)
 });

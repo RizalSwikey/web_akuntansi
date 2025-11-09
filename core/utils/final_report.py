@@ -12,9 +12,7 @@ def generate_final_report_data(report):
     Includes Pendapatan, HPP, Beban, Laba/Rugi, and HPP per produk.
     """
 
-    # =======================
-    # 1️⃣ PENDAPATAN (Revenue)
-    # =======================
+    # PENDAPATAN (Revenue)
     total_pendapatan_usaha = (
         report.revenue_items.filter(revenue_type="usaha").aggregate(Sum("total"))["total__sum"] or 0
     )
@@ -23,12 +21,9 @@ def generate_final_report_data(report):
     )
     jumlah_pendapatan = total_pendapatan_usaha + total_pendapatan_lain
 
-    # =======================
-    # 2️⃣ HPP (Harga Pokok Penjualan)
-    # =======================
+    # HPP (Harga Pokok Penjualan)
     products = Product.objects.filter(report=report)
 
-    # Group all HPP entries per product
     entries_by_product = {}
     for entry in HppEntry.objects.filter(report=report).select_related("product"):
         pid = entry.product.id
@@ -41,7 +36,6 @@ def generate_final_report_data(report):
         elif entry.category == "PEMBELIAN":
             entries_by_product[pid]["PEMBELIAN"].append(entry)
 
-    # Calculate per product HPP
     hpp_per_product = []
     total_hpp = 0
 
@@ -59,7 +53,6 @@ def generate_final_report_data(report):
 
         qty_terjual = qty_awal + qty_pembelian - qty_akhir
 
-        # 🧮 HPP total and per unit (matching your Excel formula)
         hpp_total = total_awal + total_pembelian_neto - total_akhir
         hpp_per_unit = hpp_total / qty_terjual if qty_terjual > 0 else 0
 
@@ -77,16 +70,13 @@ def generate_final_report_data(report):
             "detail_akhir": {"qty": qty_akhir},
         })
 
-    # --- Summarize HPP totals for laporan.html and laporan_pdf.html ---
     total_persediaan_awal = sum(p['total_awal'] for p in hpp_per_product)
     total_pembelian_neto = sum(p['total_pembelian_neto'] for p in hpp_per_product)
     total_persediaan_akhir = sum(p['total_akhir'] for p in hpp_per_product)
     total_hpp = sum(p['hpp'] for p in hpp_per_product)
     barang_siap_dijual = total_persediaan_awal + total_pembelian_neto
 
-    # =======================
-    # 3️⃣ BEBAN (Expenses)
-    # =======================
+    # BEBAN (Expenses)
     beban_usaha_items = report.expense_items.filter(expense_category="usaha")
     beban_lain_items = report.expense_items.filter(expense_category="lain")
 
@@ -94,11 +84,9 @@ def generate_final_report_data(report):
     total_beban_lain = beban_lain_items.aggregate(Sum("total"))["total__sum"] or 0
     jumlah_beban = total_hpp + total_beban_usaha + total_beban_lain
 
-    # =======================
-    # 4️⃣ LABA / RUGI
-    # =======================
+    # LABA / RUGI
     laba_sebelum_pajak = jumlah_pendapatan - jumlah_beban
-    pajak_penghasilan = 0  # (you can fill later)
+    pajak_penghasilan = 0  
     laba_setelah_pajak = laba_sebelum_pajak - pajak_penghasilan
 
     return {
@@ -113,7 +101,6 @@ def generate_final_report_data(report):
         "barang_siap_dijual": barang_siap_dijual,
         "total_persediaan_akhir": total_persediaan_akhir,
 
-        # Keep your existing values
         "beban_usaha_items": beban_usaha_items,
         "beban_lain_items": beban_lain_items,
         "total_beban_usaha": total_beban_usaha,
@@ -177,7 +164,6 @@ def get_manufaktur_report_context(report):
     pajak_penghasilan = 0 
     laba_setelah_pajak = laba_sebelum_pajak - pajak_penghasilan
 
-    # --- 4. RETURN CONTEXT DICTIONARY ---
     context = {
         'report': report,
         'total_bb_awal': total_bb_awal,

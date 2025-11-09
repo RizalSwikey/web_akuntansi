@@ -102,7 +102,6 @@ def _generate_excel_manufaktur(wb, report, data):
     This is the new function.
     """
     
-    # --- Sheet 1: Laporan Harga Pokok Produksi ---
     ws_hpp = wb.active
     ws_hpp.title = "Lap. HPP"
 
@@ -153,7 +152,6 @@ def _generate_excel_manufaktur(wb, report, data):
 
     _auto_fit_columns(ws_hpp)
 
-    # --- Sheet 2: Laporan Laba Rugi ---
     ws_lr = wb.create_sheet(title="Lap. Laba Rugi")
     
     ws_lr.append([report.company_name])
@@ -208,7 +206,6 @@ def generate_excel_file(report):
         wb = _generate_excel_dagang(wb, report, data)
         filename = f"Laporan_Dagang_{report.company_name}_{report.month}_{report.year}.xlsx"
 
-    # Output to bytes
     buffer = BytesIO()
     wb.save(buffer)
     buffer.seek(0)

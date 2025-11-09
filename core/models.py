@@ -12,92 +12,70 @@ class FinancialReport(models.Model):
     umkm_incentive = models.CharField(max_length=10, blank=True, null=True) # Ya, Tidak
     omzet = models.BigIntegerField(default=0)
     
-    # --- ADDED: Field for handling PTKP Status from profile.html ---
     ptkp_status = models.CharField(max_length=10, blank=True, null=True) 
     # -----------------------------------------------------------------
 
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
 
-    # Note: persediaan_awal and persediaan_akhir are now handled per product in HppEntry
-
     def __str__(self):
         return f"{self.company_name} - {self.month} {self.year} ({self.user.username})"
 
-# --- NEW Product Model ---
 class Product(models.Model):
     report = models.ForeignKey(FinancialReport, on_delete=models.CASCADE, related_name="products")
     name = models.CharField(max_length=255)
 
     class Meta:
-        # Ensure product names are unique within a single report
         unique_together = ('report', 'name')
-        ordering = ['name'] # Keep products alphabetically ordered
+        ordering = ['name'] 
 
     def __str__(self):
         return self.name
 
-# --- MODIFIED RevenueItem Model ---
 class RevenueItem(models.Model):
     TYPE_CHOICES = [
         ('usaha', 'Pendapatan dari Usaha'),
         ('lain', 'Pendapatan Lain-lain'),
     ]
     report = models.ForeignKey(FinancialReport, on_delete=models.CASCADE, related_name="revenue_items")
-    revenue_type = models.CharField(max_length=10, choices=TYPE_CHOICES, default='usaha')
-
-    # Link to Product for 'usaha' type
     product = models.ForeignKey(Product, on_delete=models.CASCADE, related_name="revenue_entries", null=True, blank=True)
 
-    # Renamed description back to 'name' for consistency
-    # This field holds product name for 'usaha' (auto-set) or description for 'lain'
+    revenue_type = models.CharField(max_length=10, choices=TYPE_CHOICES, default='usaha')
     name = models.CharField(max_length=255, blank=True, null=True, help_text="Product name (for 'usaha') or description (for 'lain')")
-
-    quantity = models.IntegerField(default=1) # Only relevant for 'usaha'
-    selling_price = models.BigIntegerField(default=0) # Only relevant for 'usaha'
-    total = models.BigIntegerField(default=0) # Main value for 'lain', calculated for 'usaha'
+    quantity = models.IntegerField(default=1) 
+    selling_price = models.BigIntegerField(default=0) 
+    total = models.BigIntegerField(default=0) 
 
     def save(self, *args, **kwargs):
         if self.revenue_type == 'usaha':
             if not self.product:
-                 # Ensure a product object is related before saving revenue item
-                 # This validation may be better handled in the view logic for cleaner UX
                  pass 
             self.total = self.quantity * self.selling_price
-            # Copy product name into the 'name' field
-            self.name = self.product.name if self.product else self.name # Handle potential missing product name if validation fails elsewhere
-        else:
-            self.product = None # Ensure no product link for 'lain'
-            # For 'lain', total is entered directly, name is also entered directly
+            self.name = self.product.name if self.product else self.name
+            self.product = None 
         super().save(*args, **kwargs)
 
     def __str__(self):
         if self.revenue_type == 'usaha':
-            # Use product name if available, otherwise fallback to name field
             display_name = self.product.name if self.product else self.name
             return f"Pendapatan Usaha: {display_name} (Rp {self.total})"
         else:
-            # Use the 'name' field which holds the description for 'lain'
             return f"Pendapatan Lain: {self.name} (Rp {self.total})"
 
-# --- NEW HppEntry Model ---
+# HppEntry Model
 class HppEntry(models.Model):
     CATEGORY_CHOICES = [
         ('AWAL', 'Persediaan Awal Bahan Baku'),
         ('PEMBELIAN', 'Pembelian Bahan Baku'),
-        ('AKHIR', 'Persediaan Akhir Bahan Baku'), # Assuming Bahan Baku for Dagang
-        # We can add TENAGA_KERJA, OVERHEAD later if needed for Manufaktur
+        ('AKHIR', 'Persediaan Akhir Bahan Baku'), 
     ]
     report = models.ForeignKey(FinancialReport, on_delete=models.CASCADE, related_name="hpp_entries")
     product = models.ForeignKey(Product, on_delete=models.CASCADE, related_name="hpp_entries")
-    category = models.CharField(max_length=10, choices=CATEGORY_CHOICES)
 
-    # Common Fields
+    category = models.CharField(max_length=10, choices=CATEGORY_CHOICES)
     quantity = models.IntegerField(default=0)
     keterangan = models.CharField(max_length=255, blank=True, null=True)
     harga_satuan = models.BigIntegerField(default=0) # For AWAL, PEMBELIAN
-
-    # Pembelian-Specific Fields
     diskon = models.BigIntegerField(default=0)
     retur_qty = models.IntegerField(default=0)
     ongkir = models.BigIntegerField(default=0)
@@ -109,9 +87,8 @@ class HppEntry(models.Model):
 
     def __str__(self):
         return f"{self.product.name} - {self.get_category_display()}"
-# ---------------------------
+    
 # HPP Manufaktur Models
-# ---------------------------
 class HppManufactureMaterial(models.Model):
     TYPE_CHOICES = [
         ('BB_AWAL', 'Persediaan Bahan Baku Awal'),
@@ -120,6 +97,7 @@ class HppManufactureMaterial(models.Model):
     ]
     report = models.ForeignKey(FinancialReport, on_delete=models.CASCADE, related_name="hpp_manufaktur_materials")
     product = models.ForeignKey(Product, on_delete=models.CASCADE, related_name="hpp_manufaktur_materials")
+
     type = models.CharField(max_length=20, choices=TYPE_CHOICES)
     nama_bahan_baku = models.CharField(max_length=255, blank=True, null=True)
     keterangan = models.CharField(max_length=255, blank=True, null=True)
@@ -149,6 +127,7 @@ class HppManufactureWIP(models.Model):  # Barang Dalam Proses
     ]
     report = models.ForeignKey(FinancialReport, on_delete=models.CASCADE, related_name="hpp_manufaktur_wip")
     product = models.ForeignKey(Product, on_delete=models.CASCADE, related_name="hpp_manufaktur_wip")
+
     type = models.CharField(max_length=20, choices=TYPE_CHOICES)
     quantity = models.IntegerField(default=0)
     keterangan = models.CharField(max_length=255, blank=True, null=True)
@@ -179,6 +158,7 @@ class HppManufactureLabor(models.Model):  # BTKL
 class HppManufactureOverhead(models.Model):  # BOP
     report = models.ForeignKey(FinancialReport, on_delete=models.CASCADE)
     product = models.ForeignKey(Product, on_delete=models.CASCADE, blank=True, null=True)
+
     nama_biaya = models.CharField(max_length=255, blank=True, null=True)
     quantity = models.PositiveIntegerField(default=0)
     harga_satuan = models.PositiveIntegerField(default=0)
@@ -187,6 +167,7 @@ class HppManufactureOverhead(models.Model):  # BOP
 
     def __str__(self):
         return f"{self.product.name} - BOP (Rp {self.total})"
+
 
 class HppManufactureProduction(models.Model):  # Barang Diproduksi
     report = models.ForeignKey(FinancialReport, on_delete=models.CASCADE, related_name="hpp_manufaktur_production")
@@ -225,8 +206,7 @@ class HppManufactureFinishedGoods(models.Model):  # Barang Jadi
     def __str__(self):
         return f"{self.product.name} - {self.get_type_display()} (Rp {self.total})"
 
-# --- ExpenseItem (No change needed for now) ---
-# core/models.py
+# ExpenseItem
 class ExpenseItem(models.Model):
     EXPENSE_CATEGORY_CHOICES = [
         ('usaha', 'Beban Usaha Lainnya'),
@@ -238,9 +218,10 @@ class ExpenseItem(models.Model):
     ]
 
     report = models.ForeignKey(FinancialReport, on_delete=models.CASCADE, related_name="expense_items")
+    product = models.ForeignKey(Product, on_delete=models.SET_NULL, null=True, blank=True)
+    
     expense_category = models.CharField(max_length=20, choices=EXPENSE_CATEGORY_CHOICES, default='usaha')
     scope = models.CharField(max_length=20, choices=BUSINESS_SCOPE_CHOICES, default='dagang')
-    product = models.ForeignKey(Product, on_delete=models.SET_NULL, null=True, blank=True)
     expense_type = models.CharField(max_length=50, blank=True, null=True)
     name = models.CharField(max_length=255)
     total = models.BigIntegerField(default=0)

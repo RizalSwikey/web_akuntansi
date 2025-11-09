@@ -253,7 +253,6 @@ document.addEventListener("DOMContentLoaded", function () {
         });
     }
 
-    // Close dropdown when clicking outside
     document.addEventListener("click", function (e) {
         if (container && !container.contains(e.target) && menu) {
             menu.classList.add("hidden");

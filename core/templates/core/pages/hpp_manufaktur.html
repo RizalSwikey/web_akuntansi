@@ -818,7 +818,6 @@ document.addEventListener("DOMContentLoaded", function () {
   
   const mainContent = document.getElementById('main-content'); 
 
-  // --- Fungsi Helper untuk Setup Modal ---
   function setupModal(modalId, openBtnId, closeBtnId, formId, options = {}) {
       const openBtn = document.getElementById(openBtnId);
       const modal = document.getElementById(modalId);
@@ -826,7 +825,6 @@ document.addEventListener("DOMContentLoaded", function () {
       const form = document.getElementById(formId);
 
       if (!openBtn || !modal || !closeBtn || !form) {
-          // console.warn(`Elemen modal tidak lengkap untuk ID: ${modalId}`);
           return; 
       }
 
@@ -856,20 +854,16 @@ document.addEventListener("DOMContentLoaded", function () {
       if (options.setup) options.setup(modal, form);
   }
 
-  // --- Setup Modal Bab 1 (Bahan Baku) ---
   setupModal('modal-bahan-baku', 'open-modal-bahan-baku-btn', 'modal-bahan-baku-close-btn', 'form-bahan-baku', {
       onOpen: function() { 
-          // Reset form dan sembunyikan field pembelian saat dibuka
           document.getElementById("form-bahan-baku").reset();
-          // PERBAIKAN: Ganti ID dropdown
           document.getElementById("modal-tipe-data").value = "BB_AWAL"; 
           togglePembelianFields(); 
       },
       onClose: function() {
-          togglePembelianFields(); // Panggil untuk menyembunyikan saat reset
+          togglePembelianFields();
       },
       setup: function(modal, form) {
-          // Panggil toggle saat dropdown berubah
           const tipeDataDropdown = document.getElementById("modal-tipe-data");
           if (tipeDataDropdown) {
               tipeDataDropdown.addEventListener("change", togglePembelianFields);
@@ -877,9 +871,8 @@ document.addEventListener("DOMContentLoaded", function () {
       }
   });
 
-  // Fungsi spesifik untuk toggle field pembelian di Modal Bab 1
   function togglePembelianFields() {
-      const tipeDataDropdown = document.getElementById("modal-tipe-data"); // ID diperbaiki
+      const tipeDataDropdown = document.getElementById("modal-tipe-data");
       const pembelianFieldsDiv = document.getElementById("modal-pembelian-fields");
       if (!tipeDataDropdown || !pembelianFieldsDiv) return;
 
@@ -890,28 +883,23 @@ document.addEventListener("DOMContentLoaded", function () {
       }
   }
   
-  // --- Setup Modal Bab 2, 3, 5 ---
   setupModal('modal-bdp','open-modal-bdp-btn','modal-bdp-close-btn','form-bdp');
   setupModal('modal-btkl','open-modal-btkl-btn','modal-btkl-close-btn','form-btkl');
   setupModal('modal-bop','open-modal-bop-btn','modal-bop-close-btn','form-bop');
 
-  // --- PERUBAHAN 3 (JavaScript): Menambahkan logika setup untuk Modal Barang Jadi ---
   setupModal('modal-bj', 'open-modal-bj-btn', 'modal-bj-close-btn', 'form-bj', {
       onOpen: function() {
-          // Saat modal dibuka, reset form & pastikan harga satuan terlihat
           document.getElementById("form-bj").reset();
           const hargaWrapper = document.getElementById("bj-harga-satuan-wrapper");
           if (hargaWrapper) {
               hargaWrapper.classList.remove("hidden");
           }
-          // Juga pastikan input harga 'required' kembali
           const hargaInput = document.getElementById("modal-bj-harga-satuan");
           if (hargaInput) {
               hargaInput.required = true;
           }
       },
       setup: function(modal, form) {
-          // Fungsi ini berjalan sekali untuk menambahkan listener
           const tipeDataDropdown = document.getElementById("modal-bj-tipe-data");
           const hargaSatuanWrapper = document.getElementById("bj-harga-satuan-wrapper");
           const hargaSatuanInput = document.getElementById("modal-bj-harga-satuan");
@@ -919,13 +907,12 @@ document.addEventListener("DOMContentLoaded", function () {
           if (!tipeDataDropdown || !hargaSatuanWrapper || !hargaSatuanInput) return;
 
           const toggleBjFields = () => {
-              // Sembunyikan 'harga_satuan' jika 'AKHIR_BJ' dipilih
               if (tipeDataDropdown.value === "AKHIR_BJ") {
                   hargaSatuanWrapper.classList.add("hidden");
-                  hargaSatuanInput.required = false; // Tidak wajib diisi jika disembunyikan
+                  hargaSatuanInput.required = false; 
               } else {
                   hargaSatuanWrapper.classList.remove("hidden");
-                  hargaSatuanInput.required = true; // Wajib diisi jika terlihat
+                  hargaSatuanInput.required = true; 
               }
           };
           

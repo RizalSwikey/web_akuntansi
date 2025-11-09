@@ -280,7 +280,6 @@ document.addEventListener("DOMContentLoaded", function () {
   const closeBtn = document.getElementById("modal-close-btn");
   const form = document.getElementById("edit-form");
 
-  // Ambil elemen modal baru
   const pembelianFields = document.getElementById("pembelian-fields");
   const hargaField = document.getElementById("harga-field");
   const keteranganField = document.getElementById("keterangan-field");
@@ -289,51 +288,39 @@ document.addEventListener("DOMContentLoaded", function () {
 
   window.openEditModal = function (type, productId, qty = 0, ket = "", harga = 0, diskon = 0, returQty = 0, ongkir = 0, entryId = '') {
     
-    // Reset form setiap kali dibuka
     form.reset(); 
 
     document.getElementById("entry-type").value = type;
     document.getElementById("entry-id").value = entryId || '';
     
-    // --- PERBAIKAN DI SINI ---
-    // Jika nilainya 0, set ke string kosong "" agar placeholder terlihat
     document.getElementById("modal-quantity").value = qty == 0 ? "" : qty;
     document.getElementById("modal-keterangan").value = ket || ""; // 'keterangan' sudah benar
 
-    // Terapkan logika yang sama untuk field angka lainnya
     document.getElementById("modal-harga-satuan").value = harga == 0 ? "" : harga;
     document.getElementById("modal-diskon").value = diskon == 0 ? "" : diskon;
     document.getElementById("modal-retur-qty").value = returQty == 0 ? "" : returQty;
     document.getElementById("modal-ongkir").value = ongkir == 0 ? "" : ongkir;
-    // --- AKHIR PERBAIKAN ---
 
-    // Tampilkan/sembunyikan field berdasarkan Tipe
     pembelianFields.classList.toggle("hidden", type !== "PEMBELIAN");
     hargaField.classList.toggle("hidden", type === "AKHIR");
-    // Sembunyikan field keterangan juga jika pembelian (karena digabung di grid lain)
     keteranganField.classList.toggle("hidden", type === "PEMBELIAN");
 
 
-    // --- LOGIKA BARU UNTUK "TAMBAH" vs "EDIT" ---
     if (type === "PEMBELIAN" && !productId) {
-      // KASUS: Tambah Pembelian Baru
       document.getElementById("modal-title").innerText = "Tambah Pembelian Baru";
-      productSelectDiv.classList.remove("hidden"); // Tampilkan dropdown produk
-      document.getElementById("product-id").value = ""; // Pastikan hidden ID kosong
-      productSelect.value = ""; // Reset dropdown
-      keteranganField.classList.remove("hidden"); // Tampilkan field keterangan
+      productSelectDiv.classList.remove("hidden"); 
+      document.getElementById("product-id").value = ""; 
+      productSelect.value = ""; 
+      keteranganField.classList.remove("hidden");
     
     } else {
-      // KASUS: Edit (Awal, Akhir, atau Pembelian)
-      productSelectDiv.classList.add("hidden"); // Sembunyikan dropdown produk
+      productSelectDiv.classList.add("hidden"); 
       if (productId) {
         document.getElementById("product-id").value = productId;
       }
-      // Set judul modal
       let title = "Edit " + type.charAt(0) + type.slice(1).toLowerCase();
       document.getElementById("modal-title").innerText = title;
     }
-    // --- Akhir Logika Baru ---
 
     modal.classList.remove("opacity-0", "pointer-events-none");
   };
