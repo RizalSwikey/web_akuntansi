@@ -10,14 +10,13 @@ from .models import (
     HppManufactureLabor,
     HppManufactureOverhead,
     HppManufactureWIP,
+    HppManufactureProduction,
     HppManufactureFinishedGoods,
 )
-from core.utils.hpp_calculator import calculate_hpp_for_product
+from core.utils.hpp_calculator import calculate_hpp_for_product, to_int, to_number, save_barang_diproduksi
 from core.utils.final_report import generate_final_report_data
 from core.utils.excel_exporter import generate_excel_file
 from core.utils.pdf_exporter import generate_pdf_file
-from core.utils.hpp_manufacture_calculator import to_int, calculate_hpp_manufacture
-
 
 
 # --- Helper function to get completion status ---
@@ -337,7 +336,6 @@ def hpp_manufaktur_view(request, report_id):
     completion_status = get_completion_status(report)
     products = Product.objects.filter(report=report)
 
-    # Prepare barang diproduksi list early (to fix UnboundLocalError)
     barang_diproduksi_list = []
 
     # ===========================
@@ -608,7 +606,7 @@ def hpp_manufaktur_view(request, report_id):
 
         if "next_step" in request.POST:
             return redirect("core:beban_usaha", report_id=report.id)
-
+    
     # --- Load All Data for Template ---
     bb_awal = HppManufactureMaterial.objects.filter(report=report, type="BB_AWAL")
     bb_pembelian = HppManufactureMaterial.objects.filter(report=report, type="BB_PEMBELIAN")
@@ -660,7 +658,6 @@ def hpp_manufaktur_view(request, report_id):
     bdp_awal_qty = map_qty(bdp_awal)
     bdp_akhir_qty = map_qty(bdp_akhir)
 
-    barang_diproduksi_list = []
     product_ids = set(bb_awal_map.keys()) | set(bb_pembelian_map.keys()) | set(bb_akhir_map.keys())
 
     for pid in product_ids:
@@ -689,6 +686,12 @@ def hpp_manufaktur_view(request, report_id):
             "total_produksi": total_produksi,
             "hpp_per_unit": hpp_per_unit,
         })
+    
+    if request.method == "POST" or not HppManufactureProduction.objects.filter(report=report).exists():
+        save_barang_diproduksi(report, barang_diproduksi_list)
+
+    total_barang_diproduksi = sum(to_number(row.get("total_produksi", 0)) for row in barang_diproduksi_list)
+    total_barang_diproduksi = int(total_barang_diproduksi)
 
     # ======================================================
     # STEP 3 — HANDLE POST ACTIONS (Now barang_diproduksi_list is READY)
@@ -745,7 +748,7 @@ def hpp_manufaktur_view(request, report_id):
                     harga_satuan=harga_satuan,
                     total=total,
                     keterangan=keterangan,
-                    status=status,  # ✅ important fix
+                    status=status,
                 )
                 messages.success(
                     request,
@@ -774,6 +777,21 @@ def hpp_manufaktur_view(request, report_id):
         # handle next step
         if "next_step" in request.POST:
             return redirect("core:beban_usaha", report_id=report.id)
+
+
+    # SUMS
+    total_bahan_baku_awal = bb_awal.aggregate(Sum('total'))['total__sum'] or 0
+    total_bahan_baku_pembelian = bb_pembelian.aggregate(Sum('total'))['total__sum'] or 0
+    total_bahan_baku_akhir = bb_akhir.aggregate(Sum('total'))['total__sum'] or 0
+
+    total_bdp_awal = bdp_awal.aggregate(Sum('total'))['total__sum'] or 0
+    total_bdp_akhir = bdp_akhir.aggregate(Sum('total'))['total__sum'] or 0
+
+    total_btkl = btkl_items.aggregate(Sum('total'))['total__sum'] or 0
+    total_bop = bop_items.aggregate(Sum('total'))['total__sum'] or 0
+
+    total_bj_awal = bj_awal.aggregate(Sum('total'))['total__sum'] or 0
+    total_bj_akhir = bj_akhir.aggregate(Sum('total'))['total__sum'] or 0
 
     # ======================================================
     # STEP 4 — FINAL CALC FOR TEMPLATE DISPLAY (bj_akhir_calc)
@@ -843,6 +861,18 @@ def hpp_manufaktur_view(request, report_id):
         "totals_bj_akhir_per_produk": totals_bj_akhir_per_produk,
 
         "barang_diproduksi_list": barang_diproduksi_list,
+        "total_barang_diproduksi": total_barang_diproduksi,
+    
+        # SUMS
+        "total_bahan_baku_awal": total_bahan_baku_awal,
+        "total_bahan_baku_pembelian": total_bahan_baku_pembelian,
+        "total_bahan_baku_akhir": total_bahan_baku_akhir,
+        "total_bdp_awal": total_bdp_awal,
+        "total_bdp_akhir": total_bdp_akhir,
+        "total_btkl": total_btkl,
+        "total_bop": total_bop,
+        "total_bj_awal": total_bj_awal,
+        "total_bj_akhir": total_bj_akhir,
         "total_bj_akhir_calc": total_bj_akhir_calc,
     })
 
