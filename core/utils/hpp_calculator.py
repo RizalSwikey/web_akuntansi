@@ -1,5 +1,7 @@
 from decimal import Decimal
-from core.models import RevenueItem
+from django.db import transaction
+from core.models import HppManufactureProduction, Product
+
 
 def calculate_hpp_for_product(product, entries):
     awal = entries.get('AWAL')
@@ -78,3 +80,50 @@ def calculate_hpp_for_product(product, entries):
 
         "validation_error_akhir": validation_error_akhir,
     }
+
+
+def to_int(val, default=0):
+    try:
+        if val is None or val == "":
+            return default
+        return int(float(val))
+    except Exception:
+        return default
+    
+
+def to_number(x):
+    if x is None:
+        return Decimal(0)
+    if isinstance(x, Decimal):
+        return x
+    try:
+        return Decimal(str(x))
+    except Exception:
+        try:
+            return Decimal(int(x))
+        except Exception:
+            return Decimal(0)
+        
+
+def save_barang_diproduksi(report, barang_diproduksi_list):
+    """
+    Save or update barang_diproduksi_list into HppManufactureProduction model.
+    Called from hpp_manufaktur_view after barang_diproduksi_list is computed.
+    """
+    with transaction.atomic():
+        for row in barang_diproduksi_list:
+            product_obj = Product.objects.filter(
+                name=row["product_name"], report=report
+            ).first()
+            if not product_obj:
+                continue
+
+            HppManufactureProduction.objects.update_or_create(
+                report=report,
+                product=product_obj,
+                defaults={
+                    "qty_diproduksi": row["qty_diproduksi"],
+                    "total_produksi": row["total_produksi"],
+                    "hpp_per_unit": row["hpp_per_unit"],
+                },
+            )
