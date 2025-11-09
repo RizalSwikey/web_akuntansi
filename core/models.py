@@ -188,6 +188,22 @@ class HppManufactureOverhead(models.Model):  # BOP
     def __str__(self):
         return f"{self.product.name} - BOP (Rp {self.total})"
 
+class HppManufactureProduction(models.Model):  # Barang Diproduksi
+    report = models.ForeignKey(FinancialReport, on_delete=models.CASCADE, related_name="hpp_manufaktur_production")
+    product = models.ForeignKey(Product, on_delete=models.CASCADE, related_name="hpp_manufaktur_production")
+
+    qty_diproduksi = models.IntegerField(default=0)
+    total_produksi = models.BigIntegerField(default=0)
+    hpp_per_unit = models.DecimalField(max_digits=18, decimal_places=2, default=0)
+    keterangan = models.CharField(max_length=255, blank=True, null=True)
+    
+    class Meta:
+        unique_together = ('report', 'product')
+        ordering = ['product__name']
+
+    def __str__(self):
+        return f"{self.product.name} - Barang Diproduksi ({self.qty_diproduksi} unit, Rp {self.hpp_per_unit}/unit)"
+
 
 class HppManufactureFinishedGoods(models.Model):  # Barang Jadi
     TYPE_CHOICES = [
