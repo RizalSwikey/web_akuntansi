@@ -1,8 +1,10 @@
-# core/utils/final_report.py
 from django.db.models import Sum
-from core.models import Product, HppEntry, RevenueItem, ExpenseItem
+from core.models import (
+    Product, HppEntry, RevenueItem, ExpenseItem,
+    HppManufactureMaterial, HppManufactureLabor, HppManufactureOverhead,
+    HppManufactureWIP, HppManufactureProduction, HppManufactureFinishedGoods
+)
 from core.utils.hpp_calculator import calculate_hpp_for_product
-
 
 def generate_final_report_data(report):
     """
@@ -99,32 +101,6 @@ def generate_final_report_data(report):
     pajak_penghasilan = 0  # (you can fill later)
     laba_setelah_pajak = laba_sebelum_pajak - pajak_penghasilan
 
-    # =======================
-    # ✅ Final assembled data
-    # =======================
-    # return {
-    #     # Pendapatan
-    #     "total_pendapatan_usaha": total_pendapatan_usaha,
-    #     "total_pendapatan_lain": total_pendapatan_lain,
-    #     "jumlah_pendapatan": jumlah_pendapatan,
-
-    #     # HPP
-    #     "hpp_total": total_hpp,
-    #     "hpp_per_product": hpp_per_product,
-
-    #     # Beban
-    #     "beban_usaha_items": beban_usaha_items,
-    #     "beban_lain_items": beban_lain_items,
-    #     "total_beban_usaha": total_beban_usaha,
-    #     "total_beban_lain": total_beban_lain,
-    #     "jumlah_beban": jumlah_beban,
-
-    #     # Laba / Rugi
-    #     "laba_sebelum_pajak": laba_sebelum_pajak,
-    #     "pajak_penghasilan": pajak_penghasilan,
-    #     "laba_setelah_pajak": laba_setelah_pajak,
-    # }
-
     return {
         "total_pendapatan_usaha": total_pendapatan_usaha,
         "total_pendapatan_lain": total_pendapatan_lain,
@@ -148,3 +124,89 @@ def generate_final_report_data(report):
         "laba_setelah_pajak": laba_setelah_pajak,
     }
 
+
+def get_manufaktur_report_context(report):
+    """
+    Helper function to calculate all final report data for Manufaktur.
+    This is used by the web view, PDF export, and Excel export.
+    """
+    
+    # --- 1. CALCULATE HARGA POKOK PRODUKSI (COGM) ---
+    total_bb_awal = HppManufactureMaterial.objects.filter(report=report, type="BB_AWAL").aggregate(Sum('total'))['total__sum'] or 0
+    total_bb_pembelian = HppManufactureMaterial.objects.filter(report=report, type="BB_PEMBELIAN").aggregate(Sum('total'))['total__sum'] or 0
+    total_bb_akhir = HppManufactureMaterial.objects.filter(report=report, type="BB_AKHIR").aggregate(Sum('total'))['total__sum'] or 0
+    total_bbb = total_bb_awal + total_bb_pembelian - total_bb_akhir
+    
+    total_btkl = HppManufactureLabor.objects.filter(report=report).aggregate(Sum('total'))['total__sum'] or 0
+    
+    bop_items = HppManufactureOverhead.objects.filter(report=report).order_by('nama_biaya')
+    total_bop = bop_items.aggregate(Sum('total'))['total__sum'] or 0
+    
+    total_biaya_produksi = total_bbb + total_btkl + total_bop
+    
+    total_bdp_awal = HppManufactureWIP.objects.filter(report=report, type="WIP_AWAL").aggregate(Sum('total'))['total__sum'] or 0
+    total_bdp_akhir = HppManufactureWIP.objects.filter(report=report, type="WIP_AKHIR").aggregate(Sum('total'))['total__sum'] or 0
+    
+    cogm = total_biaya_produksi + total_bdp_awal - total_bdp_akhir
+
+    # --- 2. CALCULATE HARGA POKOK PENJUALAN (HPP / COGS) ---
+    total_bj_awal = HppManufactureFinishedGoods.objects.filter(report=report, type="FG_AWAL").aggregate(Sum('total'))['total__sum'] or 0
+    total_bj_akhir = HppManufactureFinishedGoods.objects.filter(report=report, type="FG_AKHIR").aggregate(Sum('total'))['total__sum'] or 0
+    
+    barang_siap_dijual = cogm + total_bj_awal
+    total_hpp = barang_siap_dijual - total_bj_akhir
+    
+    hpp_per_product = HppManufactureProduction.objects.filter(report=report).order_by('product__name')
+    
+    # --- 3. CALCULATE LABA RUGI ---
+    total_pendapatan_usaha = RevenueItem.objects.filter(report=report, revenue_type='usaha').aggregate(Sum('total'))['total__sum'] or 0
+    total_pendapatan_lain = RevenueItem.objects.filter(report=report, revenue_type='lain').aggregate(Sum('total'))['total__sum'] or 0
+    jumlah_pendapatan = total_pendapatan_usaha + total_pendapatan_lain
+    
+    beban_usaha_items = ExpenseItem.objects.filter(report=report, expense_category='usaha').order_by('name')
+    total_beban_usaha_lainnya = beban_usaha_items.aggregate(Sum('total'))['total__sum'] or 0
+    
+    beban_lain_items = ExpenseItem.objects.filter(report=report, expense_category='lain').order_by('name')
+    total_beban_lain = beban_lain_items.aggregate(Sum('total'))['total__sum'] or 0
+    
+    jumlah_beban = total_hpp + total_beban_usaha_lainnya + total_beban_lain
+    
+    laba_sebelum_pajak = jumlah_pendapatan - jumlah_beban
+    
+    # TODO: Implement tax calculation
+    pajak_penghasilan = 0 
+    laba_setelah_pajak = laba_sebelum_pajak - pajak_penghasilan
+
+    # --- 4. RETURN CONTEXT DICTIONARY ---
+    context = {
+        'report': report,
+        'total_bb_awal': total_bb_awal,
+        'total_bb_pembelian': total_bb_pembelian,
+        'total_bb_akhir': total_bb_akhir,
+        'total_bbb': total_bbb,
+        'total_btkl': total_btkl,
+        'bop_items': bop_items,
+        'total_bop': total_bop,
+        'total_biaya_produksi': total_biaya_produksi,
+        'total_bdp_awal': total_bdp_awal,
+        'total_bdp_akhir': total_bdp_akhir,
+        'cogm': cogm,
+        'total_bj_awal': total_bj_awal,
+        'total_bj_akhir': total_bj_akhir,
+        'barang_siap_dijual': barang_siap_dijual,
+        'total_hpp': total_hpp,
+        'hpp_per_product': hpp_per_product,
+        'total_pendapatan_usaha': total_pendapatan_usaha,
+        'total_pendapatan_lain': total_pendapatan_lain,
+        'jumlah_pendapatan': jumlah_pendapatan,
+        'hpp_total': total_hpp,
+        'beban_usaha_items': beban_usaha_items,
+        'total_beban_usaha_lainnya': total_beban_usaha_lainnya,
+        'beban_lain_items': beban_lain_items,
+        'total_beban_lain': total_beban_lain,
+        'jumlah_beban': jumlah_beban,
+        'laba_sebelum_pajak': laba_sebelum_pajak,
+        'pajak_penghasilan': pajak_penghasilan,
+        'laba_setelah_pajak': laba_setelah_pajak,
+    }
+    return context

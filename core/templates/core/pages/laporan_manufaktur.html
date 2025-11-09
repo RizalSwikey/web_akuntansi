@@ -22,10 +22,10 @@
         </button>
         
         <div id="export-menu" class="absolute right-0 mt-2 w-48 bg-white rounded-lg shadow-xl z-10 hidden border border-slate-200 overflow-hidden">
-          <a href="#" class="block px-4 py-3 text-sm text-slate-700 hover:bg-slate-100 font-medium">
+          <a href="{% url 'core:export_excel' report.id %}" class="block px-4 py-3 text-sm text-slate-700 hover:bg-slate-100 font-medium">
             Excel
           </a>
-          <a href="#" class="block px-4 py-3 text-sm text-slate-700 hover:bg-slate-100 font-medium">
+          <a href="{% url 'core:export_pdf' report.id %}" class="block px-4 py-3 text-sm text-slate-700 hover:bg-slate-100 font-medium">
             PDF
           </a>
         </div>
@@ -35,9 +35,9 @@
     <div class="bg-white rounded-2xl p-10 shadow-lg max-w-4xl mx-auto">
       
       <div class="text-center mb-10">
-        <h2 class="text-2xl font-bold">{{ report.company_name | default:'PT. MAJU BERSAMA' }}</h2>
+        <h2 class="text-2xl font-bold">{{ report.company_name | default:'Nama Perusahaan' }}</h2>
         <p class="text-xl font-semibold">LAPORAN HARGA POKOK PRODUKSI</p>
-        <p class="text-md text-slate-500">{{ report.month | default:'Oktober' }} {{ report.year | default:'2025' }}</p>
+        <p class="text-md text-slate-500">{{ report.month | default:'Bulan' }} {{ report.year | default:'Tahun' }}</p>
       </div>
 
       <div class="space-y-3 max-w-2xl mx-auto mb-16">
@@ -46,115 +46,104 @@
         <div class="pl-6 space-y-3">
           <div class="flex justify-between items-center">
             <span class="text-slate-700">Persediaan bahan baku (awal)</span>
-            <span class="font-semibold">Rp 2,600,000</span>
+            <span class="font-semibold">Rp {{ total_bb_awal | floatformat:0 | intcomma }}</span>
           </div>
           <div class="flex justify-between items-center">
             <span class="text-slate-700">Pembelian Bahan Baku</span>
-            <span class="font-semibold">Rp 7,325,000</span>
+            <span class="font-semibold">Rp {{ total_bb_pembelian | floatformat:0 | intcomma }}</span>
           </div>
           <div class="flex justify-between items-center border-t pt-2 mt-2">
             <span class="text-slate-700 font-semibold">Persediaan Bahan Baku yang tersedia diproduksi</span>
-            <span class="font-semibold">Rp 9,925,000</span>
+            <span class="font-semibold">Rp {{ total_bb_awal | add:total_bb_pembelian | floatformat:0 | intcomma }}</span>
           </div>
           <div class="flex justify-between items-center">
             <span class="text-slate-700">Persediaan Bahan Baku (akhir)</span>
-            <span class="font-semibold">(Rp 6,900,000)</span>
+            <span class="font-semibold">(Rp {{ total_bb_akhir | floatformat:0 | intcomma }})</span>
           </div>
           <div class="flex justify-between items-center border-t pt-2 mt-2 font-bold">
             <span class="text-slate-900">Total Biaya Bahan Baku</span>
-            <span class="text-slate-900">Rp 3,025,000</span>
+            <span class="text-slate-900">Rp {{ total_bbb | floatformat:0 | intcomma }}</span>
           </div>
         </div>
 
         <div class="flex justify-between items-center pt-4">
           <span class="font-bold text-lg">Biaya Tenaga Kerja Langsung</span>
-          <span class="font-bold text-lg">Rp 32,000,000</span>
+          <span class="font-bold text-lg">Rp {{ total_btkl | floatformat:0 | intcomma }}</span>
         </div>
 
         <div class="font-bold text-lg pt-4">Biaya Overhead Pabrik</div>
         <div class="pl-6 space-y-3 border-b pb-3">
+          {% for item in bop_items %}
           <div class="flex justify-between items-center">
-            <span class="text-slate-700">Upah tidak langsung</span>
-            <span class="font-semibold">Rp 5,000</span>
+            <span class="text-slate-700">{{ item.nama_biaya }}</span>
+            <span class="font-semibold">Rp {{ item.total | floatformat:0 | intcomma }}</span>
           </div>
+          {% empty %}
           <div class="flex justify-between items-center">
-            <span class="text-slate-700">Biaya Perbaikan dan Pemeliharaan</span>
-            <span class="font-semibold">Rp 700,000</span>
+            <span class="text-slate-400 italic">Tidak ada biaya overhead</span>
+            <span class="font-semibold">Rp 0</span>
           </div>
-          <div class="flex justify-between items-center">
-            <span class="text-slate-700">Biaya Penyusutan Bangunan Pabrik</span>
-            <span class="font-semibold">Rp 500,000</span>
-          </div>
-          <div class="flex justify-between items-center">
-            <span class="text-slate-700">Biaya Penyusutan Mesin</span>
-            <span class="font-semibold">Rp 500,000</span>
-          </div>
-          <div class="flex justify-between items-center">
-            <span class="text-slate-700">Biaya Listrik, Air Pabrik</span>
-            <span class="font-semibold">Rp 500,000</span>
-          </div>
-          <div class="flex justify-between items-center">
-            <span class="text-slate-700">Biaya lain-lain</span>
-            <span class="font-semibold">Rp 500,000</span>
-          </div>
+          {% endfor %}
         </div>
         <div class="flex justify-between items-center font-bold pl-6">
             <span class="text-slate-900">Total Biaya Overhead Pabrik</span>
-            <span class="text-slate-900">Rp 2,705,000</span>
+            <span class="text-slate-900">Rp {{ total_bop | floatformat:0 | intcomma }}</span>
         </div>
 
         <div class="flex justify-between items-center font-bold text-lg pt-4 border-t mt-4">
           <span class="text-slate-900">Total Biaya Produksi Tahun ini</span>
-          <span class="text-slate-900">Rp 37,730,000</span>
+          <span class="text-slate-900">Rp {{ total_biaya_produksi | floatformat:0 | intcomma }}</span>
         </div>
 
         <div class="flex justify-between items-center pt-4">
           <span class="text-slate-700">Persediaan Barang Dalam Proses (BDP Awal)</span>
-          <span class="font-semibold">Rp 2,600,000</span>
+          <span class="font-semibold">Rp {{ total_bdp_awal | floatformat:0 | intcomma }}</span>
         </div>
         <div class="flex justify-between items-center border-t pt-2 mt-2">
           <span class="text-slate-700 font-semibold">Total Biaya Barang Dalam Proses</span>
-          <span class="font-semibold">Rp 40,330,000</span>
+          <span class="font-semibold">Rp {{ total_biaya_produksi | add:total_bdp_awal | floatformat:0 | intcomma }}</span>
         </div>
         <div class="flex justify-between items-center">
           <span class="text-slate-700">Persediaan Barang Dalam Proses (Akhir)</span>
-          <span class="font-semibold">(Rp 0)</span>
+          <span class="font-semibold">(Rp {{ total_bdp_akhir | floatformat:0 | intcomma }})</span>
         </div>
         
         <div class="flex justify-between items-center bg-slate-100 p-3 rounded-lg mt-4">
           <span class="font-bold text-lg">Cost of Goods Manufactured (COGM)</span>
-          <span class="font-bold text-lg">Rp 40,330,000</span>
+          <span class="font-bold text-lg">Rp {{ cogm | floatformat:0 | intcomma }}</span>
         </div>
 
         <div class="flex justify-between items-center pt-4">
           <span class="text-slate-700">Persediaan Barang Jadi (Awal)</span>
-          <span class="font-semibold">Rp 2,600,000</span>
+          <span class="font-semibold">Rp {{ total_bj_awal | floatformat:0 | intcomma }}</span>
         </div>
         <div class="flex justify-between items-center border-t pt-2 mt-2">
           <span class="text-slate-700 font-semibold">Total Biaya Barang Siap untuk Dijual</span>
-          <span class="font-semibold">Rp 42,930,000</span>
+          <span class="font-semibold">Rp {{ barang_siap_dijual | floatformat:0 | intcomma }}</span>
         </div>
         <div class="flex justify-between items-center">
           <span class="text-slate-700">Persediaan Barang Jadi (Akhir)</span>
-          <span class="font-semibold">(Rp 2,600,000)</span>
+          <span class="font-semibold">(Rp {{ total_bj_akhir | floatformat:0 | intcomma }})</span>
         </div>
 
         <div class="flex justify-between items-center bg-slate-100 p-3 rounded-lg mt-4">
-          <span class="font-bold text-lg">Harga Pokok Produksi (HPP)</span>
-          <span class="font-bold text-lg">Rp 40,330,000</span>
+          <span class="font-bold text-lg">Harga Pokok Penjualan (HPP)</span>
+          <span class="font-bold text-lg">Rp {{ total_hpp | floatformat:0 | intcomma }}</span>
         </div>
 
         <div class="pt-4">
           <span class="font-semibold text-slate-700">HPP Per Produk</span>
           <div class="space-y-2 ml-5">
+            {% for item in hpp_per_product %}
             <div class="flex justify-between border-b py-1 px-2 ">
-              <span>HPP Per Produk A</span>
-              <span>Rp 183,593</span>
+              <span>HPP Per {{ item.product.name }}</span>
+              <span>Rp {{ item.hpp_per_unit | floatformat:0 | intcomma }}</span>
             </div>
-             <div class="flex justify-between border-b py-1 px-2 ">
-              <span>HPP Per Produk B</span>
-              <span>Rp 73,236</span>
+            {% empty %}
+            <div class="flex justify-between border-b py-1 px-2 ">
+              <span class="text-slate-400 italic">Belum ada data HPP per produk</span>
             </div>
+            {% endfor %}
           </div>
         </div>
 
@@ -162,9 +151,9 @@
       <hr class="my-12 border-slate-300" />
 
       <div class="text-center mb-10">
-        <h2 class="text-2xl font-bold">{{ report.company_name | default:'PT. MAJU BERSAMA' }}</h2>
+        <h2 class="text-2xl font-bold">{{ report.company_name | default:'Nama Perusahaan' }}</h2>
         <p class="text-xl font-semibold">LAPORAN LABA RUGI</p>
-        <p class="text-md text-slate-500">{{ report.month | default:'Oktober' }} {{ report.year | default:'2025' }}</p>
+        <p class="text-md text-slate-500">{{ report.month | default:'Bulan' }} {{ report.year | default:'Tahun' }}</p>
       </div>
 
       <div class="space-y-4 max-w-2xl mx-auto">
@@ -172,57 +161,77 @@
         <div class="pl-6 border-b pb-2">
           <div class="flex justify-between items-center py-1">
             <span>Pendapatan Usaha</span>
-            <span>Rp 32,000,000</span>
+            <span>Rp {{ total_pendapatan_usaha | floatformat:0 | intcomma }}</span>
           </div>
           <div class="flex justify-between items-center py-1">
             <span>Pendapatan Lain - Lain</span>
-            <span>Rp 3,500,000</span>
+            <span>Rp {{ total_pendapatan_lain | floatformat:0 | intcomma }}</span>
           </div>
         </div>
         <div class="flex justify-between items-center font-bold py-1 pl-6">
           <span>Jumlah Pendapatan</span>
-          <span>Rp 35,500,000</span>
+          <span>Rp {{ jumlah_pendapatan | floatformat:0 | intcomma }}</span>
         </div>
 
         <div class="font-bold text-lg pt-6">Beban</div>
         <div class="pl-6 border-b pb-2">
           <div class="flex justify-between items-center py-1">
             <span>Beban Usaha - HPP</span>
-            <span>Rp 40,330,000</span>
+            <span>Rp {{ hpp_total | floatformat:0 | intcomma }}</span>
           </div>
+          
+          {% for item in beban_usaha_items %}
           <div class="flex justify-between items-center py-1">
-            <span>Beban Lain - Lain</span>
-            <span>Rp 0</span>
+            <span>{{ item.name }}</span>
+            <span>Rp {{ item.total | floatformat:0 | intcomma }}</span>
+          </div>
+          {% endfor %}
+           <div class="flex justify-between items-center py-1 font-semibold border-t mt-1 pt-1">
+            <span>Total Beban Usaha Lainnya</span>
+            <span>Rp {{ total_beban_usaha_lainnya | floatformat:0 | intcomma }}</span>
+          </div>
+          
+          {% for item in beban_lain_items %}
+          <div class="flex justify-between items-center py-1 mt-2">
+            <span>{{ item.name }}</span>
+            <span>Rp {{ item.total | floatformat:0 | intcomma }}</span>
+          </div>
+          {% endfor %}
+          <div class="flex justify-between items-center py-1 font-semibold border-t mt-1 pt-1">
+            <span>Total Beban Lain - Lain</span>
+            <span>Rp {{ total_beban_lain | floatformat:0 | intcomma }}</span>
           </div>
         </div>
         <div class="flex justify-between items-center font-bold py-1 pl-6">
           <span>Jumlah Beban</span>
-          <span>Rp 40,330,000</span>
+          <span>Rp {{ jumlah_beban | floatformat:0 | intcomma }}</span>
         </div>
 
         <div class="space-y-2 pt-8">
-          <div class="flex justify-between items-center font-semibold text-slate-700 py-2">
-            <span>Laba (Rugi) Sebelum Pajak Penghasilan</span>
-            <span class="font-bold text-red-600">(Rp 4,830,000)</span>
+          <div class="flex justify-between items-center font-semibold py-2">
+            <span class="text-slate-700">Laba (Rugi) Sebelum Pajak Penghasilan</span>
+            {% if laba_sebelum_pajak < 0 %}
+              <span class="font-bold text-red-600">(Rp {{ laba_sebelum_pajak|floatformat:0|intcomma }})</span>
+            {% else %}
+              <span class="font-bold text-black">Rp {{ laba_sebelum_pajak|floatformat:0|intcomma }}</span>
+            {% endif %}
           </div>
           <div class="flex justify-between items-center font-semibold text-slate-700 py-2">
             <span>Beban Pajak Penghasilan</span>
-            <span class="font-bold text-black">Rp 0</span>
+            <span class="font-bold text-black">Rp {{ pajak_penghasilan | floatformat:0 | intcomma }}</span>
           </div>
           
-          {% with laba_setelah_pajak=-4830000 %} 
-            {% if laba_setelah_pajak < 0 %}
-            <div class="flex justify-between items-center bg-red-100 p-4 rounded-lg mt-4">
-              <span class="font-bold text-lg text-red-700">Laba (Rugi) Setelah Pajak Penghasilan</span>
-              <span class="font-bold text-lg text-red-700">(Rp 4,830,000)</span>
-            </div>
-            {% else %}
-            <div class="flex justify-between items-center bg-green-100 p-4 rounded-lg mt-4">
-              <span class="font-bold text-lg text-green-700">Laba (Rugi) Setelah Pajak Penghasilan</span>
-              <span class="font-bold text-lg text-green-700">Rp 4,830,000</span>
-            </div>
-            {% endif %}
-          {% endwith %}
+          {% if laba_setelah_pajak < 0 %}
+          <div class="flex justify-between items-center bg-red-100 p-4 rounded-lg mt-4">
+            <span class="font-bold text-lg text-red-700">Laba (Rugi) Setelah Pajak Penghasilan</span>
+            <span class="font-bold text-lg text-red-700">(Rp {{ laba_setelah_pajak|floatformat:0|intcomma }})</span>
+          </div>
+          {% else %}
+          <div class="flex justify-between items-center bg-green-100 p-4 rounded-lg mt-4">
+            <span class="font-bold text-lg text-green-700">Laba (Rugi) Setelah Pajak Penghasilan</span>
+            <span class="font-bold text-lg text-green-700">Rp {{ laba_setelah_pajak|floatformat:0|intcomma }}</span>
+          </div>
+          {% endif %}
 
         </div>
       </div>
@@ -236,8 +245,9 @@
 document.addEventListener("DOMContentLoaded", function () {
     const toggleBtn = document.getElementById("export-toggle-btn");
     const menu = document.getElementById("export-menu");
+    const container = document.getElementById("export-dropdown-container");
 
-    if (toggleBtn && menu) {
+    if (toggleBtn && menu && container) {
         toggleBtn.addEventListener("click", function () {
             menu.classList.toggle("hidden");
         });
@@ -245,8 +255,7 @@ document.addEventListener("DOMContentLoaded", function () {
 
     // Close dropdown when clicking outside
     document.addEventListener("click", function (e) {
-        const container = document.getElementById("export-dropdown-container");
-        if (container && !container.contains(e.target)) {
+        if (container && !container.contains(e.target) && menu) {
             menu.classList.add("hidden");
         }
     });

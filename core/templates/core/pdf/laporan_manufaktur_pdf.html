@@ -127,7 +127,7 @@
             padding-top: 12px;
         }
         .negative {
-            /* color: #b91c1c; */ 
+            /* Tampilkan dalam format (Rp xxx) */
         }
 
     </style>
@@ -141,149 +141,138 @@
     <div class="container">
 
         <div class="header">
-            <p class="company-name">{{ report.company_name|default:"PT. MAJU BERSAMA" }}</p>
+            <p class="company-name">{{ report.company_name|default:"Nama Perusahaan" }}</p>
             <p class="report-title">LAPORAN HARGA POKOK PRODUKSI</p>
-            <p class="report-period">{{ report.month|default:"Oktober" }} {{ report.year|default:"2025" }}</p>
+            <p class="report-period">{{ report.month|default:"Bulan" }} {{ report.year|default:"Tahun" }}</p>
         </div>
 
         <div class="section-title">Biaya Bahan Baku</div>
         <table class="data-table">
             <tr>
                 <td class="label indent-1">Persediaan bahan baku (awal)</td>
-                <td class="amount">Rp 2,600,000</td>
+                <td class="amount">Rp {{ total_bb_awal|floatformat:0|intcomma }}</td>
             </tr>
             <tr>
                 <td class="label indent-1">Pembelian Bahan Baku</td>
-                <td class="amount">Rp 7,325,000</td>
+                <td class="amount">Rp {{ total_bb_pembelian|floatformat:0|intcomma }}</td>
             </tr>
             <tr class="total-row">
                 <td class="label indent-1">Persediaan Bahan Baku yang tersedia diproduksi</td>
-                <td class="amount">Rp 9,925,000</td>
+                <td class="amount">Rp {{ total_bb_awal|add:total_bb_pembelian|floatformat:0|intcomma }}</td>
             </tr>
             <tr>
                 <td class="label indent-1">Persediaan Bahan Baku (akhir)</td>
-                <td class="amount negative">(Rp 6,900,000)</td>
+                <td class="amount negative">(Rp {{ total_bb_akhir|floatformat:0|intcomma }})</td>
             </tr>
             <tr class="total-row">
                 <td class="label">Total Biaya Bahan Baku</td>
-                <td class="amount">Rp 3,025,000</td>
+                <td class="amount">Rp {{ total_bbb|floatformat:0|intcomma }}</td>
             </tr>
         </table>
 
         <table class="data-table">
             <tr>
                 <td class="label section-title" style="margin-top: 0;">Biaya Tenaga Kerja Langsung</td>
-                <td class="amount section-title" style="margin-top: 0;">Rp 32,000,000</td>
+                <td class="amount section-title" style="margin-top: 0;">Rp {{ total_btkl|floatformat:0|intcomma }}</td>
             </tr>
         </table>
         
         <div class="section-title">Biaya Overhead Pabrik</div>
         <table class="data-table">
+            {% for item in bop_items %}
             <tr>
-                <td class="label indent-1">Upah tidak langsung</td>
-                <td class="amount">Rp 5,000</td>
+                <td class="label indent-1">{{ item.nama_biaya }}</td>
+                <td class="amount">Rp {{ item.total|floatformat:0|intcomma }}</td>
             </tr>
+            {% empty %}
             <tr>
-                <td class="label indent-1">Biaya Perbaikan dan Pemeliharaan</td>
-                <td class="amount">Rp 700,000</td>
+                <td class="label indent-1" style="color: #6b7280;">- Tidak ada data BOP -</td>
+                <td class="amount">Rp 0</td>
             </tr>
-            <tr>
-                <td class="label indent-1">Biaya Penyusutan Bangunan Pabrik</td>
-                <td class="amount">Rp 500,000</td>
-            </tr>
-            <tr>
-                <td class="label indent-1">Biaya Penyusutan Mesin</td>
-                <td class="amount">Rp 500,000</td>
-            </tr>
-            <tr>
-                <td class="label indent-1">Biaya Listrik, Air Pabrik</td>
-                <td class="amount">Rp 500,000</td>
-            </tr>
-            <tr>
-                <td class="label indent-1">Biaya lain-lain</td>
-                <td class="amount">Rp 500,000</td>
-            </tr>
+            {% endfor %}
             <tr class="total-row">
                 <td class="label indent-1">Total Biaya Overhead Pabrik</td>
-                <td class="amount">Rp 2,705,000</td>
+                <td class="amount">Rp {{ total_bop|floatformat:0|intcomma }}</td>
             </tr>
         </table>
 
         <table class="data-table">
             <tr class="total-row" style="border-bottom: 1px solid #e5e7eb;">
                 <td class="label section-title" style="margin-top: 0;">Total Biaya Produksi Tahun ini</td>
-                <td class="amount section-title" style="margin-top: 0;">Rp 37,730,000</td>
+                <td class="amount section-title" style="margin-top: 0;">Rp {{ total_biaya_produksi|floatformat:0|intcomma }}</td>
             </tr>
             <tr>
                 <td class="label">Persediaan Barang Dalam Proses (BDP Awal)</td>
-                <td class="amount">Rp 2,600,000</td>
+                <td class="amount">Rp {{ total_bdp_awal|floatformat:0|intcomma }}</td>
             </tr>
             <tr class="total-row">
                 <td class="label">Total Biaya Barang Dalam Proses</td>
-                <td class="amount">Rp 40,330,000</td>
+                <td class="amount">Rp {{ total_biaya_produksi|add:total_bdp_awal|floatformat:0|intcomma }}</td>
             </tr>
             <tr>
                 <td class="label">Persediaan Barang Dalam Proses (Akhir)</td>
-                <td class="amount negative">(Rp 0)</td>
+                <td class="amount negative">(Rp {{ total_bdp_akhir|floatformat:0|intcomma }})</td>
             </tr>
             <tr class="highlight-row">
                 <td class="label">Cost of Goods Manufactured (COGM)</td>
-                <td class="amount">Rp 40,330,000</td>
+                <td class="amount">Rp {{ cogm|floatformat:0|intcomma }}</td>
             </tr>
         </table>
 
         <table class="data-table" style="margin-top: 20px;">
              <tr>
                 <td class="label">Persediaan Barang Jadi (Awal)</td>
-                <td class="amount">Rp 2,600,000</td>
+                <td class="amount">Rp {{ total_bj_awal|floatformat:0|intcomma }}</td>
             </tr>
             <tr class="total-row">
                 <td class="label">Total Biaya Barang Siap untuk Dijual</td>
-                <td class="amount">Rp 42,930,000</td>
+                <td class="amount">Rp {{ barang_siap_dijual|floatformat:0|intcomma }}</td>
             </tr>
             <tr>
                 <td class="label">Persediaan Barang Jadi (Akhir)</td>
-                <td class="amount negative">(Rp 2,600,000)</td>
+                <td class="amount negative">(Rp {{ total_bj_akhir|floatformat:0|intcomma }})</td>
             </tr>
             <tr class="highlight-row">
-                <td class="label">Harga Pokok Produksi (HPP)</td>
-                <td class="amount">Rp 40,330,000</td>
+                <td class="label">Harga Pokok Penjualan (HPP)</td>
+                <td class="amount">Rp {{ total_hpp|floatformat:0|intcomma }}</td>
             </tr>
         </table>
         
         <div class="section-title" style="margin-top: 16px;">HPP Per Produk</div>
         <table class="data-table">
+            {% for item in hpp_per_product %}
             <tr>
-                <td class="label indent-1">HPP Per Produk A</td>
-                <td class="amount">Rp 183,593</td>
+                <td class="label indent-1">HPP Per {{ item.product.name }}</td>
+                <td class="amount">Rp {{ item.hpp_per_unit|floatformat:0|intcomma }}</td>
             </tr>
-            <tr>
-                <td class="label indent-1">HPP Per Produk B</td>
-                <td class="amount">Rp 73,236</td>
+            {% empty %}
+             <tr>
+                <td class="label indent-1" style="color: #6b7280;">- Tidak ada data HPP per produk -</td>
             </tr>
+            {% endfor %}
         </table>
 
         <hr style="page-break-before: always; border: none; margin: 0; padding: 0;">
 
         <div class="header" style="padding-top: 40px;"> 
-            <p class="company-name">{{ report.company_name|default:"PT. MAJU BERSAMA" }}</p>
+            <p class="company-name">{{ report.company_name|default:"Nama Perusahaan" }}</p>
             <p class="report-title">LAPORAN LABA RUGI</p>
-            <p class="report-period">{{ report.month|default:"Oktober" }} {{ report.year|default:"2025" }}</p>
+            <p class="report-period">{{ report.month|default:"Bulan" }} {{ report.year|default:"Tahun" }}</p>
         </div>
 
         <div class="section-title">Pendapatan</div>
         <table class="data-table">
             <tr>
                 <td class="label indent-1">Pendapatan Usaha</td>
-                <td class="amount">Rp 32,000,000</td>
+                <td class="amount">Rp {{ total_pendapatan_usaha|floatformat:0|intcomma }}</td>
             </tr>
             <tr>
                 <td class="label indent-1">Pendapatan Lain - Lain</td>
-                <td class="amount">Rp 3,500,000</td>
+                <td class="amount">Rp {{ total_pendapatan_lain|floatformat:0|intcomma }}</td>
             </tr>
             <tr class="total-row">
                 <td class="label">Jumlah Pendapatan</td>
-                <td class="amount">Rp 35,500,000</td>
+                <td class="amount">Rp {{ jumlah_pendapatan|floatformat:0|intcomma }}</td>
             </tr>
         </table>
 
@@ -291,16 +280,44 @@
         <table class="data-table">
             <tr>
                 <td class="label indent-1">Beban Usaha - HPP</td>
-                <td class="amount">Rp 40,330,000</td>
+                <td class="amount">Rp {{ hpp_total|floatformat:0|intcomma }}</td>
             </tr>
+
+            {% if beban_usaha_items %}
             <tr>
-                <td class="label indent-1">Beban Lain - Lain</td>
-                <td class="amount">Rp 0</td>
+                <td class="label sub-header" colspan="2">Beban Usaha Lainnya:</td>
             </tr>
+            {% for item in beban_usaha_items %}
+            <tr>
+                <td class="label indent-2">{{ item.name }}</td>
+                <td class="amount">Rp {{ item.total|floatformat:0|intcomma }}</td>
+            </tr>
+            {% endfor %}
+            <tr>
+                <td class="label indent-1" style="font-weight: 600;">Total Beban Usaha Lainnya</td>
+                <td class="amount">Rp {{ total_beban_usaha_lainnya|floatformat:0|intcomma }}</td>
+            </tr>
+            {% endif %}
+
+            {% if beban_lain_items %}
+            <tr>
+                <td classs="label sub-header" colspan="2">Beban Lain - Lain:</td>
+            </tr>
+            {% for item in beban_lain_items %}
+            <tr>
+                <td class="label indent-2">{{ item.name }}</td>
+                <td class="amount">Rp {{ item.total|floatformat:0|intcomma }}</td>
+            </tr>
+            {% endfor %}
+            <tr>
+                <td class="label indent-1" style="font-weight: 600;">Total Beban Lain - Lain</td>
+                <td class="amount">Rp {{ total_beban_lain|floatformat:0|intcomma }}</td>
+            </tr>
+            {% endif %}
             
             <tr class="total-row">
                 <td class="label">Jumlah Beban</td>
-                <td class="amount">Rp 40,330,000</td>
+                <td class="amount">Rp {{ jumlah_beban|floatformat:0|intcomma }}</td>
             </tr>
         </table>
 
@@ -309,18 +326,29 @@
             
             <tr>
                 <td class="label">Laba (Rugi) Sebelum Pajak Penghasilan</td>
-                <td class="amount negative">(Rp 4,830,000)</td>
+                {% if laba_sebelum_pajak < 0 %}
+                <td class="amount negative">(Rp {{ laba_sebelum_pajak|floatformat:0|intcomma }})</td>
+                {% else %}
+                <td class="amount">Rp {{ laba_sebelum_pajak|floatformat:0|intcomma }}</td>
+                {% endif %}
             </tr>
 
             <tr>
                 <td class="label">Beban Pajak Penghasilan</td>
-                <td class="amount">Rp 0</td>
+                <td class="amount">Rp {{ pajak_penghasilan|floatformat:0|intcomma }}</td>
             </tr>
             
+            {% if laba_setelah_pajak < 0 %}
             <tr class="loss-row">
                 <td class="label">Laba (Rugi) Setelah Pajak Penghasilan</td>
-                <td class="amount">(Rp 4,830,000)</td>
+                <td class="amount">(Rp {{ laba_setelah_pajak|floatformat:0|intcomma }})</td>
             </tr>
+            {% else %}
+            <tr class="profit-row">
+                <td class="label">Laba (Rugi) Setelah Pajak Penghasilan</td>
+                <td class="amount">Rp {{ laba_setelah_pajak|floatformat:0|intcomma }}</td>
+            </tr>
+            {% endif %}
         </table>
         
     </div> 

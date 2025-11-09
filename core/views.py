@@ -17,7 +17,8 @@ from core.utils.hpp_calculator import calculate_hpp_for_product, to_int, to_numb
 from core.utils.final_report import generate_final_report_data
 from core.utils.excel_exporter import generate_excel_file
 from core.utils.pdf_exporter import generate_pdf_file
-
+from django.template.loader import render_to_string
+from core.utils.final_report import get_manufaktur_report_context
 
 def get_completion_status(report):
     status = {
@@ -1031,11 +1032,14 @@ def beban_usaha_manufaktur_view(request, report_id):
     }
     return render(request, 'core/pages/beban_usaha_manufaktur.html', context)
 
+# Replace your old laporan_view with this one in views.py
+
 @login_required(login_url='core:login')
 def laporan_view(request, report_id):
     """
-    PAGE 5: LAPORAN (LOGIKA BARU)
-    Juga bertindak sebagai router.
+    PAGE 5: LAPORAN (ROUTER)
+    This view acts as a router to send the user to the correct
+    report page (dagang vs manufaktur) based on their profile.
     """
     report = get_object_or_404(FinancialReport, id=report_id, user=request.user)
     completion_status = get_completion_status(report)
@@ -1044,62 +1048,87 @@ def laporan_view(request, report_id):
         messages.error(request, 'Harap lengkapi data Beban Usaha terlebih dahulu.')
         return redirect('core:beban_usaha', report_id=report.id)
 
-
     if report.business_type == 'manufaktur':
-        # --- LOGIKA UNTUK MANUFAKTUR ---
-        
-        # (Backend Anda akan membuat fungsi kalkulasi baru 
-        #  misalnya generate_final_report_data_manufaktur() nanti)
-        # data = generate_final_report_data_manufaktur(report) 
-        
-        context = {
-            # **data,
-            'report': report,
-            'completion_status': completion_status,
-        }
-        # Render template BARU
-        return render(request, 'core/pages/laporan_manufaktur.html', context)
+        return redirect('core:laporan_manufaktur', report_id=report.id)
         
     else:
-        # ======================================================
-        # LOGIKA DAGANG (KODE ANDA YANG SUDAH ADA)
-        # ======================================================
-        data = generate_final_report_data(report) # Ini fungsi Dagang
-        
-        return render(request, 'core/pages/laporan.html', {
-            **data,
-            'report': report,
-            'completion_status': completion_status,
-        })
+        return redirect('core:laporan_dagang', report_id=report.id)
+    
 
-# =============================================
-# AKHIR PERUBAHAN
-# =============================================
+@login_required(login_url='core:login')
+def laporan_dagang_view(request, report_id):
+    """
+    PAGE 5: LAPORAN (Dagang)
+    This view prepares all the final calculations for the trading/dagang report.
+    """
+    report = get_object_or_404(FinancialReport, id=report_id, user=request.user)
+    completion_status = get_completion_status(report)
+
+    data = generate_final_report_data(report) 
+    
+    context = {
+        **data,
+        'report': report,
+        'completion_status': completion_status,
+    }
+    
+    return render(request, 'core/pages/laporan.html', context)
+
+
+@login_required(login_url='core:login')
+def laporan_manufaktur_view(request, report_id):
+    report = get_object_or_404(FinancialReport, id=report_id, user=request.user)
+    completion_status = get_completion_status(report)
+    
+    if not completion_status['beban_usaha']:
+        messages.error(request, 'Harap lengkapi data Beban Usaha terlebih dahulu.')
+        return redirect('core:beban_usaha', report_id=report.id)
+
+    context = get_manufaktur_report_context(report) 
+    context['completion_status'] = completion_status
+    
+    return render(request, 'core/pages/laporan_manufaktur.html', context)
 
 
 @login_required(login_url='core:login')
 def export_excel(request, report_id):
     report = get_object_or_404(FinancialReport, id=report_id, user=request.user)
     
-    # Nanti ini juga perlu logika if/else
-    content, filename = generate_excel_file(report)
+    try:
+        content, filename = generate_excel_file(report)
+        
+        response = HttpResponse(
+            content,
+            content_type="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
+        )
+        response["Content-Disposition"] = f"attachment; filename={filename}"
+        return response
     
-    response = HttpResponse(
-        content,
-        content_type="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
-    )
-    response["Content-Disposition"] = f"attachment; filename={filename}"
-    return response
-
-
+    except Exception as e:
+        messages.error(request, f"Gagal membuat file Excel: {e}")
+        return redirect('core:laporan', report_id=report.id)
+    
 @login_required(login_url='core:login')
 def export_pdf(request, report_id):
     report = get_object_or_404(FinancialReport, id=report_id, user=request.user)
 
-    # Nanti ini juga perlu logika if/else
-    data = generate_final_report_data(report)
-    pdf_content, filename = generate_pdf_file(report, data, request=request)
+    try:
+        if report.business_type == 'manufaktur':
+            data = get_manufaktur_report_context(report)
+            template_path = 'core/pdf/laporan_manufaktur_pdf.html'
+            filename = f"Laporan_Manufaktur_{report.company_name}_{report.year}.pdf"
 
-    response = HttpResponse(pdf_content, content_type="application/pdf")
-    response["Content-Disposition"] = f"attachment; filename={filename}"
-    return response
+        else:
+            data = generate_final_report_data(report) 
+            template_path = 'core/pdf/laporan_pdf.html'
+            filename = f"Laporan_Dagang_{report.company_name}_{report.year}.pdf"
+
+        pdf_content = generate_pdf_file(report, data, template_path, request=request)
+        
+        response = HttpResponse(pdf_content, content_type="application/pdf")
+        response["Content-Disposition"] = f"attachment; filename={filename}"
+        return response
+        
+    except Exception as e:
+        messages.error(request, f"Gagal membuat PDF: {e}")
+        return redirect('core:laporan', report_id=report.id)
