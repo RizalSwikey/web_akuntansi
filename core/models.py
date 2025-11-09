@@ -226,20 +226,25 @@ class HppManufactureFinishedGoods(models.Model):  # Barang Jadi
         return f"{self.product.name} - {self.get_type_display()} (Rp {self.total})"
 
 # --- ExpenseItem (No change needed for now) ---
+# core/models.py
 class ExpenseItem(models.Model):
     EXPENSE_CATEGORY_CHOICES = [
-        ('usaha', 'Beban Usaha Lainnya'), # Renamed slightly for clarity
+        ('usaha', 'Beban Usaha Lainnya'),
         ('lain', 'Beban Lain-lain'),
     ]
+    BUSINESS_SCOPE_CHOICES = [
+        ('dagang', 'Dagang'),
+        ('manufaktur', 'Manufaktur'),
+    ]
+
     report = models.ForeignKey(FinancialReport, on_delete=models.CASCADE, related_name="expense_items")
-    expense_category = models.CharField(
-        max_length=20,
-        choices=EXPENSE_CATEGORY_CHOICES,
-        default='usaha'
-    )
+    expense_category = models.CharField(max_length=20, choices=EXPENSE_CATEGORY_CHOICES, default='usaha')
+    scope = models.CharField(max_length=20, choices=BUSINESS_SCOPE_CHOICES, default='dagang')
+    product = models.ForeignKey(Product, on_delete=models.SET_NULL, null=True, blank=True)
     expense_type = models.CharField(max_length=50, blank=True, null=True)
     name = models.CharField(max_length=255)
     total = models.BigIntegerField(default=0)
 
     def __str__(self):
-        return f"{self.expense_category}: {self.name} (Rp {self.total})"
+        return f"{self.get_expense_category_display()} - {self.name}"
+

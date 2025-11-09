@@ -892,31 +892,64 @@ def beban_usaha_view(request, report_id):
     report = get_object_or_404(FinancialReport, id=report_id, user=request.user)
     completion_status = get_completion_status(report)
 
-    # Gatekeeper: HPP must be complete
     if not completion_status['hpp']:
         messages.error(request, 'Harap lengkapi data HPP terlebih dahulu.')
-        # Arahkan kembali ke HPP (yang akan me-routing otomatis)
         return redirect('core:hpp', report_id=report.id) 
 
-    # ======================================================
-    # LOGIKA PERCABANGAN (BARU)
-    # ======================================================
     if report.business_type == 'manufaktur':
-        # --- LOGIKA UNTUK MANUFAKTUR ---
-        
-        # (Saat ini kosong, hanya untuk front-end)
-        
+        # POST handling for manufaktur beban (add / delete)
+        if request.method == 'POST':
+            action = request.POST.get('action')
+
+            # Add a new manufaktur expense (modal uses action="add_beban_item")
+            if action == 'add_beban_item' or action == 'add_beban':
+                try:
+                    jenis = request.POST.get('jenis_beban')   # from select
+                    keterangan = request.POST.get('keterangan')  # optional text
+                    total = int(request.POST.get('total_beban', 0))
+
+                    # create ExpenseItem: map template fields -> model
+                    ExpenseItem.objects.create(
+                        report=report,
+                        expense_category='usaha',   # keep semantics; change if you used 'lain'
+                        expense_type=jenis,
+                        name=keterangan or jenis,
+                        total=total
+                    )
+                    messages.success(request, 'Beban manufaktur berhasil ditambahkan.')
+                except Exception as e:
+                    messages.error(request, f'Terjadi kesalahan saat menambahkan beban: {e}')
+                return redirect('core:beban_usaha', report_id=report.id)
+
+            # Delete item
+            if action == 'delete_beban_item':
+                try:
+                    item_id = int(request.POST.get('item_id', -1))
+                    item = ExpenseItem.objects.get(id=item_id, report=report)
+                    item.delete()
+                    messages.success(request, 'Beban berhasil dihapus.')
+                except ExpenseItem.DoesNotExist:
+                    messages.error(request, 'Item beban tidak ditemukan.')
+                except Exception as e:
+                    messages.error(request, f'Gagal menghapus item: {e}')
+                return redirect('core:beban_usaha', report_id=report.id)
+
+        # GET: show manufaktur beban page
+        # If you later add a 'scope' field, filter by scope='manufaktur' here.
+        beban_items = report.expense_items.filter(expense_category='usaha').order_by('-id')
+        total_beban_usaha = beban_items.aggregate(Sum('total'))['total__sum'] or 0
+
         context = {
             'report': report,
             'completion_status': completion_status,
+            'beban_items': beban_items,
+            'total_beban_usaha': total_beban_usaha,
         }
-        # Render template BARU
         return render(request, 'core/pages/beban_usaha_manufaktur.html', context)
 
+
+
     else:
-        # ======================================================
-        # LOGIKA DAGANG (KODE ANDA YANG SUDAH ADA)
-        # ======================================================
         if request.method == 'POST':
             action = request.POST.get('action')
             
@@ -947,7 +980,6 @@ def beban_usaha_view(request, report_id):
                 return redirect('core:laporan', report_id=report.id)
             return redirect('core:beban_usaha', report_id=report.id)
 
-        # --- GET Request Logic ---
         beban_usaha_items = report.expense_items.filter(expense_category='usaha')
         beban_lain_items = report.expense_items.filter(expense_category='lain')
         total_beban_usaha = beban_usaha_items.aggregate(Sum('total'))['total__sum'] or 0
@@ -978,9 +1010,7 @@ def laporan_view(request, report_id):
         messages.error(request, 'Harap lengkapi data Beban Usaha terlebih dahulu.')
         return redirect('core:beban_usaha', report_id=report.id)
 
-    # ======================================================
-    # LOGIKA PERCABANGAN (BARU)
-    # ======================================================
+
     if report.business_type == 'manufaktur':
         # --- LOGIKA UNTUK MANUFAKTUR ---
         
