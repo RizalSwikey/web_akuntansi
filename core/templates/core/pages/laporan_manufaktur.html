@@ -1,0 +1,255 @@
+{% extends "base.html" %}
+{% load static %}
+{% load humanize %}
+{% block title %}Laporan Manufaktur{% endblock %}
+
+{% block content %}
+<div class="flex h-screen">
+
+  {% include 'core/partials/sidebar.html' %}
+
+  <main id="main-content" class="flex-1 p-8 overflow-y-auto">
+
+    <div class="flex justify-between items-center mb-8">
+      <h1 class="text-3xl font-bold">Laporan Manufaktur</h1>
+
+      <div class="relative" id="export-dropdown-container">
+        <button id="export-toggle-btn" type="button" class="bg-gray-700 text-white py-2 px-6 rounded-lg font-semibold hover:bg-gray-600 flex items-center">
+          Export Laporan
+          <svg class="w-4 h-4 ml-2" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
+            <path stroke-linecap="round" stroke-linejoin="round" d="m19.5 8.25-7.5 7.5-7.5-7.5" />
+          </svg>
+        </button>
+        
+        <div id="export-menu" class="absolute right-0 mt-2 w-48 bg-white rounded-lg shadow-xl z-10 hidden border border-slate-200 overflow-hidden">
+          <a href="#" class="block px-4 py-3 text-sm text-slate-700 hover:bg-slate-100 font-medium">
+            Excel
+          </a>
+          <a href="#" class="block px-4 py-3 text-sm text-slate-700 hover:bg-slate-100 font-medium">
+            PDF
+          </a>
+        </div>
+      </div>
+      </div>
+
+    <div class="bg-white rounded-2xl p-10 shadow-lg max-w-4xl mx-auto">
+      
+      <div class="text-center mb-10">
+        <h2 class="text-2xl font-bold">{{ report.company_name | default:'PT. MAJU BERSAMA' }}</h2>
+        <p class="text-xl font-semibold">LAPORAN HARGA POKOK PRODUKSI</p>
+        <p class="text-md text-slate-500">{{ report.month | default:'Oktober' }} {{ report.year | default:'2025' }}</p>
+      </div>
+
+      <div class="space-y-3 max-w-2xl mx-auto mb-16">
+        
+        <div class="font-bold text-lg">Bahan Baku</div>
+        <div class="pl-6 space-y-3">
+          <div class="flex justify-between items-center">
+            <span class="text-slate-700">Persediaan bahan baku (awal)</span>
+            <span class="font-semibold">Rp 2,600,000</span>
+          </div>
+          <div class="flex justify-between items-center">
+            <span class="text-slate-700">Pembelian Bahan Baku</span>
+            <span class="font-semibold">Rp 7,325,000</span>
+          </div>
+          <div class="flex justify-between items-center border-t pt-2 mt-2">
+            <span class="text-slate-700 font-semibold">Persediaan Bahan Baku yang tersedia diproduksi</span>
+            <span class="font-semibold">Rp 9,925,000</span>
+          </div>
+          <div class="flex justify-between items-center">
+            <span class="text-slate-700">Persediaan Bahan Baku (akhir)</span>
+            <span class="font-semibold">(Rp 6,900,000)</span>
+          </div>
+          <div class="flex justify-between items-center border-t pt-2 mt-2 font-bold">
+            <span class="text-slate-900">Total Biaya Bahan Baku</span>
+            <span class="text-slate-900">Rp 3,025,000</span>
+          </div>
+        </div>
+
+        <div class="flex justify-between items-center pt-4">
+          <span class="font-bold text-lg">Biaya Tenaga Kerja Langsung</span>
+          <span class="font-bold text-lg">Rp 32,000,000</span>
+        </div>
+
+        <div class="font-bold text-lg pt-4">Biaya Overhead Pabrik</div>
+        <div class="pl-6 space-y-3 border-b pb-3">
+          <div class="flex justify-between items-center">
+            <span class="text-slate-700">Upah tidak langsung</span>
+            <span class="font-semibold">Rp 5,000</span>
+          </div>
+          <div class="flex justify-between items-center">
+            <span class="text-slate-700">Biaya Perbaikan dan Pemeliharaan</span>
+            <span class="font-semibold">Rp 700,000</span>
+          </div>
+          <div class="flex justify-between items-center">
+            <span class="text-slate-700">Biaya Penyusutan Bangunan Pabrik</span>
+            <span class="font-semibold">Rp 500,000</span>
+          </div>
+          <div class="flex justify-between items-center">
+            <span class="text-slate-700">Biaya Penyusutan Mesin</span>
+            <span class="font-semibold">Rp 500,000</span>
+          </div>
+          <div class="flex justify-between items-center">
+            <span class="text-slate-700">Biaya Listrik, Air Pabrik</span>
+            <span class="font-semibold">Rp 500,000</span>
+          </div>
+          <div class="flex justify-between items-center">
+            <span class="text-slate-700">Biaya lain-lain</span>
+            <span class="font-semibold">Rp 500,000</span>
+          </div>
+        </div>
+        <div class="flex justify-between items-center font-bold pl-6">
+            <span class="text-slate-900">Total Biaya Overhead Pabrik</span>
+            <span class="text-slate-900">Rp 2,705,000</span>
+        </div>
+
+        <div class="flex justify-between items-center font-bold text-lg pt-4 border-t mt-4">
+          <span class="text-slate-900">Total Biaya Produksi Tahun ini</span>
+          <span class="text-slate-900">Rp 37,730,000</span>
+        </div>
+
+        <div class="flex justify-between items-center pt-4">
+          <span class="text-slate-700">Persediaan Barang Dalam Proses (BDP Awal)</span>
+          <span class="font-semibold">Rp 2,600,000</span>
+        </div>
+        <div class="flex justify-between items-center border-t pt-2 mt-2">
+          <span class="text-slate-700 font-semibold">Total Biaya Barang Dalam Proses</span>
+          <span class="font-semibold">Rp 40,330,000</span>
+        </div>
+        <div class="flex justify-between items-center">
+          <span class="text-slate-700">Persediaan Barang Dalam Proses (Akhir)</span>
+          <span class="font-semibold">(Rp 0)</span>
+        </div>
+        
+        <div class="flex justify-between items-center bg-slate-100 p-3 rounded-lg mt-4">
+          <span class="font-bold text-lg">Cost of Goods Manufactured (COGM)</span>
+          <span class="font-bold text-lg">Rp 40,330,000</span>
+        </div>
+
+        <div class="flex justify-between items-center pt-4">
+          <span class="text-slate-700">Persediaan Barang Jadi (Awal)</span>
+          <span class="font-semibold">Rp 2,600,000</span>
+        </div>
+        <div class="flex justify-between items-center border-t pt-2 mt-2">
+          <span class="text-slate-700 font-semibold">Total Biaya Barang Siap untuk Dijual</span>
+          <span class="font-semibold">Rp 42,930,000</span>
+        </div>
+        <div class="flex justify-between items-center">
+          <span class="text-slate-700">Persediaan Barang Jadi (Akhir)</span>
+          <span class="font-semibold">(Rp 2,600,000)</span>
+        </div>
+
+        <div class="flex justify-between items-center bg-slate-100 p-3 rounded-lg mt-4">
+          <span class="font-bold text-lg">Harga Pokok Produksi (HPP)</span>
+          <span class="font-bold text-lg">Rp 40,330,000</span>
+        </div>
+
+        <div class="pt-4">
+          <span class="font-semibold text-slate-700">HPP Per Produk</span>
+          <div class="space-y-2 ml-5">
+            <div class="flex justify-between border-b py-1 px-2 ">
+              <span>HPP Per Produk A</span>
+              <span>Rp 183,593</span>
+            </div>
+             <div class="flex justify-between border-b py-1 px-2 ">
+              <span>HPP Per Produk B</span>
+              <span>Rp 73,236</span>
+            </div>
+          </div>
+        </div>
+
+      </div>
+      <hr class="my-12 border-slate-300" />
+
+      <div class="text-center mb-10">
+        <h2 class="text-2xl font-bold">{{ report.company_name | default:'PT. MAJU BERSAMA' }}</h2>
+        <p class="text-xl font-semibold">LAPORAN LABA RUGI</p>
+        <p class="text-md text-slate-500">{{ report.month | default:'Oktober' }} {{ report.year | default:'2025' }}</p>
+      </div>
+
+      <div class="space-y-4 max-w-2xl mx-auto">
+        <div class="font-bold text-lg">Pendapatan</div>
+        <div class="pl-6 border-b pb-2">
+          <div class="flex justify-between items-center py-1">
+            <span>Pendapatan Usaha</span>
+            <span>Rp 32,000,000</span>
+          </div>
+          <div class="flex justify-between items-center py-1">
+            <span>Pendapatan Lain - Lain</span>
+            <span>Rp 3,500,000</span>
+          </div>
+        </div>
+        <div class="flex justify-between items-center font-bold py-1 pl-6">
+          <span>Jumlah Pendapatan</span>
+          <span>Rp 35,500,000</span>
+        </div>
+
+        <div class="font-bold text-lg pt-6">Beban</div>
+        <div class="pl-6 border-b pb-2">
+          <div class="flex justify-between items-center py-1">
+            <span>Beban Usaha - HPP</span>
+            <span>Rp 40,330,000</span>
+          </div>
+          <div class="flex justify-between items-center py-1">
+            <span>Beban Lain - Lain</span>
+            <span>Rp 0</span>
+          </div>
+        </div>
+        <div class="flex justify-between items-center font-bold py-1 pl-6">
+          <span>Jumlah Beban</span>
+          <span>Rp 40,330,000</span>
+        </div>
+
+        <div class="space-y-2 pt-8">
+          <div class="flex justify-between items-center font-semibold text-slate-700 py-2">
+            <span>Laba (Rugi) Sebelum Pajak Penghasilan</span>
+            <span class="font-bold text-red-600">(Rp 4,830,000)</span>
+          </div>
+          <div class="flex justify-between items-center font-semibold text-slate-700 py-2">
+            <span>Beban Pajak Penghasilan</span>
+            <span class="font-bold text-black">Rp 0</span>
+          </div>
+          
+          {% with laba_setelah_pajak=-4830000 %} 
+            {% if laba_setelah_pajak < 0 %}
+            <div class="flex justify-between items-center bg-red-100 p-4 rounded-lg mt-4">
+              <span class="font-bold text-lg text-red-700">Laba (Rugi) Setelah Pajak Penghasilan</span>
+              <span class="font-bold text-lg text-red-700">(Rp 4,830,000)</span>
+            </div>
+            {% else %}
+            <div class="flex justify-between items-center bg-green-100 p-4 rounded-lg mt-4">
+              <span class="font-bold text-lg text-green-700">Laba (Rugi) Setelah Pajak Penghasilan</span>
+              <span class="font-bold text-lg text-green-700">Rp 4,830,000</span>
+            </div>
+            {% endif %}
+          {% endwith %}
+
+        </div>
+      </div>
+      </div>
+  </main>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+document.addEventListener("DOMContentLoaded", function () {
+    const toggleBtn = document.getElementById("export-toggle-btn");
+    const menu = document.getElementById("export-menu");
+
+    if (toggleBtn && menu) {
+        toggleBtn.addEventListener("click", function () {
+            menu.classList.toggle("hidden");
+        });
+    }
+
+    // Close dropdown when clicking outside
+    document.addEventListener("click", function (e) {
+        const container = document.getElementById("export-dropdown-container");
+        if (container && !container.contains(e.target)) {
+            menu.classList.add("hidden");
+        }
+    });
+});
+</script>
+{% endblock %}

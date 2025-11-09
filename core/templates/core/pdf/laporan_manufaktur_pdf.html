@@ -1,0 +1,328 @@
+{% load humanize %}
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <title>Laporan Manufaktur - {{ report.company_name }}</title>
+    <style>
+        body {
+            font-family: 'Helvetica', 'Arial', sans-serif;
+            font-size: 11px;
+            line-height: 1.5;
+            color: #1f2937;
+            margin: 0;
+            padding: 0;
+        }
+        .container {
+            width: 800px;
+            margin: 0 auto;
+            padding: 40px;
+            margin-bottom: 60px; /* Ruang untuk footer */
+        }
+        .header {
+            text-align: center;
+            margin-bottom: 24px;
+        }
+        .company-name {
+            font-size: 20px;
+            font-weight: bold;
+            margin: 0;
+        }
+        .report-title {
+            font-size: 16px;
+            font-weight: bold;
+            margin: 0;
+        }
+        .report-period {
+            font-size: 12px;
+            color: #6b7280;
+            margin: 0;
+        }
+        .section-title {
+            font-weight: bold;
+            font-size: 14px;
+            margin-top: 20px;
+            margin-bottom: 8px;
+        }
+        
+        .footer {
+            position: fixed; /* Kunci utamanya: 'cetak' di posisi tetap */
+            bottom: 0;       /* Letakkan 0px dari bawah */
+            left: 0;
+            right: 0;
+            width: 100%;
+            text-align: center;
+            font-size: 10px;
+            color: #9ca3af; /* text-gray-400 */
+            border-top: 1px solid #e5e7eb; 
+            padding: 10px 0;
+            background-color: #ffffff; /* Beri background putih */
+        }
+        
+        .data-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-bottom: 16px;
+        }
+        .data-table tr {
+            border-bottom: 1px solid #e5e7eb;
+        }
+        .data-table td {
+            padding: 8px 4px;
+        }
+        .data-table .label {
+            text-align: left;
+        }
+        .data-table .amount {
+            text-align: right;
+            font-weight: 600;
+            /* Mencegah angka terpotong */
+            white-space: nowrap;
+        }
+        
+        .total-row {
+            border-top: 1px solid #9ca3af;
+        }
+        .total-row .label,
+        .total-row .amount {
+            font-weight: bold;
+            font-size: 12px;
+            padding-top: 10px;
+        }
+        
+        .highlight-row td {
+            background-color: #f3f4f6;
+            padding: 12px 8px;
+            font-weight: bold;
+            font-size: 13px;
+        }
+
+        /* Untuk Laba (Hijau) */
+        .profit-row td {
+            background-color: #d1fae5; /* bg-green-100 */
+            color: #065f46; /* text-green-700 */
+            padding: 12px 8px;
+            font-weight: bold;
+            font-size: 13px;
+        }
+        
+        /* Untuk Rugi (Merah) */
+        .loss-row td {
+            background-color: #fee2e2; /* bg-red-100 */
+            color: #b91c1c; /* text-red-700 */
+            padding: 12px 8px;
+            font-weight: bold;
+            font-size: 13px;
+        }
+
+        .indent-1 {
+            padding-left: 24px !important;
+        }
+        .indent-2 {
+            padding-left: 48px !important;
+        }
+        .sub-header {
+            font-weight: 600;
+            color: #374151;
+            padding-top: 12px;
+        }
+        .negative {
+            /* color: #b91c1c; */ 
+        }
+
+    </style>
+</head>
+<body>
+
+    <div class="footer">
+        © {{ report.year|default:"2025" }} JurnalKita - Laporan dibuat secara otomatis
+    </div>
+    
+    <div class="container">
+
+        <div class="header">
+            <p class="company-name">{{ report.company_name|default:"PT. MAJU BERSAMA" }}</p>
+            <p class="report-title">LAPORAN HARGA POKOK PRODUKSI</p>
+            <p class="report-period">{{ report.month|default:"Oktober" }} {{ report.year|default:"2025" }}</p>
+        </div>
+
+        <div class="section-title">Biaya Bahan Baku</div>
+        <table class="data-table">
+            <tr>
+                <td class="label indent-1">Persediaan bahan baku (awal)</td>
+                <td class="amount">Rp 2,600,000</td>
+            </tr>
+            <tr>
+                <td class="label indent-1">Pembelian Bahan Baku</td>
+                <td class="amount">Rp 7,325,000</td>
+            </tr>
+            <tr class="total-row">
+                <td class="label indent-1">Persediaan Bahan Baku yang tersedia diproduksi</td>
+                <td class="amount">Rp 9,925,000</td>
+            </tr>
+            <tr>
+                <td class="label indent-1">Persediaan Bahan Baku (akhir)</td>
+                <td class="amount negative">(Rp 6,900,000)</td>
+            </tr>
+            <tr class="total-row">
+                <td class="label">Total Biaya Bahan Baku</td>
+                <td class="amount">Rp 3,025,000</td>
+            </tr>
+        </table>
+
+        <table class="data-table">
+            <tr>
+                <td class="label section-title" style="margin-top: 0;">Biaya Tenaga Kerja Langsung</td>
+                <td class="amount section-title" style="margin-top: 0;">Rp 32,000,000</td>
+            </tr>
+        </table>
+        
+        <div class="section-title">Biaya Overhead Pabrik</div>
+        <table class="data-table">
+            <tr>
+                <td class="label indent-1">Upah tidak langsung</td>
+                <td class="amount">Rp 5,000</td>
+            </tr>
+            <tr>
+                <td class="label indent-1">Biaya Perbaikan dan Pemeliharaan</td>
+                <td class="amount">Rp 700,000</td>
+            </tr>
+            <tr>
+                <td class="label indent-1">Biaya Penyusutan Bangunan Pabrik</td>
+                <td class="amount">Rp 500,000</td>
+            </tr>
+            <tr>
+                <td class="label indent-1">Biaya Penyusutan Mesin</td>
+                <td class="amount">Rp 500,000</td>
+            </tr>
+            <tr>
+                <td class="label indent-1">Biaya Listrik, Air Pabrik</td>
+                <td class="amount">Rp 500,000</td>
+            </tr>
+            <tr>
+                <td class="label indent-1">Biaya lain-lain</td>
+                <td class="amount">Rp 500,000</td>
+            </tr>
+            <tr class="total-row">
+                <td class="label indent-1">Total Biaya Overhead Pabrik</td>
+                <td class="amount">Rp 2,705,000</td>
+            </tr>
+        </table>
+
+        <table class="data-table">
+            <tr class="total-row" style="border-bottom: 1px solid #e5e7eb;">
+                <td class="label section-title" style="margin-top: 0;">Total Biaya Produksi Tahun ini</td>
+                <td class="amount section-title" style="margin-top: 0;">Rp 37,730,000</td>
+            </tr>
+            <tr>
+                <td class="label">Persediaan Barang Dalam Proses (BDP Awal)</td>
+                <td class="amount">Rp 2,600,000</td>
+            </tr>
+            <tr class="total-row">
+                <td class="label">Total Biaya Barang Dalam Proses</td>
+                <td class="amount">Rp 40,330,000</td>
+            </tr>
+            <tr>
+                <td class="label">Persediaan Barang Dalam Proses (Akhir)</td>
+                <td class="amount negative">(Rp 0)</td>
+            </tr>
+            <tr class="highlight-row">
+                <td class="label">Cost of Goods Manufactured (COGM)</td>
+                <td class="amount">Rp 40,330,000</td>
+            </tr>
+        </table>
+
+        <table class="data-table" style="margin-top: 20px;">
+             <tr>
+                <td class="label">Persediaan Barang Jadi (Awal)</td>
+                <td class="amount">Rp 2,600,000</td>
+            </tr>
+            <tr class="total-row">
+                <td class="label">Total Biaya Barang Siap untuk Dijual</td>
+                <td class="amount">Rp 42,930,000</td>
+            </tr>
+            <tr>
+                <td class="label">Persediaan Barang Jadi (Akhir)</td>
+                <td class="amount negative">(Rp 2,600,000)</td>
+            </tr>
+            <tr class="highlight-row">
+                <td class="label">Harga Pokok Produksi (HPP)</td>
+                <td class="amount">Rp 40,330,000</td>
+            </tr>
+        </table>
+        
+        <div class="section-title" style="margin-top: 16px;">HPP Per Produk</div>
+        <table class="data-table">
+            <tr>
+                <td class="label indent-1">HPP Per Produk A</td>
+                <td class="amount">Rp 183,593</td>
+            </tr>
+            <tr>
+                <td class="label indent-1">HPP Per Produk B</td>
+                <td class="amount">Rp 73,236</td>
+            </tr>
+        </table>
+
+        <hr style="page-break-before: always; border: none; margin: 0; padding: 0;">
+
+        <div class="header" style="padding-top: 40px;"> 
+            <p class="company-name">{{ report.company_name|default:"PT. MAJU BERSAMA" }}</p>
+            <p class="report-title">LAPORAN LABA RUGI</p>
+            <p class="report-period">{{ report.month|default:"Oktober" }} {{ report.year|default:"2025" }}</p>
+        </div>
+
+        <div class="section-title">Pendapatan</div>
+        <table class="data-table">
+            <tr>
+                <td class="label indent-1">Pendapatan Usaha</td>
+                <td class="amount">Rp 32,000,000</td>
+            </tr>
+            <tr>
+                <td class="label indent-1">Pendapatan Lain - Lain</td>
+                <td class="amount">Rp 3,500,000</td>
+            </tr>
+            <tr class="total-row">
+                <td class="label">Jumlah Pendapatan</td>
+                <td class="amount">Rp 35,500,000</td>
+            </tr>
+        </table>
+
+        <div class="section-title">Beban</div>
+        <table class="data-table">
+            <tr>
+                <td class="label indent-1">Beban Usaha - HPP</td>
+                <td class="amount">Rp 40,330,000</td>
+            </tr>
+            <tr>
+                <td class="label indent-1">Beban Lain - Lain</td>
+                <td class="amount">Rp 0</td>
+            </tr>
+            
+            <tr class="total-row">
+                <td class="label">Jumlah Beban</td>
+                <td class="amount">Rp 40,330,000</td>
+            </tr>
+        </table>
+
+        <div class="section-title">Hasil Akhir</div>
+        <table class="data-table">
+            
+            <tr>
+                <td class="label">Laba (Rugi) Sebelum Pajak Penghasilan</td>
+                <td class="amount negative">(Rp 4,830,000)</td>
+            </tr>
+
+            <tr>
+                <td class="label">Beban Pajak Penghasilan</td>
+                <td class="amount">Rp 0</td>
+            </tr>
+            
+            <tr class="loss-row">
+                <td class="label">Laba (Rugi) Setelah Pajak Penghasilan</td>
+                <td class="amount">(Rp 4,830,000)</td>
+            </tr>
+        </table>
+        
+    </div> 
+</body>
+</html>
