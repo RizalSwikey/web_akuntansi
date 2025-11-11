@@ -52,7 +52,7 @@ class RevenueItem(models.Model):
                  pass 
             self.total = self.quantity * self.selling_price
             self.name = self.product.name if self.product else self.name
-            self.product = None 
+            # self.product = None 
         super().save(*args, **kwargs)
 
     def __str__(self):
@@ -156,7 +156,7 @@ class HppManufactureLabor(models.Model):  # BTKL
 
 
 class HppManufactureOverhead(models.Model):  # BOP
-    report = models.ForeignKey(FinancialReport, on_delete=models.CASCADE)
+    report = models.ForeignKey(FinancialReport, on_delete=models.CASCADE, related_name="hpp_manufaktur_overhead")
     product = models.ForeignKey(Product, on_delete=models.CASCADE, blank=True, null=True)
 
     nama_biaya = models.CharField(max_length=255, blank=True, null=True)
