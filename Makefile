@@ -1,5 +1,5 @@
 run:
-	uv run manage.py runserver
+	uv run manage.py runserver 0.0.0.0:8000
 
 tailwind:
 	uv run manage.py tailwind start
@@ -14,3 +14,14 @@ test:
 shell:
 	uv run manage.py shell
 
+up:
+	docker compose up -d
+
+up-build:
+	docker compose up -d --build
+
+down: 
+	docker compose down
+
+logs:
+	docker compose logs django
