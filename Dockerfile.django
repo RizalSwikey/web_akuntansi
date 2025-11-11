@@ -1,24 +1,33 @@
-# Base image
 FROM python:3.11-slim
 
-# Set working directory
 WORKDIR /app
 
-# Install system dependencies
-RUN apt-get update && apt-get install -y \
+RUN apt-get update && \
+    apt-get install -y --no-install-recommends \
     build-essential \
     libpq-dev \
+    wget \
+    fontconfig \
+    libjpeg62-turbo \
+    libxext6 \
+    libxrender1 \
+    xfonts-base \
+    xfonts-75dpi \
+    && \
+    wget https://github.com/wkhtmltopdf/packaging/releases/download/0.12.6.1-3/wkhtmltox_0.12.6.1-3.bookworm_amd64.deb \
+    && \
+    apt-get install -y ./wkhtmltox_0.12.6.1-3.bookworm_amd64.deb \
+    && \
+    rm ./wkhtmltox_0.12.6.1-3.bookworm_amd64.deb \
+    && apt-get remove -y wget \
+    && apt-get autoremove -y \
     && rm -rf /var/lib/apt/lists/*
 
-# Copy Python dependencies
 COPY requirements.txt .
 RUN pip install --no-cache-dir -r requirements.txt
 
-# Copy project files
 COPY . .
 
-# Expose Django port
 EXPOSE 8000
 
-# Run Django dev server
 CMD ["python", "manage.py", "runserver", "0.0.0.0:8000"]
