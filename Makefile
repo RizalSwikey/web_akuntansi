@@ -1,4 +1,7 @@
-run:
+run-dev:
+	uv run manage.py runserver 8001
+
+run-prod:
 	uv run manage.py runserver 0.0.0.0:8000
 
 tailwind:
