@@ -99,7 +99,7 @@ def generate_final_report_data(report):
         "total_pendapatan_lain": total_pendapatan_lain,
         "jumlah_pendapatan": jumlah_pendapatan,
 
-        "total_hpp": total_hpp,
+        "hpp_total": total_hpp,
         "hpp_per_product": hpp_per_product,
         "total_persediaan_awal": total_persediaan_awal,
         "total_pembelian_neto": total_pembelian_neto,
