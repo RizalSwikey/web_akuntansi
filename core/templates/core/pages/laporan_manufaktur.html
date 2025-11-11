@@ -210,30 +210,16 @@
         <div class="space-y-2 pt-8">
           <div class="flex justify-between items-center font-semibold py-2">
             <span class="text-slate-700">Laba (Rugi) Sebelum Pajak Penghasilan</span>
-            {% if laba_sebelum_pajak < 0 %}
-              <span class="font-bold text-red-600">(Rp {{ laba_sebelum_pajak|floatformat:0|intcomma }})</span>
-            {% else %}
-              <span class="font-bold text-black">Rp {{ laba_sebelum_pajak|floatformat:0|intcomma }}</span>
-            {% endif %}
+            <span class="font-bold text-black">Rp {{ laba_sebelum_pajak|floatformat:0|intcomma }}</span>
           </div>
-          
           <div class="flex justify-between items-center font-semibold text-slate-700 py-2">
             <span>Beban Pajak Penghasilan</span>
             <span class="font-bold text-black">Rp {{ pajak_penghasilan | floatformat:0 | intcomma }}</span>
           </div>
-          
-          {% if laba_setelah_pajak < 0 %}
-          <div class="flex justify-between items-center bg-red-100 p-4 rounded-lg mt-4">
-            <span class="font-bold text-lg text-red-700">Laba (Rugi) Setelah Pajak Penghasilan</span>
-            <span class="font-bold text-lg text-red-700">(Rp {{ laba_setelah_pajak|floatformat:0|intcomma }})</span>
-          </div>
-          {% else %}
           <div class="flex justify-between items-center bg-green-100 p-4 rounded-lg mt-4">
             <span class="font-bold text-lg text-green-700">Laba (Rugi) Setelah Pajak Penghasilan</span>
-            <span class="font-bold text-lg text-green-700">Rp {{ laba_setelah_pajak|floatformat:0|intcomma }}</span>
+            <span class="font-bold text-lg text-green-700">Rp {{ laba_setelah_pajak | floatformat:0 | intcomma}}</span>
           </div>
-          {% endif %}
-
         </div>
       </div>
       </div>

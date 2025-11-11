@@ -147,11 +147,11 @@
             </select>
           </div>
           <div class="mb-8">
-            <label for="omzet" class="block mb-2 font-semibold">Omzet melebihi 500jt?</label>
-  <select id="omzet" name="omzet" class="w-full p-3 border border-slate-300 rounded-lg">
-    <option value="tidak" {% if report.omzet == 'tidak' %}selected{% endif %}>Tidak</option>
-    <option value="iya" {% if report.omzet == 'iya' %}selected{% endif %}>Iya</option>
-  </select>
+            <label for="omzet" class="block mb-2 font-semibold">Omzet melebihi 500 juta?</label>
+            <select id="omzet_status" name="omzet_status" class="w-full p-3 border border-slate-300 rounded-lg">
+              <option value="tidak" {% if report.omzet_status == 'tidak' %}selected{% endif %}>Tidak</option>
+              <option value="iya" {% if report.omzet_status == 'iya' %}selected{% endif %}>Iya</option>
+            </select>
           </div>
           <div class="mb-8">
             <label

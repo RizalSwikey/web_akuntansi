@@ -86,7 +86,12 @@ def generate_final_report_data(report):
 
     # LABA / RUGI
     laba_sebelum_pajak = jumlah_pendapatan - jumlah_beban
-    pajak_penghasilan = 0  
+
+    if getattr(report, "omzet_status", None) == "iya" and jumlah_pendapatan > 500_000_000:
+        pajak_penghasilan = jumlah_pendapatan * 0.005
+    else:
+        pajak_penghasilan = 0
+
     laba_setelah_pajak = laba_sebelum_pajak - pajak_penghasilan
 
     return {
@@ -160,8 +165,11 @@ def get_manufaktur_report_context(report):
     
     laba_sebelum_pajak = jumlah_pendapatan - jumlah_beban
     
-    # TODO: Implement tax calculation
-    pajak_penghasilan = 0 
+    if getattr(report, "omzet_status", None) == "iya" and jumlah_pendapatan > 500_000_000:
+        pajak_penghasilan = jumlah_pendapatan * 0.005
+    else:
+        pajak_penghasilan = 0
+
     laba_setelah_pajak = laba_sebelum_pajak - pajak_penghasilan
 
     context = {

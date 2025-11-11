@@ -17,7 +17,6 @@ from core.utils.hpp_calculator import calculate_hpp_for_product, to_int, to_numb
 from core.utils.final_report import generate_final_report_data
 from core.utils.excel_exporter import generate_excel_file
 from core.utils.pdf_exporter import generate_pdf_file
-from django.template.loader import render_to_string
 from core.utils.final_report import get_manufaktur_report_context
 
 def get_completion_status(report):
@@ -113,14 +112,14 @@ def profile_view(request, report_id):
     completion_status = get_completion_status(report)
 
     if request.method == 'POST':
-        report.company_name = request.POST.get('company_name')
-        report.month = request.POST.get('month')
-        report.year = request.POST.get('year')
-        report.business_status = request.POST.get('business_status')
-        report.ptkp_status = request.POST.get('ptkp_status')
-        report.umkm_incentive = request.POST.get('umkm_incentive')
-        report.omzet = request.POST.get('omzet', 0)
-        report.business_type = request.POST.get('business_type') # INI PENTING
+        report.company_name = request.POST.get("company_name")
+        report.month = request.POST.get("month")
+        report.year = request.POST.get("year")
+        report.business_type = request.POST.get("business_type")
+        report.business_status = request.POST.get("business_status")
+        report.umkm_incentive = request.POST.get("umkm_incentive")
+        report.ptkp_status = request.POST.get("ptkp_status")
+        report.omzet_status = request.POST.get("omzet_status")
         report.save()
         messages.success(request, 'Profil perusahaan berhasil disimpan!')
         

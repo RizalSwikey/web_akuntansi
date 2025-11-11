@@ -1,25 +1,29 @@
 from django.db import models
 from django.contrib.auth.models import User
-from django.core.exceptions import ValidationError
-
 class FinancialReport(models.Model):
     user = models.ForeignKey(User, on_delete=models.CASCADE, related_name="reports")
     company_name = models.CharField(max_length=255, blank=True, null=True)
     month = models.CharField(max_length=20, blank=True, null=True)
     year = models.IntegerField(blank=True, null=True)
-    business_type = models.CharField(max_length=50, blank=True, null=True) # Jasa, Manufaktur, Dagang
-    business_status = models.CharField(max_length=50, blank=True, null=True) # PKP, Non PKP (orang_pribadi, badan_usaha)
-    umkm_incentive = models.CharField(max_length=10, blank=True, null=True) # Ya, Tidak
-    omzet = models.BigIntegerField(default=0)
-    
-    ptkp_status = models.CharField(max_length=10, blank=True, null=True) 
-    # -----------------------------------------------------------------
+    business_type = models.CharField(max_length=50, blank=True, null=True)
+    business_status = models.CharField(max_length=50, blank=True, null=True)
+    umkm_incentive = models.CharField(max_length=10, blank=True, null=True)
+    omzet_status = models.CharField(
+        max_length=10,
+        choices=[('iya', 'Iya'), ('tidak', 'Tidak')],
+        blank=True,
+        null=True,
+        help_text="Apakah omzet lebih dari 500 juta?"
+    )
+
+    ptkp_status = models.CharField(max_length=10, blank=True, null=True)
 
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
 
     def __str__(self):
         return f"{self.company_name} - {self.month} {self.year} ({self.user.username})"
+
 
 class Product(models.Model):
     report = models.ForeignKey(FinancialReport, on_delete=models.CASCADE, related_name="products")
