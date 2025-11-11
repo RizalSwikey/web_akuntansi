@@ -21,7 +21,7 @@
       {% endfor %}
     {% endif %}
 
-    <div id="bb-ancor" class="bg-white p-8 rounded-2xl shadow-lg mb-8">
+    <div id="bb-anchor" class="bg-white p-8 rounded-2xl shadow-lg mb-8">
       
       <div class="flex justify-between items-center mb-6">
         <h2 class="text-xl font-bold">Biaya Bahan Baku</h2>
@@ -163,7 +163,7 @@
       </div>
 
     </div>
-    <div id="bdp-ancor" class="bg-white p-8 rounded-2xl shadow-lg mb-8">
+    <div id="bdp-anchor" class="bg-white p-8 rounded-2xl shadow-lg mb-8">
       
       <div class="flex justify-between items-center mb-6">
           <h2 class="text-xl font-bold">Barang Dalam Proses (BDP)</h2>
@@ -265,7 +265,7 @@
       </div>
 
     </div>
-    <div id="btkl-ancor" class="bg-white p-8 rounded-2xl shadow-lg mb-8">
+    <div id="btkl-anchor" class="bg-white p-8 rounded-2xl shadow-lg mb-8">
 
       <h2 class="text-xl font-bold mb-6 pb-4">Biaya Produksi Lain</h2>
 
@@ -398,7 +398,7 @@
       </div>
     </div>
 
-    <div id="bj-ancor" class="bg-white p-8 rounded-2xl shadow-lg mb-8">
+    <div id="bj-anchor" class="bg-white p-8 rounded-2xl shadow-lg mb-8">
       <div class="flex justify-between items-center mb-6">
           <h2 class="text-xl font-bold">Barang Jadi</h2>
           <button id="open-modal-bj-btn" class="bg-black text-white py-2 px-6 rounded-lg font-semibold hover:bg-slate-800">
@@ -920,6 +920,24 @@ document.addEventListener("DOMContentLoaded", function () {
       }
   });
 
+});
+</script>
+<script>
+window.addEventListener("load", () => {
+  if (window.location.hash) {
+    const allowed = ["#bb-anchor", "#bdp-anchor", "#btkl-anchor", "#bj-anchor", "#bj-awal", "#bj-akhir"];
+    if (!allowed.includes(window.location.hash)) {
+      history.replaceState(null, "", window.location.pathname);
+    }
+  }
+});
+</script>
+<script>
+document.addEventListener("submit", (e) => {
+  const form = e.target;
+  if (form.tagName === "FORM" && form.action.includes("#")) {
+    form.action = form.action.split("#")[0];
+  }
 });
 </script>
 {% endblock %}
