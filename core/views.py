@@ -313,7 +313,7 @@ def hpp_dagang_view(request, report_id):
                     continue
 
             if invalid_found:
-                msg = "Periksa Kembali Catatan Penjualan/Persediaan Akhir."
+                msg = "Tidak dapat melanjutkan: Periksa Kembali Catatan Penjualan/Persediaan Akhir."
                 messages.error(request, msg)
                 return redirect('core:hpp_dagang', report_id=report.id)
 
