@@ -4,6 +4,7 @@ from django.contrib import messages
 from django.contrib.auth import authenticate, login, logout
 from django.db.models import Sum, F
 from django.http import HttpResponse
+from django.urls import reverse
 from .models import FinancialReport, Product, RevenueItem, HppEntry, ExpenseItem
 from .models import (
     HppManufactureMaterial,
@@ -18,6 +19,7 @@ from core.utils.final_report import generate_final_report_data
 from core.utils.excel_exporter import generate_excel_file
 from core.utils.pdf_exporter import generate_pdf_file
 from core.utils.final_report import get_manufaktur_report_context
+
 
 def get_completion_status(report):
     status = {
@@ -363,7 +365,7 @@ def hpp_manufaktur_view(request, report_id):
 
             if retur_qty > qty:
                 messages.error(request, "Retur (Qty) tidak boleh lebih besar dari Kuantitas.")
-                return redirect("core:hpp_manufaktur", report_id=report.id)
+                return redirect(f"{reverse('core:hpp_manufaktur', args=[report.id])}#bb-ancor")
 
             if tipe in ["BB_AWAL", "BB_AKHIR"]:
                 total = qty * harga
@@ -386,7 +388,7 @@ def hpp_manufaktur_view(request, report_id):
             )
 
             messages.success(request, "Data bahan baku berhasil disimpan.")
-            return redirect("core:hpp_manufaktur", report_id=report.id)
+            return redirect(f"{reverse('core:hpp_manufaktur', args=[report.id])}#bb-ancor")
 
         if action == "edit_bb":
             item = get_object_or_404(HppManufactureMaterial, id=request.POST.get("item_id"), report=report)
@@ -409,12 +411,12 @@ def hpp_manufaktur_view(request, report_id):
 
             item.save()
             messages.success(request, "Data bahan baku berhasil diperbarui.")
-            return redirect("core:hpp_manufaktur", report_id=report.id)
+            return redirect(f"{reverse('core:hpp_manufaktur', args=[report.id])}#bb-ancor")
 
         if action == "delete_bb":
             HppManufactureMaterial.objects.filter(id=request.POST.get("item_id"), report=report).delete()
             messages.success(request, "Data bahan baku berhasil dihapus.")
-            return redirect("core:hpp_manufaktur", report_id=report.id)
+            return redirect(f"{reverse('core:hpp_manufaktur', args=[report.id])}#bb-ancor")
 
         # --- BDP / WIP ---
         if action in ["add_wip", "edit_wip"]:
@@ -448,13 +450,13 @@ def hpp_manufaktur_view(request, report_id):
                 item.save()
                 messages.success(request, "Data BDP berhasil diperbarui.")
 
-            return redirect("core:hpp_manufaktur", report_id=report.id)
+            return redirect(f"{reverse('core:hpp_manufaktur', args=[report.id])}#bdp-ancor")
 
         if action == "delete_wip":
             item_id = request.POST.get("item_id")
             get_object_or_404(HppManufactureWIP, id=item_id).delete()
             messages.success(request, "Data BDP berhasil dihapus.")
-            return redirect("core:hpp_manufaktur", report_id=report.id)
+            return redirect(f"{reverse('core:hpp_manufaktur', args=[report.id])}#bdp-ancor")
 
         # --- BTKL ---
         if action in ["add_btkl", "edit_btkl"]:
@@ -487,13 +489,13 @@ def hpp_manufaktur_view(request, report_id):
                 item.keterangan = keterangan
                 item.save()
                 messages.success(request, "Data BTKL berhasil diperbarui.")
-            return redirect("core:hpp_manufaktur", report_id=report.id)
+            return redirect(f"{reverse('core:hpp_manufaktur', args=[report.id])}#btkl-ancor")
 
         if action == "delete_btkl":
             item_id = request.POST.get("item_id")
             get_object_or_404(HppManufactureLabor, id=item_id).delete()
             messages.success(request, "Data BTKL berhasil dihapus.")
-            return redirect("core:hpp_manufaktur", report_id=report.id)
+            return redirect(f"{reverse('core:hpp_manufaktur', args=[report.id])}#btkl-ancor")
 
         # --- BOP ---
         if action == "add_bop":
@@ -514,7 +516,7 @@ def hpp_manufaktur_view(request, report_id):
                 keterangan=keterangan,
             )
             messages.success(request, "Data BOP berhasil disimpan.")
-            return redirect("core:hpp_manufaktur", report_id=report.id)
+            return redirect(f"{reverse('core:hpp_manufaktur', args=[report.id])}#btkl-ancor")
 
         if action == "edit_bop":
             item_id = request.POST.get("item_id")
@@ -527,13 +529,13 @@ def hpp_manufaktur_view(request, report_id):
             item.total = item.quantity * item.harga_satuan
             item.save()
             messages.success(request, "Data BOP berhasil diperbarui.")
-            return redirect("core:hpp_manufaktur", report_id=report.id)
+            return redirect(f"{reverse('core:hpp_manufaktur', args=[report.id])}#btkl-ancor")
 
         if action == "delete_bop":
             item_id = request.POST.get("item_id")
             HppManufactureOverhead.objects.filter(id=item_id, report=report).delete()
             messages.success(request, "Data BOP berhasil dihapus.")
-            return redirect("core:hpp_manufaktur", report_id=report.id)
+            return redirect(f"{reverse('core:hpp_manufaktur', args=[report.id])}#btkl-ancor")
 
         # --- BARANG JADI (FG_AWAL & FG_AKHIR) ---
         if action in ["add_fg", "edit_fg"]:
@@ -595,13 +597,13 @@ def hpp_manufaktur_view(request, report_id):
                 item.keterangan = keterangan
                 item.save()
                 messages.success(request, "Data Barang Jadi berhasil diperbarui.")
-            return redirect("core:hpp_manufaktur", report_id=report.id)
+            return redirect(f"{reverse('core:hpp_manufaktur', args=[report.id])}#bj-ancor")
 
         if action == "delete_fg":
             item_id = request.POST.get("item_id")
             get_object_or_404(HppManufactureFinishedGoods, id=item_id).delete()
             messages.success(request, "Data Persediaan Barang Jadi berhasil dihapus.")
-            return redirect("core:hpp_manufaktur", report_id=report.id)
+            return redirect(f"{reverse('core:hpp_manufaktur', args=[report.id])}#bj-ancor")
 
         if "next_step" in request.POST:
             return redirect("core:beban_usaha", report_id=report.id)
