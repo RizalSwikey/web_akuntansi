@@ -37,11 +37,11 @@ def get_completion_status(report):
         if report.business_type == "manufaktur":
             if (
                 report.hpp_manufaktur_materials.exists()
-                or report.hpp_manufaktur_wip.exists()
-                or report.hpp_manufaktur_labor.exists()
-                or report.hpp_manufaktur_overhead.exists()
-                or report.hpp_manufaktur_fg.exists()
-                or report.hpp_manufaktur_production.exists()
+                and report.hpp_manufaktur_wip.exists()
+                and report.hpp_manufaktur_labor.exists()
+                and report.hpp_manufaktur_overhead.exists()
+                and report.hpp_manufaktur_fg.exists()
+                and report.hpp_manufaktur_production.exists()
             ):
                 status["hpp"] = True
         else:
