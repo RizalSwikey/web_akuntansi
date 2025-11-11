@@ -293,12 +293,36 @@ def hpp_dagang_view(request, report_id):
                 messages.error(request, f"Gagal menyimpan data HPP: {e}")
 
         elif 'next_step' in request.POST:
+            invalid_found = False
+            invalid_products = []
+
+            for product in products:
+                try:
+                    awal = HppEntry.objects.filter(report=report, product=product, category='AWAL').first()
+                    pembelian = HppEntry.objects.filter(report=report, product=product, category='PEMBELIAN')
+                    akhir = HppEntry.objects.filter(report=report, product=product, category='AKHIR').first()
+
+                    qty_awal = awal.quantity if awal else 0
+                    qty_pembelian = sum(p.quantity for p in pembelian)
+                    qty_akhir = akhir.quantity if akhir else 0
+
+                    if qty_akhir > (qty_awal + qty_pembelian):
+                        invalid_found = True
+                        invalid_products.append(product.name)
+                except Exception:
+                    continue
+
+            if invalid_found:
+                msg = "Periksa Kembali Catatan Penjualan/Persediaan Akhir."
+                messages.error(request, msg)
+                return redirect('core:hpp_dagang', report_id=report.id)
+
             if not completion_status['hpp']:
                 messages.warning(request, 'Isi minimal satu data HPP sebelum lanjut.')
                 return redirect('core:hpp', report_id=report.id)
+
             return redirect('core:beban_usaha', report_id=report.id)
 
-        return redirect('core:hpp_dagang', report_id=report.id)
 
     hpp_data_by_product = {}
     for product in products:
@@ -606,7 +630,34 @@ def hpp_manufaktur_view(request, report_id):
             return redirect(f"{reverse('core:hpp_manufaktur', args=[report.id])}#bj-anchor")
 
         if "next_step" in request.POST:
+            bj_awal_map = {x.product.id: x for x in HppManufactureFinishedGoods.objects.filter(report=report, type="FG_AWAL")}
+            produksi_map = {x["product_name"]: x for x in barang_diproduksi_list}
+            bj_akhir = HppManufactureFinishedGoods.objects.filter(report=report, type="FG_AKHIR")
+
+            has_invalid = False
+
+            for akhir in bj_akhir:
+                product_name = akhir.product.name if akhir.product else None
+                if not product_name:
+                    has_invalid = True
+                    break
+
+                qty_akhir = akhir.quantity or 0
+                awal = bj_awal_map.get(akhir.product.id)
+                qty_awal = awal.quantity if awal else 0
+                produksi = produksi_map.get(product_name, {})
+                qty_produksi = produksi.get("qty_diproduksi", 0)
+
+                if qty_akhir == 0 or qty_akhir > (qty_awal + qty_produksi):
+                    has_invalid = True
+                    break
+
+            if has_invalid:
+                messages.error(request, "Tidak dapat melanjutkan: ada Persediaan Barang Jadi Akhir yang perlu diperiksa kembali.")
+                return redirect("core:hpp_manufaktur", report_id=report.id)
+
             return redirect("core:beban_usaha", report_id=report.id)
+
     
     bb_awal = HppManufactureMaterial.objects.filter(report=report, type="BB_AWAL")
     bb_pembelian = HppManufactureMaterial.objects.filter(report=report, type="BB_PEMBELIAN")
@@ -754,7 +805,7 @@ def hpp_manufaktur_view(request, report_id):
                 item.harga_satuan = harga_satuan
                 item.total = total
                 item.keterangan = keterangan
-                item.status = status  # ✅ update too
+                item.status = status
                 item.save()
                 messages.success(request, "Data Barang Jadi berhasil diperbarui.")
 
