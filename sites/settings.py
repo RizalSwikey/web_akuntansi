@@ -25,7 +25,7 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 
 SECRET_KEY = os.getenv('DJANGO_SECRET_KEY')
 DEBUG = os.getenv('DJANGO_DEBUG') == 'True'
-ALLOWED_HOSTS = os.getenv("DJANGO_ALLOWED_HOSTS", "localhost,127.0.0.1,54.169.105.90").split(",")
+ALLOWED_HOSTS = os.getenv("DJANGO_ALLOWED_HOSTS").split(",")
 
 # Application definition
 
@@ -112,8 +112,9 @@ AUTH_PASSWORD_VALIDATORS = [
 
 
 
-SESSION_COOKIE_SECURE = True
-CSRF_COOKIE_SECURE = True
+SESSION_COOKIE_SECURE = not DEBUG
+CSRF_COOKIE_SECURE = not DEBUG
+
 SECURE_SSL_REDIRECT = False
 
 # Internationalization
@@ -144,11 +145,12 @@ DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 TAILWIND_APP_NAME = 'theme'
 
 # WINDOWS PATH (DEV)
-NPM_BIN_PATH = r"C:\Program Files\nodejs\npm.cmd"
+# NPM_BIN_PATH = r"C:\Program Files\nodejs\npm.cmd"
 # LINUX PATH (PROD)
-# NPM_BIN_PATH = r"/usr/bin/npm"
+NPM_BIN_PATH = r"/usr/bin/npm"
 
 # WINDOWS PATH (DEV)
-WKHTMLTOPDF_CMD = r"C:\Program Files\wkhtmltopdf\bin\wkhtmltopdf.exe"
+# WKHTMLTOPDF_CMD = r"C:\Program Files\wkhtmltopdf\bin\wkhtmltopdf.exe"
 # LINUX PATH (PROD)
+WKHTMLTOPDF_CMD = r'/usr/local/bin/wkhtmltopdf'
 
