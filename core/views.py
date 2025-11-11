@@ -279,11 +279,11 @@ def hpp_dagang_view(request, report_id):
                     product=product,
                     category=category,
                     defaults={
-                        'quantity': int(request.POST.get('quantity', 0)),
-                        'harga_satuan': int(request.POST.get('harga_satuan', 0)),
-                        'diskon': int(request.POST.get('diskon', 0)) if category == 'PEMBELIAN' else 0,
-                        'retur_qty': int(request.POST.get('retur_qty', 0)) if category == 'PEMBELIAN' else 0,
-                        'ongkir': int(request.POST.get('ongkir', 0)) if category == 'PEMBELIAN' else 0,
+                        'quantity': to_int(request.POST.get('quantity', 0)),
+                        'harga_satuan': to_int(request.POST.get('harga_satuan', 0)),
+                        'diskon': to_int(request.POST.get('diskon', 0)) if category == 'PEMBELIAN' else 0,
+                        'retur_qty': to_int(request.POST.get('retur_qty', 0)) if category == 'PEMBELIAN' else 0,
+                        'ongkir': to_int(request.POST.get('ongkir', 0)) if category == 'PEMBELIAN' else 0,
                         'keterangan': request.POST.get('keterangan', ''),
                     }
                 )
