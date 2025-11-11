@@ -13,13 +13,13 @@
     <main id="main-content" class="flex-1 p-8 overflow-y-auto">
       
         <div class="max-w-7xl mx-auto"> {% if messages %}
-                <div class="space-y-4 mb-6">
-                {% for message in messages %}
-                <div class="{% if message.tags == 'error' %}bg-red-100 border-red-400 text-red-700{% elif message.tags == 'warning' %}bg-yellow-100 border-yellow-400 text-yellow-700{% else %}bg-green-100 border-green-400 text-green-700{% endif %} border px-4 py-3 rounded-lg relative" role="alert">
-                    <span class="block sm:inline">{{ message }}</span>
-                </div>
-                {% endfor %}
-                </div>
+              <div class="space-y-4 mb-6">
+              {% for message in messages %}
+              <div class="{% if message.tags == 'error' %}bg-red-100 border-red-400 text-red-700{% elif message.tags == 'warning' %}bg-yellow-100 border-yellow-400 text-yellow-700{% else %}bg-green-100 border-green-400 text-green-700{% endif %} border px-4 py-3 rounded-lg relative" role="alert">
+                  <span class="block sm:inline">{{ message }}</span>
+              </div>
+              {% endfor %}
+              </div>
             {% endif %}
         </div>
 
@@ -45,27 +45,24 @@
                 <div class="grid grid-cols-12 gap-4 items-center border-b border-slate-200 pb-4 mb-2 
                             font-semibold text-sm text-slate-500 uppercase tracking-wider">
                     
-                    <div class="col-span-12 sm:col-span-5">Nama Perusahaan</div>
-                    <div class="col-span-6 sm:col-span-4">Periode</div>
-                    <div class="col-span-6 sm:col-span-3 text-left sm:text-center">Aksi</div>
-                </div>
+                    <div class="col-span-12 sm:col-span-4">Nama Perusahaan</div> <div class="col-span-5 sm:col-span-3">Periode</div> <div class="col-span-4 sm:col-span-2">Jenis Usaha</div> <div class="col-span-3 sm:col-span-3 text-left sm:text-center">Aksi</div> </div>
 
                 <div class="divide-y divide-slate-100">
                     
                     {% for report in reports %}
                     <div class="grid grid-cols-12 gap-4 items-center py-4">
                         
-                        <div class="col-span-12 sm:col-span-5 text-slate-800 font-medium">
-                            {{ report.company_name|default:"–" }}
+                        <div class="col-span-12 sm:col-span-4 text-slate-800 font-medium"> {{ report.company_name|default:"–" }}
                         </div>
                         
-                        <div class="col-span-6 sm:col-span-4 text-slate-600">
-                            {{ report.month|default:"–" }} / {{ report.year|default:"–" }}
+                        <div class="col-span-5 sm:col-span-3 text-slate-600"> {{ report.month|default:"–" }} / {{ report.year|default:"–" }}
+                        </div>
+
+                        <div class="col-span-4 sm:col-span-2 text-slate-600 capitalize">
+                           {{ report.business_type|default:"–" }}
                         </div>
                         
-                        <div class="col-span-6 sm:col-span-3 flex items-center justify-start sm:justify-center space-x-1">
-                            
-                            <a href="{% url 'core:profile' report.id %}" 
+                        <div class="col-span-3 sm:col-span-3 flex items-center justify-start sm:justify-center space-x-1"> <a href="{% url 'core:profile' report.id %}" 
                                title="Lanjutkan Laporan"
                                class="p-2 text-slate-500 rounded-md hover:bg-blue-50 hover:text-blue-600 transition-colors">
                                 <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-5 h-5">
@@ -73,7 +70,7 @@
                                 </svg>
                             </a>
                             
-                            <a href="{% url 'core:laporan' report.id %}" 
+                            <a href="{% url 'core:laporan_dagang' report.id %}" 
                                title="Lihat Laporan"
                                class="p-2 text-slate-500 rounded-md hover:bg-green-50 hover:text-green-600 transition-colors">
                                 <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-5 h-5">
@@ -106,15 +103,18 @@
                 </div>
                 {% endif %}
 
-            </div> </div> </main>
+            </div>
+        </div>
+    </main>
   </div>
 </div>
+
 <div id="delete-modal" 
      class="fixed inset-0 bg-black/60 flex justify-center items-center z-50 
             transition-opacity opacity-0 pointer-events-none">
 
     <div class="bg-white p-7 rounded-2xl shadow-xl w-full max-w-md
-                transform transition-all scale-95 opacity-0" 
+               transform transition-all scale-95 opacity-0" 
          id="delete-modal-content">
         
         <div class="mx-auto flex-shrink-0 flex items-center justify-center 
