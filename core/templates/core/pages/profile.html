@@ -147,18 +147,11 @@
             </select>
           </div>
           <div class="mb-8">
-            <label for="omzet" class="block text-slate-600 font-semibold mb-2"
-              >Omzet</label
-            >
-            <input
-              type="number"
-              id="omzet"
-              name="omzet"
-              class="w-full p-3 border border-slate-300 rounded-lg focus:border-slate-400 outline-none"
-              placeholder="Masukkan Omzet Bulanan"
-              value="{{ report.omzet | default:'' }}"
-              required
-            />
+            <label for="omzet" class="block mb-2 font-semibold">Omzet melebihi 500jt?</label>
+  <select id="omzet" name="omzet" class="w-full p-3 border border-slate-300 rounded-lg">
+    <option value="tidak" {% if report.omzet == 'tidak' %}selected{% endif %}>Tidak</option>
+    <option value="iya" {% if report.omzet == 'iya' %}selected{% endif %}>Iya</option>
+  </select>
           </div>
           <div class="mb-8">
             <label
