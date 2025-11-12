@@ -31,7 +31,7 @@ def calculate_hpp_for_product(product, entries):
 
     validation_error_akhir = None
     if qty_akhir > qty_tersedia:
-        validation_error_akhir = "Qty Akhir > Qty Tersedia. Periksa data Anda."
+        validation_error_akhir = "Periksa Kembali Catatan Penjualan/Persediaan Akhir."
 
     if total_pembelian_qty > 0:
         unit_beli = total_pembelian_neto / total_pembelian_qty
