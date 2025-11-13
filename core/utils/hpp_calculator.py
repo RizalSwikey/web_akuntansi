@@ -15,6 +15,7 @@ def calculate_hpp_for_product(product, entries):
 
     total_pembelian_neto = Decimal(0)
     total_pembelian_qty = Decimal(0)
+    total_retur_qty = Decimal(0)
 
     for p in pembelian_list:
         pembelian_bruto = Decimal(p.quantity) * Decimal(p.harga_satuan)
@@ -22,8 +23,9 @@ def calculate_hpp_for_product(product, entries):
         total_pembelian = pembelian_bruto - Decimal(p.diskon) - jumlah_retur_rp + Decimal(p.ongkir)
 
         total_pembelian_neto += total_pembelian
-        total_pembelian_qty += Decimal(p.quantity)
-
+        total_pembelian_qty += (Decimal(p.quantity) - Decimal(p.retur_qty))
+        total_retur_qty += Decimal(p.retur_qty)
+        
     barang_tersedia = total_awal + total_pembelian_neto
 
     qty_akhir = Decimal(akhir.quantity if akhir else 0)
@@ -39,13 +41,13 @@ def calculate_hpp_for_product(product, entries):
         unit_beli = Decimal(0)
 
     # Perhitungan total akhir
-    diff = qty_akhir - qty_awal if qty_akhir > qty_awal else Decimal(0)
-    total_akhir = (qty_awal * harga_awal) + (diff * unit_beli)
+    diff_qty = qty_akhir - total_retur_qty - qty_awal
 
     # Qty terjual
-    qty_terjual = qty_tersedia - qty_akhir
+    total_akhir = total_awal + (diff_qty * unit_beli)
 
     # Total HPP (COGS)
+    qty_terjual = qty_tersedia - qty_akhir
     hpp = barang_tersedia - total_akhir
 
     # HPP per unit terjual
