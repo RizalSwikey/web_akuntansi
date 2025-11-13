@@ -22,7 +22,12 @@ def generate_final_report_data(report):
     jumlah_pendapatan = total_pendapatan_usaha + total_pendapatan_lain
 
     # HPP (Harga Pokok Penjualan)
-    products = Product.objects.filter(report=report)
+    products = (
+        Product.objects
+        .filter(report=report, revenue_entries__revenue_type="usaha")
+        .prefetch_related("revenue_entries")
+        .distinct()
+    )
 
     entries_by_product = {}
     for entry in HppEntry.objects.filter(report=report).select_related("product"):
