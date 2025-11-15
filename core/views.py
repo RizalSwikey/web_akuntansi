@@ -266,6 +266,30 @@ def hpp_dagang_view(request, report_id):
                 defaults={'keterangan': ''}
             )
 
+
+
+    for product in products:
+        try:
+            awal = HppEntry.objects.filter(report=report, product=product, category='AWAL').first()
+            qty_awal = awal.quantity if awal else 0
+            
+            pembelian_list = HppEntry.objects.filter(report=report, product=product, category='PEMBELIAN')
+            qty_pembelian_neto = sum(p.quantity - p.retur_qty for p in pembelian_list)
+            
+            revenue_data = RevenueItem.objects.filter(report=report, product=product, revenue_type='usaha').aggregate(total_sold=Sum('quantity'))
+            qty_terjual = revenue_data['total_sold'] or 0
+            
+            qty_akhir_calc = qty_awal + qty_pembelian_neto - qty_terjual
+            
+            HppEntry.objects.update_or_create(
+                report=report,
+                product=product,
+                category='AKHIR',
+                defaults={'quantity': qty_akhir_calc}
+            )
+        except Exception as e:
+            messages.error(request, f"Gagal menghitung Qty Akhir untuk {product.name}: {e}")
+
     if request.method == 'POST':
         action = request.POST.get('action')
         product_id = request.POST.get('product_id')
@@ -273,6 +297,10 @@ def hpp_dagang_view(request, report_id):
         if action == 'edit_hpp_entry':
             product = get_object_or_404(Product, id=product_id, report=report)
             category = request.POST.get('category')
+
+            if category == 'AKHIR':
+                messages.error(request, "Persediaan Akhir dihitung otomatis dan tidak dapat diubah.")
+                return redirect('core:hpp_dagang', report_id=report.id)
 
             try:
                 HppEntry.objects.update_or_create(
