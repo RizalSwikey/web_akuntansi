@@ -188,6 +188,52 @@ def pendapatan_view(request, report_id):
             except Exception as e:
                 messages.error(request, f'Terjadi kesalahan: {e}')
 
+        elif action == 'edit_revenue_item':
+            try:
+                item_id = int(request.POST.get('item_id', -1))
+                
+                item = RevenueItem.objects.get(id=item_id, report=report)
+                
+                data_type = item.revenue_type
+
+                if data_type == 'usaha':
+                    product_name = request.POST.get('modal-product-name')
+                    quantity = int(request.POST.get('modal-quantity', 0))
+                    selling_price = int(request.POST.get('modal-price', 0))
+
+                    if not product_name or quantity <= 0 or selling_price <= 0:
+                        messages.error(request, 'Nama produk, kuantitas, dan harga jual harus diisi dengan benar.')
+                    else:
+                        product, created = Product.objects.get_or_create(
+                            report=report,
+                            name=product_name
+                        )
+                        
+                        item.product = product
+                        item.quantity = quantity
+                        item.selling_price = selling_price
+                        item.save(update_fields=['product', 'quantity', 'selling_price'])
+                        
+                        messages.success(request, f'Pendapatan usaha "{product_name}" berhasil diubah.')
+
+                elif data_type == 'lain':
+                    item_name = request.POST.get('modal-product-name-lain')
+                    total = int(request.POST.get('modal-total', 0))
+
+                    if not item_name or total <= 0:
+                        messages.error(request, 'Keterangan dan total harus diisi dengan benar.')
+                    else:
+                        item.name = item_name
+                        item.total = total
+                        item.save(update_fields=['name', 'total'])
+                        
+                        messages.success(request, f'Pendapatan lain-lain "{item_name}" berhasil diubah.')
+
+            except RevenueItem.DoesNotExist:
+                 messages.error(request, 'Item pendapatan tidak ditemukan.')
+            except Exception as e:
+                messages.error(request, f'Gagal mengubah item: {e}')
+
         elif action == 'delete_revenue_item':
             try:
                 item_id = int(request.POST.get('item_id', -1))
@@ -407,7 +453,7 @@ def hpp_manufaktur_view(request, report_id):
             product_id = request.POST.get("product_id")
             product = get_object_or_404(Product, id=product_id, report=report)
 
-            tipe = request.POST.get("type")  # BB_AWAL / BB_PEMBELIAN / BB_AKHIR
+            tipe = request.POST.get("type")
             nama_bb = request.POST.get("nama_bahan_baku", "").strip()
             keterangan = request.POST.get("keterangan", "").strip()
 
@@ -996,6 +1042,33 @@ def beban_usaha_dagang_view(request, report_id):
             except Exception as e:
                 messages.error(request, f'Terjadi kesalahan: {e}')
         
+        elif action == 'edit_beban_item':
+            try:
+                item_id = int(request.POST.get('item_id', -1))
+                
+                item = ExpenseItem.objects.get(id=item_id, report=report)
+                
+                kategori_beban = request.POST.get('kategori_beban')
+                jenis_beban = request.POST.get('jenis_beban')
+                nama_beban = request.POST.get('nama_beban')
+                total_beban = int(request.POST.get('total_beban', 0))
+
+                item.expense_category = kategori_beban
+                item.expense_type = jenis_beban
+                item.name = nama_beban
+                item.total = total_beban
+                
+                item.save(update_fields=['expense_category', 'expense_type', 'name', 'total'])
+                
+                messages.success(request, f'Beban "{nama_beban}" berhasil diubah.')
+
+            except ExpenseItem.DoesNotExist:
+                messages.error(request, 'Beban tidak ditemukan.')
+            except ValueError:
+                messages.error(request, 'Total beban harus berupa angka yang valid.')
+            except Exception as e:
+                messages.error(request, f'Gagal mengubah beban: {e}')
+
         elif action == 'delete_beban_item':
             try:
                 item_id = int(request.POST.get('item_id', -1))
@@ -1055,6 +1128,7 @@ def beban_usaha_manufaktur_view(request, report_id):
                     report=report,
                     expense_category='usaha',
                     expense_type=jenis,
+                    scope='manufaktur',
                     name=keterangan or jenis,
                     total=total
                 )
@@ -1063,6 +1137,37 @@ def beban_usaha_manufaktur_view(request, report_id):
                 messages.error(request, f'Terjadi kesalahan saat menambahkan beban: {e}')
             return redirect('core:beban_usaha_manufaktur', report_id=report.id) 
 
+        if action == 'edit_beban_item':
+            try:
+                item_id = int(request.POST.get('item_id', -1))
+                
+                item = ExpenseItem.objects.get(
+                    id=item_id, 
+                    report=report, 
+                    scope='manufaktur'
+                )
+
+                jenis = request.POST.get('jenis_beban')
+                keterangan = request.POST.get('keterangan')
+                total = int(request.POST.get('total_beban', 0))
+
+                item.expense_type = jenis
+                item.name = keterangan or jenis
+                item.total = total
+
+                item.save(update_fields=['expense_type', 'name', 'total'])
+                
+                item_name = item.name
+                messages.success(request, f'Beban "{item_name}" berhasil diubah.')
+
+            except ExpenseItem.DoesNotExist:
+                messages.error(request, 'Item beban tidak ditemukan.')
+            except ValueError:
+                messages.error(request, 'Total harus berupa angka yang valid.')
+            except Exception as e:
+                messages.error(request, f'Gagal mengubah item: {e}')
+            return redirect('core:beban_usaha_manufaktur', report_id=report.id)
+        
         if action == 'delete_beban_item':
             try:
                 item_id = int(request.POST.get('item_id', -1))
