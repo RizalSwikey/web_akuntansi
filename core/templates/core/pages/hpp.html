@@ -134,15 +134,14 @@
       <div class="bg-white p-6 rounded-2xl shadow-lg">
         <h2 class="text-xl font-bold mb-4">Persediaan Akhir</h2>
         <div class="overflow-x-auto">
-          <table class="w-full min-w-[800px] text-left text-sm">
+          <table class="w-full min-w-[700px] text-left text-sm">
             <thead>
               <tr class="border-b bg-slate-50">
-                <th class="p-3 font-semibold w-1/4">Nama Produk</th>
-                <th class="p-3 font-semibold text-center w-[100px]">Kuantitas</th>
-                <th class="p-3 font-semibold w-1/4">Keterangan</th>
-                <th class="p-3 font-semibold text-right w-[150px]">Total (Rp)</th>
-                <th class="p-3 font-semibold w-1/5">Status Validasi</th>
-                <th class="p-3 font-semibold text-center w-[80px]">Aksi</th>
+                <th class="p-3 font-semibold w-2/6">Nama Produk</th>
+                <th class="p-3 font-semibold text-center w-1/6">Kuantitas</th>
+                <th class="p-3 font-semibold w-1/6">Keterangan</th>
+                <th class="p-3 font-semibold text-right w-1/6">Total (Rp)</th>
+                <th class="p-3 font-semibold w-1/6">Status Validasi</th>
               </tr>
             </thead>
             <tbody>
@@ -152,23 +151,25 @@
                   <td class="p-3 font-medium">{{ product.name }}</td>
                   <td class="p-3 text-center">{{ akhir.quantity | intcomma }}</td>
                   <td class="p-3 text-slate-600">{{ akhir.keterangan|default:"-" }}</td>
-                  <td class="p-3 text-right font-semibold">Rp {{ calc_detail.total_akhir|default:0|intcomma }}</td>
+                  
+                  <td class="p-3 text-right font-semibold whitespace-nowrap">Rp {{ calc_detail.total_akhir|default:0|intcomma }}</td>
+                  
                   <td class="p-3 text-xs">
-                    {% if calc_detail.validation_error_akhir %}
-                      <span class="text-red-600 block">{{ calc_detail.validation_error_akhir }}</span>
-                    {% elif calc_detail.validation_error_penjualan %}
-                      <span class="text-orange-600 block">{{ calc_detail.validation_error_penjualan }}</span>
-                    {% else %}
-                      <span class="text-green-600">OK</span>
-                    {% endif %}
-                  </td>
-                  <td class="p-3 text-center">
+                    {% with error_msg=calc_detail.validation_error_akhir %}
+                      {% if error_msg %}
+                        <span class="text-red-600 font-semibold" title="{{ error_msg }}">
+                          Periksa ({{ error_msg }})
+                        </span>
+                      {% else %}
+                        <span class="text-green-600 font-medium">OK</span>
+                      {% endif %}
+                    {% endwith %}
                   </td>
                 </tr>
                 {% endwith %}
               {% empty %}
                 <tr>
-                  <td colspan="6" class="p-4 text-center text-slate-500">
+                  <td colspan="5" class="p-4 text-center text-slate-500">
                     Tambahkan produk di halaman Pendapatan terlebih dahulu.
                   </td>
                 </tr>
@@ -177,8 +178,10 @@
             <tfoot>
               <tr class="font-bold bg-slate-50">
                 <td colspan="3" class="p-3 text-right">Total Persediaan Akhir:</td>
-                <td class="p-3 text-right text-lg">Rp {{ grand_total_akhir|intcomma }}</td>
-                <td colspan="2"></td>
+                
+                <td class="p-3 text-right text-lg whitespace-nowrap">Rp {{ grand_total_akhir|intcomma }}</td>
+                
+                <td colspan="1"></td>
               </tr>
             </tfoot>
           </table>
