@@ -745,13 +745,18 @@ def hpp_manufaktur_view(request, report_id):
         if not product:
             continue
 
-        qty_awal = bdp_awal_qty.get(pid, 0)
-        qty_akhir = bdp_akhir_qty.get(pid, 0)
-        qty_diproduksi = max(qty_akhir - qty_awal, 0)
+        bj_awal_qty_map = map_qty(bj_awal)
+        bj_akhir_qty_map = map_qty(bj_akhir)
+        revenue_items_qs = RevenueItem.objects.filter(report=report, product_id=pid, revenue_type='usaha')
+        qty_terjual_map = revenue_items_qs.aggregate(total_sold=Sum('quantity'))
+        qty_bj_awal = bj_awal_qty_map.get(pid, 0)
+        qty_bj_akhir = bj_akhir_qty_map.get(pid, 0)
+        qty_sold = qty_terjual_map.get('total_sold') or 0
+        qty_diproduksi = max((qty_sold + qty_bj_akhir) - qty_bj_awal, 0)
 
         total_produksi = (
             (bb_awal_map.get(pid, 0) + bb_pembelian_map.get(pid, 0) - bb_akhir_map.get(pid, 0))
-            + (bdp_akhir_map.get(pid, 0) - bdp_awal_map.get(pid, 0))
+            + (bdp_awal_map.get(pid, 0) - bdp_akhir_map.get(pid, 0))
             + btkl_map.get(pid, 0)
             + bop_map.get(pid, 0)
         )
@@ -760,8 +765,6 @@ def hpp_manufaktur_view(request, report_id):
 
         barang_diproduksi_list.append({
             "product_name": product.name,
-            "qty_awal": qty_awal,
-            "qty_akhir": qty_akhir,
             "qty_diproduksi": qty_diproduksi,
             "total_produksi": total_produksi,
             "hpp_per_unit": hpp_per_unit,
