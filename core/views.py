@@ -272,6 +272,7 @@ def hpp_dagang_view(request, report_id):
         try:
             awal = HppEntry.objects.filter(report=report, product=product, category='AWAL').first()
             qty_awal = awal.quantity if awal else 0
+            keterangan_awal = awal.keterangan if awal else '-'
             
             pembelian_list = HppEntry.objects.filter(report=report, product=product, category='PEMBELIAN')
             qty_pembelian_neto = sum(p.quantity - p.retur_qty for p in pembelian_list)
@@ -285,7 +286,10 @@ def hpp_dagang_view(request, report_id):
                 report=report,
                 product=product,
                 category='AKHIR',
-                defaults={'quantity': qty_akhir_calc}
+                defaults={
+                    'quantity': qty_akhir_calc,
+                    'keterangan' : keterangan_awal
+                    }
             )
         except Exception as e:
             messages.error(request, f"Gagal menghitung Qty Akhir untuk {product.name}: {e}")
