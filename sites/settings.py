@@ -145,12 +145,12 @@ DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 TAILWIND_APP_NAME = 'theme'
 
 # WINDOWS PATH (DEV)
-# NPM_BIN_PATH = r"C:\Program Files\nodejs\npm.cmd"
+NPM_BIN_PATH = r"C:\Program Files\nodejs\npm.cmd"
 # LINUX PATH (PROD)
-NPM_BIN_PATH = r"/usr/bin/npm"
+# NPM_BIN_PATH = r"/usr/bin/npm"
 
 # WINDOWS PATH (DEV)
-# WKHTMLTOPDF_CMD = r"C:\Program Files\wkhtmltopdf\bin\wkhtmltopdf.exe"
+WKHTMLTOPDF_CMD = r"C:\Program Files\wkhtmltopdf\bin\wkhtmltopdf.exe"
 # LINUX PATH (PROD)
-WKHTMLTOPDF_CMD = r'/usr/local/bin/wkhtmltopdf'
+# WKHTMLTOPDF_CMD = r'/usr/local/bin/wkhtmltopdf'
 
