@@ -151,7 +151,7 @@
             </tr>
             <tr class="highlight-row">
                 <td class="label">Harga Pokok Penjualan (HPP)</td>
-                <td class="amount">Rp {{ total_hpp|floatformat:0|intcomma }}</td>
+                <td class="amount">Rp {{ hpp_total |floatformat:0|intcomma }}</td>
             </tr>
         </table>
         
@@ -196,7 +196,7 @@
         <table class="data-table">
             <tr>
                 <td class="label indent">Beban Usaha - HPP</td>
-                <td class="amount">Rp {{ total_hpp|floatformat:0|intcomma }}</td>
+                <td class="amount">Rp {{ hpp_total|floatformat:0|intcomma }}</td>
             </tr>
             
             {% if beban_usaha_items %}
