@@ -212,7 +212,8 @@ def pendapatan_view(request, report_id):
                         item.product = product
                         item.quantity = quantity
                         item.selling_price = selling_price
-                        item.save(update_fields=['product', 'quantity', 'selling_price'])
+                        item.total = quantity * selling_price
+                        item.save(update_fields=['product', 'quantity', 'selling_price', 'total'])
                         
                         messages.success(request, f'Pendapatan usaha "{product_name}" berhasil diubah.')
 

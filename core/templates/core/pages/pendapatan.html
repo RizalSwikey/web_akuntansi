@@ -320,7 +320,7 @@ document.addEventListener("DOMContentLoaded", function () {
   // EDIT BUTTON LOGIC
   document.querySelectorAll(".edit-row-btn").forEach(button => {
     button.addEventListener("click", () => {
-      modalAction.value = "edit";
+      modalAction.value = "edit_revenue_item";
       modalItemId.value = button.dataset.id;
       modalTitle.textContent = "Edit Pendapatan";
 
