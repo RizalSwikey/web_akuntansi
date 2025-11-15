@@ -57,7 +57,7 @@ def _generate_excel_dagang(wb, report, data):
     ws["A11"].font = bold
     ws["B11"].font = bold
 
-    ws.append(["Harga Pokok Penjualan (HPP)", data["total_hpp"]])
+    ws.append(["Harga Pokok Penjualan (HPP)", data["hpp_total"]])
 
     # Beban usaha & lainnya
     for item in data["beban_usaha_items"]:
@@ -144,7 +144,7 @@ def _generate_excel_manufaktur(wb, report, data):
     ws_hpp.append(["Persediaan Barang Jadi (Awal)", data['total_bj_awal']])
     ws_hpp.append(["Barang Siap untuk Dijual", data['barang_siap_dijual']])
     ws_hpp.append(["Persediaan Barang Jadi (Akhir)", -data['total_bj_akhir']])
-    ws_hpp.append(["Harga Pokok Penjualan (HPP)", data['total_hpp']])
+    ws_hpp.append(["Harga Pokok Penjualan (HPP)", data['hpp_total']])
     ws_hpp.cell(row=ws_hpp.max_row, column=1).font = bold
     ws_hpp.cell(row=ws_hpp.max_row, column=1).fill = total_fill
     ws_hpp.cell(row=ws_hpp.max_row, column=2).fill = total_fill
@@ -169,7 +169,7 @@ def _generate_excel_manufaktur(wb, report, data):
     
     ws_lr.append(["Beban"])
     ws_lr.cell(row=ws_lr.max_row, column=1).font = bold
-    ws_lr.append(["Harga Pokok Penjualan (HPP)", data['total_hpp']])
+    ws_lr.append(["Harga Pokok Penjualan (HPP)", data['hpp_total']])
     for item in data['beban_usaha_items']:
         ws_lr.append([item.name, item.total])
     ws_lr.append(["Total Beban Usaha Lainnya", data['total_beban_usaha_lainnya']])
