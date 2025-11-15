@@ -557,8 +557,8 @@ def hpp_manufaktur_view(request, report_id):
         if action == "add_bop":
             nama_biaya = request.POST.get("nama_biaya", "")
             product_id = request.POST.get("product_id") or None
-            quantity = int(request.POST.get("quantity", 0))
-            harga_satuan = int(request.POST.get("harga_satuan", 0))
+            quantity = to_int(request.POST.get("quantity"))
+            harga_satuan = to_int(request.POST.get("harga_satuan"))
             keterangan = request.POST.get("keterangan", "")
             total = quantity * harga_satuan
 
