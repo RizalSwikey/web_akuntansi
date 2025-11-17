@@ -664,7 +664,6 @@ def hpp_manufaktur_view(request, report_id):
             tipe_data = request.POST.get("tipe_data")
             product_id = request.POST.get("product_id")
             qty = to_int(request.POST.get("kuantitas"))
-            # Harga manual hanya dipakai jika data AWAL, jika AKHIR kita hitung otomatis
             harga_satuan_manual = to_int(request.POST.get("harga_satuan")) 
             keterangan = request.POST.get("keterangan", "")
 
@@ -673,25 +672,21 @@ def hpp_manufaktur_view(request, report_id):
             harga_satuan_final = harga_satuan_manual
 
             if tipe_data == "AKHIR_BJ":
-                # 1. Ambil Data Stok Awal
                 bj_awal_item = HppManufactureFinishedGoods.objects.filter(
                     report=report, type="FG_AWAL", product_id=product_id
                 ).first()
                 qty_awal = to_int(bj_awal_item.quantity) if bj_awal_item else 0
                 harga_awal = to_int(bj_awal_item.harga_satuan) if bj_awal_item else 0
 
-                # 2. Ambil Data Produksi (Manual Input dari DB)
                 prod_item = production_map.get(int(product_id))
                 qty_produksi = to_int(prod_item.qty_diproduksi) if prod_item else 0
                 total_biaya_produksi = to_int(prod_item.total_produksi) if prod_item else 0
 
-                # 3. Ambil Data Penjualan
                 revenue_sold = RevenueItem.objects.filter(
                     report=report, product_id=product_id, revenue_type='usaha'
                 ).aggregate(Sum('quantity'))['quantity__sum'] or 0
                 qty_penjualan = to_int(revenue_sold)
 
-                # 4. Validasi Stok Fisik (Rumus: Awal + Produksi - Jual)
                 stok_seharusnya = qty_awal + qty_produksi - qty_penjualan
                 
                 if qty < 0: qty = 0
@@ -701,27 +696,18 @@ def hpp_manufaktur_view(request, report_id):
                     total = 0 
                 else:
                     if (qty_penjualan - qty_awal) < 0:
-                        # KASUS 1: Penjualan diambil dari Stok Awal. Stok Baru utuh.
-                        # Total Akhir = A + B
                         
-                        # A = (Qty Awal - Qty Jual) * Harga Awal (Sisa stok lama)
                         sisa_nilai_awal = (qty_awal - qty_penjualan) * harga_awal
                         
-                        # B = Total Barang Diproduksi (Utuh belum terjual)
                         total = sisa_nilai_awal + total_biaya_produksi
                         
                     else:
-                        # KASUS 2: Penjualan menghabiskan Stok Awal & mengambil Stok Baru.
-                        # Total Akhir = A - B - C
                         
-                        # A = (Total Awal Rp + Total Produksi Rp) -> Modal Tersedia
                         total_nilai_awal = qty_awal * harga_awal
                         modal_tersedia = total_nilai_awal + total_biaya_produksi
                         
-                        # B = (Qty Awal * Harga Awal) -> HPP dari stok lama (habis terjual)
                         hpp_stok_lama = total_nilai_awal
                         
-                        # C = (Qty Jual - Qty Awal) * (Total Produksi / Qty Produksi) -> HPP dari stok baru
                         if qty_produksi > 0:
                             harga_prod_per_unit = total_biaya_produksi / qty_produksi
                         else:
@@ -730,33 +716,27 @@ def hpp_manufaktur_view(request, report_id):
                         qty_ambil_baru = qty_penjualan - qty_awal
                         hpp_stok_baru = qty_ambil_baru * harga_prod_per_unit
                         
-                        # Rumus Akhir: A - B - C
                         total = modal_tersedia - hpp_stok_lama - hpp_stok_baru
 
                     status = "OK"
 
-                # Hitung harga satuan untuk display saja
                 if qty > 0:
                     harga_satuan_final = total / qty
                 else:
                     harga_satuan_final = 0
 
-            # Tentukan Tipe Database
             tipe_db = "FG_AWAL" if tipe_data == "AWAL_BJ" else "FG_AKHIR"
             
-            # Jika data AWAL, total dihitung manual (qty * harga input)
             if tipe_db == "FG_AWAL":
                 total = qty * harga_satuan_manual
                 harga_satuan_final = harga_satuan_manual
 
-            # Simpan ke Database
             defaults = {
                 'type': tipe_db,
                 'quantity': qty,
                 'harga_satuan': harga_satuan_final,
                 'total': total,
                 'keterangan': keterangan,
-                'status': status
             }
 
             if action == "add_fg":
