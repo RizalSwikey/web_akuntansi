@@ -878,18 +878,15 @@
     const mainContent = document.getElementById('main-content'); 
 
     function setupModal(modalId, openBtnId, closeBtnId, formId, options = {}) {
-        const openBtn = document.getElementById(openBtnId); // This might be null
+        const openBtn = document.getElementById(openBtnId);
         const modal = document.getElementById(modalId);
         const closeBtn = document.getElementById(closeBtnId);
         const form = document.getElementById(formId);
 
-        // --- THE FIX ---
-        // We check for the essential parts first. The openBtn is optional.
         if (!modal || !closeBtn || !form) {
             console.warn("Modal setup skipped: Missing essential elements.", {modalId, closeBtnId, formId});
             return; 
         }
-        // --- END FIX ---
 
         function openAction() {
             modal.classList.remove("opacity-0", "pointer-events-none");
@@ -906,14 +903,10 @@
             }, 200);
         }
         
-        // --- THE FIX ---
-        // Only add the open listener IF the button exists.
         if (openBtn) {
             openBtn.addEventListener("click", openAction);
         }
-        // --- END FIX ---
 
-        // These will now run for all modals, including 'modal-produksi'
         closeBtn.addEventListener("click", closeAction);
         modal.addEventListener("click", (e) => {
             if (e.target === modal) {
@@ -960,7 +953,7 @@
         document.getElementById("modal-harga-satuan").value = harga;
         document.getElementById("modal-keterangan").value = ket;
 
-        togglePembelianFields(); // Tampilkan/sembunyikan field pembelian
+        togglePembelianFields();
         
         if (type === "BB_PEMBELIAN") {
             document.getElementById("modal-diskon").value = diskon;
@@ -1120,26 +1113,22 @@
         modal.classList.remove("opacity-0", "pointer-events-none");
         if (mainContent) mainContent.classList.add('overflow-hidden');
     }
+
     // --- MODAL PRODUKSI (NEW) ---
-    // Kita set null pada parameter openBtnId karena tombol bukanya ada banyak (di dalam loop tabel),
-    // jadi kita tidak bind ke satu ID tombol spesifik saat init.
     setupModal('modal-produksi', 'dummy-btn', 'modal-produksi-close-btn', 'form-produksi', {
         onOpen: function() {
-            // Logic reset jika diperlukan
+            // Logic reset?
         }
     });
 
-    // Fungsi Global untuk dipanggil dari tombol Edit di tabel
     window.openEditModal_Produksi = function(id, productName, currentQty) {
         const modal = document.getElementById('modal-produksi');
         const form = document.getElementById('form-produksi');
         
-        // Isi data ke dalam form modal
         document.getElementById("produksi-item-id").value = id;
-        document.getElementById("modal-produksi-nama").value = productName; // Menampilkan nama (read-only)
-        document.getElementById("modal-produksi-qty").value = currentQty;   // Mengisi qty lama
+        document.getElementById("modal-produksi-nama").value = productName;
+        document.getElementById("modal-produksi-qty").value = currentQty;
 
-        // Buka Modal
         modal.classList.remove("opacity-0", "pointer-events-none");
         if (mainContent) mainContent.classList.add('overflow-hidden');
     }

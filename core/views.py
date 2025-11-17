@@ -313,8 +313,6 @@ def hpp_dagang_view(request, report_id):
                 defaults={'keterangan': ''}
             )
 
-
-
     for product in products:
         try:
             awal = HppEntry.objects.filter(report=report, product=product, category='AWAL').first()
@@ -444,8 +442,7 @@ def hpp_manufaktur_view(request, report_id):
     completion_status = get_completion_status(report)
     products = Product.objects.filter(report=report)
 
-    # --- 1. LOAD DATA PRODUKSI DARI DB (Agar Qty Manual Terbaca) ---
-    # Kita load dulu agar bisa dipakai untuk perhitungan validasi di bawah
+    # --- 1. LOAD DATA PRODUKSI DARI DB  ---
     existing_production = HppManufactureProduction.objects.filter(report=report)
     production_map = {p.product.id: p for p in existing_production}
 
@@ -454,18 +451,15 @@ def hpp_manufaktur_view(request, report_id):
 
         # === FITUR BARU: SIMPAN QTY PRODUKSI MANUAL ===
         if action == "edit_production":
-            item_id = request.POST.get("item_id") # Get PK from modal form
+            item_id = request.POST.get("item_id")
             qty_input = to_int(request.POST.get("qty_diproduksi"))
             
             try:
-                # Get the existing production object by its ID
                 prod_item = get_object_or_404(HppManufactureProduction, id=item_id, report=report)
                 
-                # Update only the quantity
                 prod_item.qty_diproduksi = qty_input
                 prod_item.save(update_fields=['qty_diproduksi'])
                 
-                # We don't recalculate HPP per unit here; the page reload will do it.
                 messages.success(request, f"Kuantitas produksi untuk {prod_item.product.name} berhasil disimpan.")
             except Exception as e:
                 messages.error(request, f"Gagal menyimpan kuantitas: {e}")
@@ -672,45 +666,34 @@ def hpp_manufaktur_view(request, report_id):
             harga_satuan = to_int(request.POST.get("harga_satuan"))
             keterangan = request.POST.get("keterangan", "")
 
-            # Logic Validasi & Total
             total = qty * harga_satuan
             status = "OK"
 
             if tipe_data == "AKHIR_BJ":
-                # Ambil data Awal
                 bj_awal_item = HppManufactureFinishedGoods.objects.filter(
                     report=report, type="FG_AWAL", product_id=product_id
                 ).first()
                 qty_awal = bj_awal_item.quantity if bj_awal_item else 0
                 harga_awal = bj_awal_item.harga_satuan if bj_awal_item else 0
 
-                # Ambil data Produksi (Manual dari DB)
                 prod_item = production_map.get(int(product_id))
                 qty_produksi = prod_item.qty_diproduksi if prod_item else 0
                 harga_produksi = prod_item.hpp_per_unit if prod_item else 0
 
-                # Ambil data Penjualan
                 revenue_sold = RevenueItem.objects.filter(
                     report=report, product_id=product_id, revenue_type='usaha'
                 ).aggregate(Sum('quantity'))['quantity__sum'] or 0
 
-                # Rumus User: Akhir = Awal + Produksi - Penjualan
                 stok_seharusnya = qty_awal + qty_produksi - revenue_sold
                 
-                # Jika qty negatif (input user salah)
                 if qty < 0:
                      qty = 0
 
                 # Validasi
                 if qty > stok_seharusnya:
                     status = "Periksa Kembali: Stok Akhir melebihi (Awal + Produksi - Penjualan)"
-                    total = 0 # Atau tetap hitung total tapi kasih warning
+                    total = 0
                 else:
-                    # Hitung Rupiah: (Qty Awal * Harga Awal) + (Sisa Produksi * Harga Produksi)
-                    # Asumsi FIFO/Average sederhana: 
-                    # Jika qty akhir <= qty produksi sisa, pakai harga produksi, dst.
-                    # Sederhananya pakai Average dari total barang tersedia:
-                    
                     total_nilai_tersedia = (qty_awal * harga_awal) + (qty_produksi * harga_produksi)
                     total_qty_tersedia = qty_awal + qty_produksi
                     
@@ -807,7 +790,6 @@ def hpp_manufaktur_view(request, report_id):
 
     barang_diproduksi_list = []
     
-    # Cari semua ID produk yang terlibat dalam manufaktur
     product_ids = set(bb_awal_map.keys()) | set(bb_pembelian_map.keys()) | set(bb_akhir_map.keys()) | set(production_map.keys())
 
     for pid in product_ids:
@@ -815,7 +797,6 @@ def hpp_manufaktur_view(request, report_id):
         if not product:
             continue
 
-        # Hitung Total Biaya Produksi (Rupiah)
         total_biaya_produksi = (
             (bb_awal_map.get(pid, 0) + bb_pembelian_map.get(pid, 0) - bb_akhir_map.get(pid, 0))
             + (bdp_awal_map.get(pid, 0) - bdp_akhir_map.get(pid, 0))
@@ -823,37 +804,30 @@ def hpp_manufaktur_view(request, report_id):
             + bop_map.get(pid, 0)
         )
 
-        # Ambil Qty Produksi Manual dari DB (default 0 jika belum diisi)
         prod_item = production_map.get(pid)
         qty_diproduksi = prod_item.qty_diproduksi if prod_item else 0
         
-        # Hitung HPP per Unit Produksi
         hpp_per_unit = total_biaya_produksi / qty_diproduksi if qty_diproduksi > 0 else 0
 
         barang_diproduksi_list.append({
             "product_name": product.name,
-            "product_id": product.id, # Butuh ID untuk form input
+            "product_id": product.id,
             "qty_diproduksi": qty_diproduksi,
             "total_produksi": total_biaya_produksi,
             "hpp_per_unit": hpp_per_unit,
         })
     
-    # Simpan kalkulasi otomatis (Total Biaya & HPP Unit) ke DB agar sinkron
-    # Simpan kalkulasi otomatis (Total Biaya & HPP Unit) ke DB agar sinkron
     save_barang_diproduksi(report, barang_diproduksi_list)
 
-    # [PERBAIKAN] Muat ulang data dari DB sebagai OBJEK Model
-    # Ini memastikan kita mendapatkan '.id' (Primary Key) dan data yang konsisten
     barang_diproduksi_list_objects = HppManufactureProduction.objects.filter(
         report=report
     ).select_related('product').order_by('product__name')
     
-    # [PERBAIKAN] Hitung total dari QuerySet objek
     total_barang_diproduksi = barang_diproduksi_list_objects.aggregate(
         total=Sum('total_produksi')
     )['total'] or 0
 
-    # SUMS untuk footer table
+    # SUMS
     total_bahan_baku_awal = bb_awal.aggregate(Sum('total'))['total__sum'] or 0
     total_bahan_baku_pembelian = bb_pembelian.aggregate(Sum('total'))['total__sum'] or 0
     total_bahan_baku_akhir = bb_akhir.aggregate(Sum('total'))['total__sum'] or 0
@@ -890,7 +864,7 @@ def hpp_manufaktur_view(request, report_id):
         "totals_bj_awal_per_produk": totals_bj_awal_per_produk,
         "totals_bj_akhir_per_produk": totals_bj_akhir_per_produk,
 
-        "barang_diproduksi_list": barang_diproduksi_list_objects, # Pass the objects
+        "barang_diproduksi_list": barang_diproduksi_list_objects,
         "total_barang_diproduksi": total_barang_diproduksi,
     
         "total_bahan_baku_awal": total_bahan_baku_awal,

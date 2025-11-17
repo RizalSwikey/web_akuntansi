@@ -56,7 +56,6 @@ class RevenueItem(models.Model):
                  pass 
             self.total = self.quantity * self.selling_price
             self.name = self.product.name if self.product else self.name
-            # self.product = None 
         super().save(*args, **kwargs)
 
     def __str__(self):
@@ -85,7 +84,6 @@ class HppEntry(models.Model):
     ongkir = models.BigIntegerField(default=0)
 
     class Meta:
-        # Prevent multiple Awal/Akhir entries per product per report
         unique_together = ('report', 'product', 'category')
         ordering = ['product__name', 'category']
 
@@ -109,7 +107,7 @@ class HppManufactureMaterial(models.Model):
     harga_satuan = models.BigIntegerField(default=0)
     diskon = models.IntegerField(default=0)
     retur_qty = models.IntegerField(default=0)
-    retur_amount = models.IntegerField(default=0)  # auto later
+    retur_amount = models.IntegerField(default=0)
     ongkir = models.IntegerField(default=0)
     total = models.BigIntegerField(default=0)
 
