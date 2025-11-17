@@ -2,66 +2,89 @@ from decimal import Decimal
 from django.db import transaction
 from core.models import HppManufactureProduction, Product
 
-
 def calculate_hpp_for_product(product, entries):
     awal = entries.get('AWAL')
     pembelian_list = entries.get('PEMBELIAN')
     akhir = entries.get('AKHIR')
 
+    # 1. Hitung Data Awal
     qty_awal = Decimal(awal.quantity if awal else 0)
     harga_awal = Decimal(awal.harga_satuan if awal else 0)
-
     total_awal = qty_awal * harga_awal
 
+    # 2. Hitung Data Pembelian (Neto)
     total_pembelian_neto = Decimal(0)
-    total_pembelian_qty = Decimal(0)
-    total_retur_qty = Decimal(0)
+    total_pembelian_qty_net = Decimal(0) 
 
     for p in pembelian_list:
-        pembelian_bruto = Decimal(p.quantity) * Decimal(p.harga_satuan)
-        jumlah_retur_rp = Decimal(p.retur_qty) * Decimal(p.harga_satuan)
-        total_pembelian = pembelian_bruto - Decimal(p.diskon) - jumlah_retur_rp + Decimal(p.ongkir)
-
-        total_pembelian_neto += total_pembelian
-        total_pembelian_qty += (Decimal(p.quantity) - Decimal(p.retur_qty))
-        total_retur_qty += Decimal(p.retur_qty)
+        qty_beli = Decimal(p.quantity)
+        harga_beli = Decimal(p.harga_satuan)
+        retur_qty = Decimal(p.retur_qty)
+        diskon = Decimal(p.diskon)
+        ongkir = Decimal(p.ongkir)
         
-    barang_tersedia = total_awal + total_pembelian_neto
+        # Hitung retur dalam rupiah
+        nilai_retur_rp = retur_qty * harga_beli
+        
+        pembelian_bruto = qty_beli * harga_beli
+        total_pembelian_item = pembelian_bruto - diskon - nilai_retur_rp + ongkir
 
-    qty_akhir = Decimal(akhir.quantity if akhir else 0)
-    qty_tersedia = qty_awal + total_pembelian_qty
+        total_pembelian_neto += total_pembelian_item
+        total_pembelian_qty_net += (qty_beli - retur_qty)
 
-    validation_error_akhir = None
-    if qty_akhir > qty_tersedia:
-        validation_error_akhir = "Periksa Kembali Catatan Penjualan/Persediaan Akhir."
+    # 3. Variabel Dasar (A)
+    total_nilai_tersedia = total_awal + total_pembelian_neto
+    total_qty_tersedia = qty_awal + total_pembelian_qty_net
 
-    if total_pembelian_qty > 0:
-        unit_beli = total_pembelian_neto / total_pembelian_qty
+    # Hitung Harga Beli Baru per Unit (untuk perhitungan C - FIFO)
+    if total_pembelian_qty_net > 0:
+        harga_beli_baru_per_unit = total_pembelian_neto / total_pembelian_qty_net
     else:
-        unit_beli = Decimal(0)
+        harga_beli_baru_per_unit = Decimal(0)
 
-    # Perhitungan total akhir
-    diff_qty = qty_akhir - total_retur_qty - qty_awal
+    # 4. Tentukan Jumlah Terjual & Validasi Stok Akhir
+    qty_akhir = Decimal(akhir.quantity if akhir else 0)
+    
+    if qty_akhir > total_qty_tersedia:
+        qty_akhir = total_qty_tersedia # Cap agar tidak minus
+        validation_error_akhir = "Periksa Kembali Catatan Penjualan/Persediaan Akhir."
+    else:
+        validation_error_akhir = None
 
-    # Qty terjual
-    total_akhir = total_awal + (diff_qty * unit_beli)
+    qty_terjual = total_qty_tersedia - qty_akhir
 
-    # Total HPP (COGS)
-    qty_terjual = qty_tersedia - qty_akhir
-    hpp = barang_tersedia - total_akhir
+    # 5. Hitung HPP menggunakan Logika FIFO (First-In, First-Out)
+    hpp_total = Decimal(0)
 
-    # HPP per unit terjual
+    if qty_terjual > qty_awal:
+        # KASUS 1: Penjualan menghabiskan stok awal & mengambil stok baru
+        # B = Stok Awal terjual semua
+        biaya_stok_awal = total_awal 
+        
+        # C = Sisa penjualan diambil dari harga pembelian baru
+        qty_sisa_jual = qty_terjual - qty_awal
+        biaya_stok_baru = qty_sisa_jual * harga_beli_baru_per_unit
+        
+        hpp_total = biaya_stok_awal + biaya_stok_baru
+    else:
+        # KASUS 2: Penjualan sedikit, hanya mengambil dari stok awal
+        hpp_total = qty_terjual * harga_awal
+
+    # 6. Hitung Nilai Akhir (A - HPP)
+    total_akhir = total_nilai_tersedia - hpp_total
+
+    # HPP per unit (Statistik)
     if qty_terjual > 0:
-        hpp_per_unit = hpp / qty_terjual
+        hpp_per_unit = hpp_total / qty_terjual
     else:
         hpp_per_unit = 0
 
     return {
         "total_awal": int(total_awal),
         "total_pembelian_neto": int(total_pembelian_neto),
-        "barang_tersedia": int(barang_tersedia),
+        "barang_tersedia": int(total_nilai_tersedia),
         "total_akhir": int(total_akhir),
-        "hpp": int(hpp),
+        "hpp": int(hpp_total),
         "hpp_per_unit": float(hpp_per_unit),
 
         "detail_awal": {
@@ -70,19 +93,19 @@ def calculate_hpp_for_product(product, entries):
         } if awal else None,
 
         "detail_pembelian": {
-            "qty": int(total_pembelian_qty),
+            "qty": int(total_pembelian_qty_net),
         } if pembelian_list else None,
-
 
         "detail_akhir": {
             "qty": int(qty_akhir),
         } if akhir else None,
 
         "qty_terjual": int(qty_terjual),
-
         "validation_error_akhir": validation_error_akhir,
     }
 
+
+# --- FUNGSI HELPER (INI YANG TADI HILANG) ---
 
 def to_int(val, default=0):
     try:
@@ -91,7 +114,6 @@ def to_int(val, default=0):
         return int(float(val))
     except Exception:
         return default
-    
 
 def to_number(x):
     if x is None:
@@ -105,12 +127,10 @@ def to_number(x):
             return Decimal(int(x))
         except Exception:
             return Decimal(0)
-        
 
 def save_barang_diproduksi(report, barang_diproduksi_list):
     """
     Save or update barang_diproduksi_list into HppManufactureProduction model.
-    Called from hpp_manufaktur_view after barang_diproduksi_list is computed.
     """
     with transaction.atomic():
         for row in barang_diproduksi_list:
