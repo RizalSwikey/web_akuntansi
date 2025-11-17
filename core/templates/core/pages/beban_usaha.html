@@ -173,7 +173,7 @@
 <!-- ======================= MODAL ADD / EDIT BEBAN ======================= -->
 
 <div id="add-beban-modal" class="fixed inset-0 bg-black/60 flex justify-center items-center z-50 transition-opacity opacity-0 pointer-events-none">
-  <form id="beban-form" method="POST" action="{% url 'core:beban_usaha' report.id %}" class="bg-white p-8 rounded-2xl shadow-xl w-full max-w-lg space-y-6">
+  <form id="beban-form" method="POST" action="{% url 'core:beban_usaha_dagang' report.id %}" class="bg-white p-8 rounded-2xl shadow-xl w-full max-w-lg space-y-6">
     {% csrf_token %}
     <input type="hidden" name="action" id="beban-action" value="add_beban">
     <input type="hidden" name="item_id" id="beban-item-id" value="">
