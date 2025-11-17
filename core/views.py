@@ -737,6 +737,7 @@ def hpp_manufaktur_view(request, report_id):
                 'harga_satuan': harga_satuan_final,
                 'total': total,
                 'keterangan': keterangan,
+                'status': status,
             }
 
             if action == "add_fg":

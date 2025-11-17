@@ -200,6 +200,7 @@ class HppManufactureFinishedGoods(models.Model):  # Barang Jadi
     quantity = models.IntegerField(default=0)
     harga_satuan = models.IntegerField(default=0)
     total = models.IntegerField(default=0)
+    status = models.CharField(max_length=255, blank=True, null=True)
     keterangan = models.CharField(max_length=255, blank=True, null=True)
 
     class Meta:
