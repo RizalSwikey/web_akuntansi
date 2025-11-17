@@ -439,7 +439,6 @@ def hpp_dagang_view(request, report_id):
 
 
 @login_required(login_url='core:login')
-@login_required(login_url='core:login')
 def hpp_manufaktur_view(request, report_id):
     report = get_object_or_404(FinancialReport, id=report_id, user=request.user)
     completion_status = get_completion_status(report)
@@ -455,18 +454,22 @@ def hpp_manufaktur_view(request, report_id):
 
         # === FITUR BARU: SIMPAN QTY PRODUKSI MANUAL ===
         if action == "edit_production":
-            product_id = request.POST.get("product_id")
+            item_id = request.POST.get("item_id") # Get PK from modal form
             qty_input = to_int(request.POST.get("qty_diproduksi"))
             
-            product_obj = get_object_or_404(Product, id=product_id, report=report)
-            
-            # Kita update Qty saja, Total & HPP per unit akan dihitung ulang di bawah
-            HppManufactureProduction.objects.update_or_create(
-                report=report,
-                product=product_obj,
-                defaults={'qty_diproduksi': qty_input}
-            )
-            messages.success(request, "Kuantitas produksi berhasil disimpan.")
+            try:
+                # Get the existing production object by its ID
+                prod_item = get_object_or_404(HppManufactureProduction, id=item_id, report=report)
+                
+                # Update only the quantity
+                prod_item.qty_diproduksi = qty_input
+                prod_item.save(update_fields=['qty_diproduksi'])
+                
+                # We don't recalculate HPP per unit here; the page reload will do it.
+                messages.success(request, f"Kuantitas produksi untuk {prod_item.product.name} berhasil disimpan.")
+            except Exception as e:
+                messages.error(request, f"Gagal menyimpan kuantitas: {e}")
+                
             return redirect(f"{reverse('core:hpp_manufaktur', args=[report.id])}#produksi-anchor")
 
         # --- BAHAN BAKU ---
@@ -836,10 +839,19 @@ def hpp_manufaktur_view(request, report_id):
         })
     
     # Simpan kalkulasi otomatis (Total Biaya & HPP Unit) ke DB agar sinkron
+    # Simpan kalkulasi otomatis (Total Biaya & HPP Unit) ke DB agar sinkron
     save_barang_diproduksi(report, barang_diproduksi_list)
 
-    total_barang_diproduksi = sum(to_number(row.get("total_produksi", 0)) for row in barang_diproduksi_list)
-    total_barang_diproduksi = int(total_barang_diproduksi)
+    # [PERBAIKAN] Muat ulang data dari DB sebagai OBJEK Model
+    # Ini memastikan kita mendapatkan '.id' (Primary Key) dan data yang konsisten
+    barang_diproduksi_list_objects = HppManufactureProduction.objects.filter(
+        report=report
+    ).select_related('product').order_by('product__name')
+    
+    # [PERBAIKAN] Hitung total dari QuerySet objek
+    total_barang_diproduksi = barang_diproduksi_list_objects.aggregate(
+        total=Sum('total_produksi')
+    )['total'] or 0
 
     # SUMS untuk footer table
     total_bahan_baku_awal = bb_awal.aggregate(Sum('total'))['total__sum'] or 0
@@ -878,7 +890,7 @@ def hpp_manufaktur_view(request, report_id):
         "totals_bj_awal_per_produk": totals_bj_awal_per_produk,
         "totals_bj_akhir_per_produk": totals_bj_akhir_per_produk,
 
-        "barang_diproduksi_list": barang_diproduksi_list,
+        "barang_diproduksi_list": barang_diproduksi_list_objects, # Pass the objects
         "total_barang_diproduksi": total_barang_diproduksi,
     
         "total_bahan_baku_awal": total_bahan_baku_awal,

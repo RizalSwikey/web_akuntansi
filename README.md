@@ -24,6 +24,8 @@ accounting_apps
 │  │  ├─ 0014_hppmanufactureproduction.py
 │  │  ├─ 0015_alter_hppmanufactureproduction_unique_together.py
 │  │  ├─ 0016_expenseitem_product_expenseitem_scope.py
+│  │  ├─ 0017_alter_hppmanufactureoverhead_report.py
+│  │  ├─ 0018_remove_financialreport_omzet_and_more.py
 │  │  └─ __init__.py
 │  ├─ models.py
 │  ├─ static
@@ -96,11 +98,7 @@ accounting_apps
 │  │  │  ├─ autocomplete.css
 │  │  │  ├─ base.css
 │  │  │  ├─ changelists.css
-........................
-│  │        │  └─ select2.full.min.js
-│  │        └─ xregexp
-│  │           ├─ LICENSE.txt
-│  │           ├─ xregexp.js
+...............
 │  │           └─ xregexp.min.js
 │  ├─ core
 │  │  ├─ img
