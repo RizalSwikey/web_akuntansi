@@ -658,84 +658,122 @@ def hpp_manufaktur_view(request, report_id):
             return redirect(f"{reverse('core:hpp_manufaktur', args=[report.id])}#btkl-anchor")
 
         # --- BARANG JADI (FG_AWAL & FG_AKHIR) ---
+        # === PERUBAHAN KHUSUS: LOGIKA BARANG JADI (FIFO MANUFAKTUR) ===
         if action in ["add_fg", "edit_fg"]:
             item_id = request.POST.get("item_id")
             tipe_data = request.POST.get("tipe_data")
             product_id = request.POST.get("product_id")
             qty = to_int(request.POST.get("kuantitas"))
-            harga_satuan = to_int(request.POST.get("harga_satuan"))
+            # Harga manual hanya dipakai jika data AWAL, jika AKHIR kita hitung otomatis
+            harga_satuan_manual = to_int(request.POST.get("harga_satuan")) 
             keterangan = request.POST.get("keterangan", "")
 
-            total = qty * harga_satuan
+            total = 0
             status = "OK"
+            harga_satuan_final = harga_satuan_manual
 
             if tipe_data == "AKHIR_BJ":
+                # 1. Ambil Data Stok Awal
                 bj_awal_item = HppManufactureFinishedGoods.objects.filter(
                     report=report, type="FG_AWAL", product_id=product_id
                 ).first()
-                qty_awal = bj_awal_item.quantity if bj_awal_item else 0
-                harga_awal = bj_awal_item.harga_satuan if bj_awal_item else 0
+                qty_awal = to_int(bj_awal_item.quantity) if bj_awal_item else 0
+                harga_awal = to_int(bj_awal_item.harga_satuan) if bj_awal_item else 0
 
+                # 2. Ambil Data Produksi (Manual Input dari DB)
                 prod_item = production_map.get(int(product_id))
-                qty_produksi = prod_item.qty_diproduksi if prod_item else 0
-                harga_produksi = prod_item.hpp_per_unit if prod_item else 0
+                qty_produksi = to_int(prod_item.qty_diproduksi) if prod_item else 0
+                total_biaya_produksi = to_int(prod_item.total_produksi) if prod_item else 0
 
+                # 3. Ambil Data Penjualan
                 revenue_sold = RevenueItem.objects.filter(
                     report=report, product_id=product_id, revenue_type='usaha'
                 ).aggregate(Sum('quantity'))['quantity__sum'] or 0
+                qty_penjualan = to_int(revenue_sold)
 
-                stok_seharusnya = qty_awal + qty_produksi - revenue_sold
+                # 4. Validasi Stok Fisik (Rumus: Awal + Produksi - Jual)
+                stok_seharusnya = qty_awal + qty_produksi - qty_penjualan
                 
-                if qty < 0:
-                     qty = 0
+                if qty < 0: qty = 0
 
-                # Validasi
                 if qty > stok_seharusnya:
                     status = "Periksa Kembali: Stok Akhir melebihi (Awal + Produksi - Penjualan)"
-                    total = 0
+                    total = 0 
                 else:
-                    total_nilai_tersedia = (qty_awal * harga_awal) + (qty_produksi * harga_produksi)
-                    total_qty_tersedia = qty_awal + qty_produksi
-                    
-                    if total_qty_tersedia > 0:
-                        avg_price = total_nilai_tersedia / total_qty_tersedia
+                    if (qty_penjualan - qty_awal) < 0:
+                        # KASUS 1: Penjualan diambil dari Stok Awal. Stok Baru utuh.
+                        # Total Akhir = A + B
+                        
+                        # A = (Qty Awal - Qty Jual) * Harga Awal (Sisa stok lama)
+                        sisa_nilai_awal = (qty_awal - qty_penjualan) * harga_awal
+                        
+                        # B = Total Barang Diproduksi (Utuh belum terjual)
+                        total = sisa_nilai_awal + total_biaya_produksi
+                        
                     else:
-                        avg_price = 0
-                    
-                    total = qty * avg_price
+                        # KASUS 2: Penjualan menghabiskan Stok Awal & mengambil Stok Baru.
+                        # Total Akhir = A - B - C
+                        
+                        # A = (Total Awal Rp + Total Produksi Rp) -> Modal Tersedia
+                        total_nilai_awal = qty_awal * harga_awal
+                        modal_tersedia = total_nilai_awal + total_biaya_produksi
+                        
+                        # B = (Qty Awal * Harga Awal) -> HPP dari stok lama (habis terjual)
+                        hpp_stok_lama = total_nilai_awal
+                        
+                        # C = (Qty Jual - Qty Awal) * (Total Produksi / Qty Produksi) -> HPP dari stok baru
+                        if qty_produksi > 0:
+                            harga_prod_per_unit = total_biaya_produksi / qty_produksi
+                        else:
+                            harga_prod_per_unit = 0
+                            
+                        qty_ambil_baru = qty_penjualan - qty_awal
+                        hpp_stok_baru = qty_ambil_baru * harga_prod_per_unit
+                        
+                        # Rumus Akhir: A - B - C
+                        total = modal_tersedia - hpp_stok_lama - hpp_stok_baru
+
                     status = "OK"
 
-            tipe = "FG_AWAL" if tipe_data == "AWAL_BJ" else "FG_AKHIR"
+                # Hitung harga satuan untuk display saja
+                if qty > 0:
+                    harga_satuan_final = total / qty
+                else:
+                    harga_satuan_final = 0
+
+            # Tentukan Tipe Database
+            tipe_db = "FG_AWAL" if tipe_data == "AWAL_BJ" else "FG_AKHIR"
+            
+            # Jika data AWAL, total dihitung manual (qty * harga input)
+            if tipe_db == "FG_AWAL":
+                total = qty * harga_satuan_manual
+                harga_satuan_final = harga_satuan_manual
+
+            # Simpan ke Database
+            defaults = {
+                'type': tipe_db,
+                'quantity': qty,
+                'harga_satuan': harga_satuan_final,
+                'total': total,
+                'keterangan': keterangan,
+                'status': status
+            }
 
             if action == "add_fg":
                 HppManufactureFinishedGoods.objects.create(
-                    report=report,
-                    product_id=product_id,
-                    type=tipe,
-                    quantity=qty,
-                    harga_satuan=harga_satuan,
-                    total=total,
-                    keterangan=keterangan,
-                    status=status,
+                    report=report, product_id=product_id, **defaults
                 )
-                messages.success(
-                    request,
-                    f"Data Persediaan Barang Jadi ({'Akhir' if tipe == 'FG_AKHIR' else 'Awal'}) berhasil disimpan."
-                )
+                messages.success(request, f"Data Barang Jadi berhasil disimpan.")
             else:
                 item = get_object_or_404(HppManufactureFinishedGoods, id=item_id)
-                item.type = tipe
+                for key, value in defaults.items():
+                    setattr(item, key, value)
                 item.product_id = product_id
-                item.quantity = qty
-                item.harga_satuan = harga_satuan
-                item.total = total
-                item.keterangan = keterangan
-                item.status = status
                 item.save()
                 messages.success(request, "Data Barang Jadi berhasil diperbarui.")
 
             return redirect(f"{reverse('core:hpp_manufaktur', args=[report.id])}#bj-anchor")
-
+        
         if action == "delete_fg":
             item_id = request.POST.get("item_id")
             get_object_or_404(HppManufactureFinishedGoods, id=item_id).delete()
