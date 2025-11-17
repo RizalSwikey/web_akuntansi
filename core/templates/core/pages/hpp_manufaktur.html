@@ -514,7 +514,7 @@
                 <div class="col-span-4 p-3">{{ item.product.name }}</div>
                 <div class="col-span-2 p-3 text-center">{{ item.quantity|default:"-"|floatformat:0|intcomma }}</div>
                 <div class="col-span-2 p-3 font-semibold text-right">
-                  Rp {{ item.total_akhir|floatformat:0|intcomma }}
+                  Rp {{ item.total|floatformat:0|intcomma }}
                 </div>
                 <div class="col-span-3 p-3 text-center text-xs">
                   {% if item.status == "OK" %}

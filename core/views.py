@@ -793,6 +793,8 @@ def hpp_manufaktur_view(request, report_id):
     totals_bop_per_produk = grouped_totals(bop_items)
     totals_bj_awal_per_produk = grouped_totals(bj_awal)
     totals_bj_akhir_per_produk = grouped_totals(bj_akhir)
+    print(bj_akhir)
+    print(totals_bj_akhir_per_produk)
 
     # Helper Map
     def map_totals(qs):
