@@ -211,18 +211,18 @@
       <div>
         <label class="block mb-2 font-semibold">Nama Produk</label>
         <input type="text" id="modal-product-name" name="modal-product-name"
-               class="w-full p-3 border border-slate-300 rounded-lg" required>
+               class="w-full p-3 border border-slate-300 rounded-lg" >
       </div>
       <div class="grid grid-cols-2 gap-4">
         <div>
           <label class="block mb-2 font-semibold">Kuantitas</label>
           <input type="number" id="modal-quantity" name="modal-quantity"
-                 class="w-full p-3 border border-slate-300 rounded-lg" required>
+                 class="w-full p-3 border border-slate-300 rounded-lg" >
         </div>
         <div>
           <label class="block mb-2 font-semibold">Harga Jual (Rp)</label>
           <input type="number" id="modal-price" name="modal-price"
-                 class="w-full p-3 border border-slate-300 rounded-lg" required>
+                 class="w-full p-3 border border-slate-300 rounded-lg" >
         </div>
       </div>
     </div>
@@ -307,14 +307,30 @@ document.addEventListener("DOMContentLoaded", function () {
 
   // TYPE SWITCH
   modalType.addEventListener("change", () => {
-    if (modalType.value === "usaha") {
+  if (modalType.value === "usaha") {
       usahaFields.classList.remove("hidden");
       lainFields.classList.add("hidden");
+
+      usahaName.required = true;
+      usahaQty.required = true;
+      usahaPrice.required = true;
+
+      lainName.required = false;
+      lainTotal.required = false;
+
     } else {
       usahaFields.classList.add("hidden");
       lainFields.classList.remove("hidden");
+
+      usahaName.required = false;
+      usahaQty.required = false;
+      usahaPrice.required = false;
+
+      lainName.required = true;
+      lainTotal.required = true;
     }
   });
+
 
 
   // EDIT BUTTON LOGIC
@@ -327,17 +343,13 @@ document.addEventListener("DOMContentLoaded", function () {
       const type = button.dataset.type;
       modalType.value = type;
 
-      if (type === "usaha") {
-        usahaFields.classList.remove("hidden");
-        lainFields.classList.add("hidden");
+      modalType.dispatchEvent(new Event("change"));
 
+      if (type === "usaha") {
         usahaName.value = button.dataset.name;
         usahaQty.value = button.dataset.quantity;
         usahaPrice.value = button.dataset.price;
       } else {
-        usahaFields.classList.add("hidden");
-        lainFields.classList.remove("hidden");
-
         lainName.value = button.dataset.name;
         lainTotal.value = button.dataset.total;
       }
@@ -345,6 +357,7 @@ document.addEventListener("DOMContentLoaded", function () {
       openModal();
     });
   });
+
 
 });
 </script>
