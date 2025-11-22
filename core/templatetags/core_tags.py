@@ -1,5 +1,4 @@
 from django import template
-
 register = template.Library()
 
 @register.filter
@@ -41,3 +40,10 @@ def percent(value):
         return f"{float(value) * 100:.2f}%"
     except (ValueError, TypeError):
         return "0%"
+
+@register.filter
+def dict_get(d, key):
+    """Safely get a value from a dict by key."""
+    if d is None:
+        return ""
+    return d.get(str(key), "")

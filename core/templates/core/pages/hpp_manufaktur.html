@@ -376,6 +376,15 @@
             <div class="col-span-10 p-3 text-right text-slate-600">Total Biaya Overhead Pabrik (BOP)</div>
             <div id="bop-total" class="col-span-2 p-3 text-lg text-right">Rp {{ total_bop|floatformat:0|intcomma }}</div>
           </div>
+          
+          {% for name, bop in bop_per_produk.items %}
+              <p>
+                <tr>
+                  <td>Sub Jumlah Persediaan Akhir {{ name }}</td>
+                  <td>Rp {{ bop|intcomma }}</td>
+                </tr>
+              </p>
+          {% endfor %}
         </div>
       </div>
       
@@ -391,18 +400,18 @@
           </div>
 
           <div id="produksi-rows" class="divide-y">
-            {% if not barang_diproduksi_list %}
+            {% if not barang_diproduksi_list_objects  %}
               <p class="text-center text-slate-400 p-4 italic js-empty-state">Belum ada data hasil produksi yang dihitung.</p>
               <p class="text-center text-slate-400 p-4 text-sm">Pastikan data Bahan Baku, BDP, BTKL, dan BOP sudah lengkap.</p>
             {% endif %}
 
-            {% for hasil in barang_diproduksi_list %}
+            {% for item in barang_diproduksi_list_objects  %}
             <div class="data-row grid grid-cols-12 gap-4 items-center py-3">
               
               <div class="col-span-1 flex justify-start pl-2">
                 <div class="flex items-center gap-2 bg-slate-100 px-3 py-1 rounded-lg">
                     <button type="button" title="Edit Kuantitas" 
-                            onclick="openEditModal_Produksi('{{ hasil.id }}', '{{ hasil.product.name }}', '{{ hasil.qty_diproduksi }}')"
+                            onclick="openEditModal_Produksi('{{ item.id }}', '{{ item.product.name }}', '{{ item.qty_diproduksi }}')"
                             class="text-slate-500 hover:text-blue-500">
                       <svg class="w-4 h-4 pointer-events-none" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
                         <path stroke-linecap="round" stroke-linejoin="round" d="M16.862 3.487a2.25 2.25 0 013.182 3.182L7.5 19.313l-4.5 1.5 1.5-4.5L16.862 3.487z" />
@@ -411,16 +420,20 @@
                 </div>
               </div>
 
-              <div class="col-span-4 p-3 font-medium">{{ hasil.product.name }}</div>
-              <div class="col-span-2 p-3 text-center">{{ hasil.qty_diproduksi|floatformat:0|intcomma }}</div>
-              <div class="col-span-3 p-3 text-right">Rp {{ hasil.hpp_per_unit|floatformat:2|intcomma }}</div> 
-              <div class="col-span-2 p-3 font-semibold text-right">Rp {{ hasil.total_produksi|floatformat:0|intcomma }}</div>
+              <div class="col-span-4 p-3 font-medium">{{ item.product.name }}</div>
+              <div class="col-span-2 p-3 text-center">{{ item.qty_diproduksi|floatformat:0|intcomma }}</div>
+              <div class="col-span-3 p-3 text-right">Rp {{ item.hpp_per_unit|floatformat:2|intcomma }}</div> 
+              <div class="col-span-2 p-3 font-semibold text-right">Rp {{ item.total_produksi|floatformat:0|intcomma }}</div>
             </div>
             {% endfor %}
           </div>
         </div>
+        
           <div class="grid grid-cols-12 gap-4 items-center font-bold border-t pt-3 mt-3">
-            <div class="col-span-10 p-3 text-right text-slate-600">Sub Jumlah</div> <div class="col-span-2 p-3 text-lg text-right">Rp {{ total_barang_diproduksi|floatformat:0|intcomma }}</div> </div>
+            <div class="col-span-10 p-3 text-right text-slate-600">Sub Jumlah</div>
+              <div>{{ total_qty_produksi|floatformat:0|intcomma }}</div>
+              <div class="col-span-2 p-3 text-lg text-right">Rp {{ total_barang_diproduksi|floatformat:0|intcomma }}</div>
+            </div>
         </div>
       </div>
       
@@ -981,7 +994,7 @@
 
             returAmountInput.readOnly = true;
         }
-        
+
         modal.classList.remove("opacity-0", "pointer-events-none");
         if (mainContent) mainContent.classList.add('overflow-hidden');
     }

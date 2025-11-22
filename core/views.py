@@ -449,21 +449,26 @@ def hpp_manufaktur_view(request, report_id):
     if request.method == "POST":
         action = request.POST.get("action")
 
-        # === FITUR BARU: SIMPAN QTY PRODUKSI MANUAL ===
+        # === SIMPAN QTY PRODUKSI MANUAL ===
         if action == "edit_production":
             item_id = request.POST.get("item_id")
             qty_input = to_int(request.POST.get("qty_diproduksi"))
-            
+
             try:
                 prod_item = get_object_or_404(HppManufactureProduction, id=item_id, report=report)
-                
+
                 prod_item.qty_diproduksi = qty_input
-                prod_item.save(update_fields=['qty_diproduksi'])
-                
+                # Recalculate hpp_per_unit if total_produksi present
+                if getattr(prod_item, "total_produksi", None) is not None:
+                    if qty_input > 0:
+                        prod_item.hpp_per_unit = prod_item.total_produksi / qty_input
+                    else:
+                        prod_item.hpp_per_unit = 0
+                prod_item.save(update_fields=['qty_diproduksi', 'hpp_per_unit'])
                 messages.success(request, f"Kuantitas produksi untuk {prod_item.product.name} berhasil disimpan.")
             except Exception as e:
                 messages.error(request, f"Gagal menyimpan kuantitas: {e}")
-                
+
             return redirect(f"{reverse('core:hpp_manufaktur', args=[report.id])}#produksi-anchor")
 
         # --- BAHAN BAKU ---
@@ -807,12 +812,13 @@ def hpp_manufaktur_view(request, report_id):
     totals_bop_per_produk = grouped_totals(bop_items)
     totals_bj_awal_per_produk = grouped_totals(bj_awal)
     totals_bj_akhir_per_produk = grouped_totals(bj_akhir)
-    print(bj_akhir)
-    print(totals_bj_akhir_per_produk)
 
     # Helper Map
     def map_totals(qs):
         return {row["product"]: row["total"] for row in qs}
+    
+    def map_qty(qs):
+        return {row["product"]: row["qty"] for row in qs}
 
     bb_awal_map = map_totals(totals_awal_per_produk)
     bb_pembelian_map = map_totals(totals_pembelian_per_produk)
@@ -822,9 +828,25 @@ def hpp_manufaktur_view(request, report_id):
     btkl_map = map_totals(totals_btkl_per_produk)
     bop_map = map_totals(totals_bop_per_produk)
 
+    bdp_awal_qty = (
+        bdp_awal.values("product")
+        .annotate(qty=Sum("quantity"))
+    )
+
+    bdp_akhir_qty = (
+        bdp_akhir.values("product")
+        .annotate(qty=Sum("quantity"))
+    )
+
+    bdp_awal_qty_map = map_qty(bdp_awal_qty)
+    bdp_akhir_qty_map = map_qty(bdp_akhir_qty)
+
     barang_diproduksi_list = []
     
-    product_ids = set(bb_awal_map.keys()) | set(bb_pembelian_map.keys()) | set(bb_akhir_map.keys()) | set(production_map.keys())
+    product_ids = set(bb_awal_map.keys()) | set(bb_pembelian_map.keys()) | set(bb_akhir_map.keys()) | set(production_map.keys()) | set(bdp_awal_map.keys()) | set(bdp_akhir_map.keys())
+
+    for p in products:
+        product_ids.add(p.id)
 
     for pid in product_ids:
         product = Product.objects.filter(id=pid).first()
@@ -838,10 +860,22 @@ def hpp_manufaktur_view(request, report_id):
             + bop_map.get(pid, 0)
         )
 
+        # 1) Auto-calc default produksi (BDP akhir - BDP awal)
+        qty_auto = bdp_akhir_qty_map.get(pid, 0) - bdp_awal_qty_map.get(pid, 0)
+        # if qty_auto < 0:
+        #     qty_auto = 0
+
+
+        # 2) Check if DB has a previous manual override
         prod_item = production_map.get(pid)
-        qty_diproduksi = prod_item.qty_diproduksi if prod_item else 0
-        
-        hpp_per_unit = total_biaya_produksi / qty_diproduksi if qty_diproduksi > 0 else 0
+
+        if prod_item and (prod_item.qty_diproduksi is not None) and int(prod_item.qty_diproduksi) != 0:
+            qty_diproduksi = int(prod_item.qty_diproduksi)  # manual override
+        else:
+            qty_diproduksi = qty_auto  # auto value
+
+        # 3) HPP per unit
+        hpp_per_unit = (total_biaya_produksi / qty_diproduksi) if qty_diproduksi > 0 else 0
 
         barang_diproduksi_list.append({
             "product_name": product.name,
@@ -850,18 +884,17 @@ def hpp_manufaktur_view(request, report_id):
             "total_produksi": total_biaya_produksi,
             "hpp_per_unit": hpp_per_unit,
         })
-    
+
+    # Save into DB but respect manual overrides inside save function
     save_barang_diproduksi(report, barang_diproduksi_list)
 
+    # After save, fetch fresh queryset for template (template expects objects with ids for modals)
     barang_diproduksi_list_objects = HppManufactureProduction.objects.filter(
         report=report
-    ).select_related('product').order_by('product__name')
-    
-    total_barang_diproduksi = barang_diproduksi_list_objects.aggregate(
-        total=Sum('total_produksi')
-    )['total'] or 0
+    ).select_related('product').order_by('product__name')   
 
     # SUMS
+
     total_bahan_baku_awal = bb_awal.aggregate(Sum('total'))['total__sum'] or 0
     total_bahan_baku_pembelian = bb_pembelian.aggregate(Sum('total'))['total__sum'] or 0
     total_bahan_baku_akhir = bb_akhir.aggregate(Sum('total'))['total__sum'] or 0
@@ -873,6 +906,61 @@ def hpp_manufaktur_view(request, report_id):
     total_bj_akhir = bj_akhir.aggregate(Sum('total'))['total__sum'] or 0
     total_bj_akhir_calc = sum(getattr(x, "total", 0) for x in bj_akhir)
 
+    # ==============================
+    #  HITUNG ALOKASI BOP PER PRODUK
+    # ==============================
+    total_qty_produksi = sum(x.qty_diproduksi for x in barang_diproduksi_list_objects)
+
+    bop_per_produk = {}
+
+    for item in barang_diproduksi_list_objects:
+        if total_qty_produksi > 0:
+            bop_alloc = total_bop * (item.qty_diproduksi / total_qty_produksi)
+        else:
+            bop_alloc = 0
+
+        bop_per_produk[item.product.name] = round(bop_alloc)
+
+    # ===============================================
+    #   HITUNG HARGA SATUAN PRODUK (BOP-BASED ONLY)
+    # ===============================================
+    harga_satuan_per_produk = {}
+    total_hpp_per_produk = {}
+
+    total_qty_produksi = sum(item.qty_diproduksi for item in barang_diproduksi_list_objects)
+
+    total_bop = sum(bop_per_produk.values())
+
+    if total_qty_produksi > 0:
+        bop_per_unit = total_bop / total_qty_produksi
+    else:
+        bop_per_unit = 0
+
+    for item in barang_diproduksi_list_objects:
+        id = str(item.product.id)
+        qty = item.qty_diproduksi
+
+        bop_total = round(bop_per_unit * qty)
+
+        harga_satuan_per_produk[id] = round(bop_per_unit)
+        total_hpp_per_produk[id] = bop_total
+
+    print(harga_satuan_per_produk)
+    print(total_hpp_per_produk)
+    print(barang_diproduksi_list_objects)
+
+    for item in barang_diproduksi_list_objects:
+        new_hpp = harga_satuan_per_produk.get(str(item.product.id), 0)
+        new_total = total_hpp_per_produk.get(str(item.product.id), 0)
+
+        item.hpp_per_unit = new_hpp
+        item.total_produksi = new_total
+        item.save(update_fields=["hpp_per_unit", "total_produksi"])
+    
+    total_barang_diproduksi = barang_diproduksi_list_objects.aggregate(
+        total=Sum('total_produksi')
+    )['total'] or 0
+    
     return render(request, "core/pages/hpp_manufaktur.html", {
         "report": report,
         "products": products,
@@ -898,7 +986,9 @@ def hpp_manufaktur_view(request, report_id):
         "totals_bj_awal_per_produk": totals_bj_awal_per_produk,
         "totals_bj_akhir_per_produk": totals_bj_akhir_per_produk,
 
-        "barang_diproduksi_list": barang_diproduksi_list_objects,
+        "barang_diproduksi_list_objects": barang_diproduksi_list_objects,
+        "total_qty_produksi": total_qty_produksi,
+
         "total_barang_diproduksi": total_barang_diproduksi,
     
         "total_bahan_baku_awal": total_bahan_baku_awal,
@@ -911,6 +1001,10 @@ def hpp_manufaktur_view(request, report_id):
         "total_bj_awal": total_bj_awal,
         "total_bj_akhir": total_bj_akhir,
         "total_bj_akhir_calc": total_bj_akhir_calc,
+
+        "bop_per_produk": bop_per_produk,
+        "harga_satuan_per_produk": harga_satuan_per_produk,
+        "total_hpp_per_produk": total_hpp_per_produk,
     })
 
 

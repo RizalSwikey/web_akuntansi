@@ -131,21 +131,47 @@ def to_number(x):
 def save_barang_diproduksi(report, barang_diproduksi_list):
     """
     Save or update barang_diproduksi_list into HppManufactureProduction model.
+    Important: Respect manual override if an existing record already has a non-zero qty_diproduksi.
     """
     with transaction.atomic():
         for row in barang_diproduksi_list:
-            product_obj = Product.objects.filter(
-                name=row["product_name"], report=report
-            ).first()
+            product_obj = None
+            if row.get("product_id"):
+                product_obj = Product.objects.filter(id=row["product_id"], report=report).first()
+            if not product_obj:
+                product_obj = Product.objects.filter(name=row.get("product_name"), report=report).first()
             if not product_obj:
                 continue
 
-            HppManufactureProduction.objects.update_or_create(
-                report=report,
-                product=product_obj,
-                defaults={
-                    "qty_diproduksi": row["qty_diproduksi"],
-                    "total_produksi": row["total_produksi"],
-                    "hpp_per_unit": row["hpp_per_unit"],
-                },
-            )
+            existing = HppManufactureProduction.objects.filter(report=report, product=product_obj).first()
+
+            if existing and (existing.qty_diproduksi is not None) and int(existing.qty_diproduksi) != 0:
+                manual_qty = int(existing.qty_diproduksi)
+                total_produksi = row.get("total_produksi", 0)
+                hpp_per_unit = (total_produksi / manual_qty) if manual_qty > 0 else 0
+
+                HppManufactureProduction.objects.update_or_create(
+                    report=report,
+                    product=product_obj,
+                    defaults={
+                        "qty_diproduksi": manual_qty,
+                        "total_produksi": total_produksi,
+                        "hpp_per_unit": hpp_per_unit,
+                    },
+                )
+            else:
+                qty = int(row.get("qty_diproduksi", 0)) if row.get("qty_diproduksi") is not None else 0
+                if qty < 0:
+                    qty = 0
+                total_produksi = row.get("total_produksi", 0) or 0
+                hpp_per_unit = (total_produksi / qty) if qty > 0 else 0
+
+                HppManufactureProduction.objects.update_or_create(
+                    report=report,
+                    product=product_obj,
+                    defaults={
+                        "qty_diproduksi": qty,
+                        "total_produksi": total_produksi,
+                        "hpp_per_unit": hpp_per_unit,
+                    },
+                )
