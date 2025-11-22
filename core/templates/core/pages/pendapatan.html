@@ -275,12 +275,45 @@ document.addEventListener("DOMContentLoaded", function () {
   const usahaFields = document.getElementById("modal-usaha-fields");
   const lainFields = document.getElementById("modal-lain-fields");
 
+  // Input Elements
   const usahaName = document.getElementById("modal-product-name");
   const usahaQty = document.getElementById("modal-quantity");
   const usahaPrice = document.getElementById("modal-price");
 
   const lainName = document.getElementById("modal-name-lain");
   const lainTotal = document.getElementById("modal-total");
+
+  // --- FUNGSI BARU: UPDATE REQUIRED ATTRIBUTE ---
+  // Ini kuncinya: Matikan 'required' pada field yang disembunyikan
+  function updateFormState(type) {
+    if (type === "usaha") {
+        // Tampilkan Usaha, Sembunyikan Lain
+        usahaFields.classList.remove("hidden");
+        lainFields.classList.add("hidden");
+
+        // Nyalakan Wajib Isi untuk Usaha
+        usahaName.required = true;
+        usahaQty.required = true;
+        usahaPrice.required = true;
+
+        // Matikan Wajib Isi untuk Lain-lain
+        lainName.required = false;
+        lainTotal.required = false;
+    } else {
+        // Tampilkan Lain, Sembunyikan Usaha
+        usahaFields.classList.add("hidden");
+        lainFields.classList.remove("hidden");
+
+        // Matikan Wajib Isi untuk Usaha (Agar bisa disave)
+        usahaName.required = false;
+        usahaQty.required = false;
+        usahaPrice.required = false;
+
+        // Nyalakan Wajib Isi untuk Lain-lain
+        lainName.required = true;
+        lainTotal.required = true;
+    }
+  }
 
   function openModal() {
     addIncomeModal.classList.remove("opacity-0", "pointer-events-none");
@@ -294,18 +327,22 @@ document.addEventListener("DOMContentLoaded", function () {
     modalAction.value = "add";
     modalItemId.value = "";
     modalTitle.textContent = "Tambah Data Pendapatan";
-
-    usahaFields.classList.remove("hidden");
-    lainFields.classList.add("hidden");
     modalType.value = "usaha";
+    
+    // Reset tampilan ke default (usaha)
+    updateFormState("usaha");
   }
 
-  addIncomeBtn.addEventListener("click", openModal);
+  addIncomeBtn.addEventListener("click", () => {
+      openModal();
+      updateFormState("usaha"); // Pastikan defaultnya usaha
+  });
+  
   modalCloseBtn.addEventListener("click", closeModal);
   addIncomeModal.addEventListener("click", e => e.target === addIncomeModal && closeModal());
 
 
-  // TYPE SWITCH
+  // TYPE SWITCH EVENT
   modalType.addEventListener("change", () => {
   if (modalType.value === "usaha") {
       usahaFields.classList.remove("hidden");
@@ -330,6 +367,7 @@ document.addEventListener("DOMContentLoaded", function () {
       lainTotal.required = true;
     }
   });
+
 
 
 
