@@ -520,7 +520,8 @@ def hpp_manufaktur_view(request, report_id):
             item.harga_satuan = to_int(request.POST.get("harga_satuan"))
             item.diskon = to_int(request.POST.get("diskon"))
             item.retur_qty = to_int(request.POST.get("retur_qty"))
-            item.retur_amount = to_int(request.POST.get("retur_amount"))
+            retur_amount_post = to_int(request.POST.get("retur_amount"))
+            item.retur_amount = retur_amount_post if retur_amount_post != 0 else (item.retur_qty * item.harga_satuan)
             item.ongkir = to_int(request.POST.get("ongkir"))
             item.keterangan = request.POST.get("keterangan", "")
 
