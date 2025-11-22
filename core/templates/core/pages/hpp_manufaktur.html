@@ -618,7 +618,7 @@
           </div>
           <div>
               <label for="modal-retur-amount" class="block mb-2 font-semibold">Jumlah Retur (Rp)</label>
-              <input type="number" name="retur_amount" id="modal-retur-amount" class="w-full p-3 border border-slate-300 rounded-lg" min="0" placeholder="Simpan untuk kalkulasi" disabled>
+              <input type="number" name="retur_amount" id="modal-retur-amount" class="w-full p-3 border border-slate-300 rounded-lg" readonly>
           </div>
       </div>
 
@@ -938,14 +938,19 @@
         fieldsDiv.classList.toggle("hidden", tipe !== "BB_PEMBELIAN");
     }
 
-    window.openEditModal_BB = function(id, type, productId, namaBahan, qty, harga, ket, diskon=0, returQty=0, returAmount = 0, ongkir=0) {
+    window.openEditModal_BB = function(
+          id, type, productId, namaBahan, qty, harga, ket,
+          diskon = 0, returQty = 0, returAmount = 0, ongkir = 0
+        ) {
         const modal = document.getElementById('modal-bahan-baku');
-        document.getElementById("form-bahan-baku").reset();
-        
-        document.getElementById("bb-modal-title").innerText = "Edit Data Biaya Bahan Baku";
+        const form = document.getElementById("form-bahan-baku");
+
+        form.reset();
+
         document.getElementById("bb-action").value = "edit_bb";
         document.getElementById("bb-item-id").value = id;
-        
+        document.getElementById("bb-modal-title").innerText = "Edit Data Biaya Bahan Baku";
+
         document.getElementById("modal-tipe-data").value = type;
         document.getElementById("modal-product-id").value = productId;
         document.getElementById("modal-nama-bahan").value = namaBahan;
@@ -954,21 +959,27 @@
         document.getElementById("modal-keterangan").value = ket;
 
         togglePembelianFields();
-        
+
         if (type === "BB_PEMBELIAN") {
             document.getElementById("modal-diskon").value = diskon;
             document.getElementById("modal-retur-qty").value = returQty;
             document.getElementById("modal-ongkir").value = ongkir;
-            
+
             const returAmountInput = document.getElementById("modal-retur-amount");
 
+            // Set placeholder
             if (parseInt(returAmount) > 0) {
                 returAmountInput.placeholder = parseInt(returAmount).toLocaleString("id-ID");
             } else {
                 returAmountInput.placeholder = "Simpan untuk kalkulasi";
             }
 
-            returAmountInput.disabled = true;
+            // ⭐ FORCE SET VALUE AFTER togglePembelianFields
+            setTimeout(() => {
+                returAmountInput.value = returAmount;
+            }, 0);
+
+            returAmountInput.readOnly = true;
         }
         
         modal.classList.remove("opacity-0", "pointer-events-none");

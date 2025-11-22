@@ -480,7 +480,12 @@ def hpp_manufaktur_view(request, report_id):
             diskon = to_int(request.POST.get("diskon"))
             retur_qty = to_int(request.POST.get("retur_qty"))
             retur_amount_post = to_int(request.POST.get("retur_amount"))
-            retur_amount = to_int(retur_amount_post) if retur_amount_post != 0 else (retur_qty * harga)
+
+            if retur_amount_post > 0:
+                retur_amount = retur_amount_post
+            else:
+                retur_amount = retur_qty * harga
+
             ongkir = to_int(request.POST.get("ongkir"))
 
             if retur_qty > qty:
@@ -512,24 +517,31 @@ def hpp_manufaktur_view(request, report_id):
 
         if action == "edit_bb":
             item = get_object_or_404(HppManufactureMaterial, id=request.POST.get("item_id"), report=report)
+            product_id = request.POST.get("product_id")
+            product = get_object_or_404(Product, id=product_id, report=report)
 
             item.type = request.POST.get("type")
-            item.product_id = request.POST.get("product_id")
+            item.product = product
             item.nama_bahan_baku = request.POST.get("nama_bahan_baku")
             item.quantity = to_int(request.POST.get("quantity"))
             item.harga_satuan = to_int(request.POST.get("harga_satuan"))
             item.diskon = to_int(request.POST.get("diskon"))
             item.retur_qty = to_int(request.POST.get("retur_qty"))
             retur_amount_post = to_int(request.POST.get("retur_amount"))
-            item.retur_amount = retur_amount_post if retur_amount_post != 0 else (item.retur_qty * item.harga_satuan)
+
+            if retur_amount_post > 0:
+                item.retur_amount = retur_amount_post
+            else:
+                item.retur_amount = item.retur_qty * item.harga_satuan
+
             item.ongkir = to_int(request.POST.get("ongkir"))
             item.keterangan = request.POST.get("keterangan", "")
-
-            if item.type in ["BB_AWAL", "BB_AKHIR"]:
+            
+            if str(item.type) in ["BB_AWAL", "BB_AKHIR"]:
                 item.total = item.quantity * item.harga_satuan
             else:
                 item.total = (item.quantity * item.harga_satuan) - item.diskon - item.retur_amount + item.ongkir
-
+                
             item.save()
             messages.success(request, "Data bahan baku berhasil diperbarui.")
             return redirect(f"{reverse('core:hpp_manufaktur', args=[report.id])}#bb-anchor")

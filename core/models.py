@@ -114,10 +114,6 @@ class HppManufactureMaterial(models.Model):
     class Meta:
         ordering = ['product__name', 'type']
 
-    def save(self, *args, **kwargs):
-        self.total = self.quantity * self.harga_satuan
-        super().save(*args, **kwargs)
-
     def __str__(self):
         return f"{self.product.name} - {self.get_type_display()}"
     
